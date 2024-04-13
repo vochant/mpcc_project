@@ -1,0 +1,16 @@
+#pragma once
+
+#include "object/array.hpp"
+#include "object/boolean.hpp"
+#include "object/class.hpp"
+#include "object/enumerate.hpp"
+#include "object/environment.hpp"
+#include "object/error.hpp"
+#include "object/float.hpp"
+#include "object/function.hpp"
+#include "object/instance.hpp"
+#include "object/integer.hpp"
+#include "object/native_data.hpp"
+#include "object/native_function.hpp"
+#include "object/null.hpp"
+#include "object/string.hpp"
