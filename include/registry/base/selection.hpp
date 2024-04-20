@@ -10,14 +10,14 @@
 
 class PluginProvider {
 private:
-	std::shared_ptr<Program> _target;
+    std::shared_ptr<Program> _target;
 public:
-	PluginProvider(std::shared_ptr<Program> _target) : _target(_target) {}
-	void attach() {
-		// Load your plugin there.
-		_target->loadLibrary(std::make_shared<DLoadPlugin>());
-		_target->loadLibrary(std::make_shared<IOPlugin>());
-		_target->loadLibrary(std::make_shared<ConstantsPlugin>());
-		_target->loadLibrary(std::make_shared<FileIOPlugin>());
-	}
+    PluginProvider(std::shared_ptr<Program> _target) : _target(_target) {}
+    void attach() {
+        // Load your plugin there.
+        _target->loadLibrary(std::make_shared<DLoadPlugin>());
+        _target->loadLibrary(std::make_shared<IOPlugin>());
+        _target->loadLibrary(std::make_shared<ConstantsPlugin>());
+        _target->loadLibrary(std::make_shared<FileIOPlugin>());
+    }
 };

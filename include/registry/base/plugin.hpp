@@ -6,6 +6,6 @@
 
 class Plugin {
 public:
-	Plugin() {}
-	virtual void attach(std::shared_ptr<Environment> env) const = 0;
+    Plugin() {}
+    virtual void attach(std::shared_ptr<Environment> env) const = 0;
 };

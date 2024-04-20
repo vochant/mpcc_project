@@ -16,7 +16,7 @@ option(BUILD_TEST "build the target test" ON)
 
 set(CMAKE_CXX_FLAGS "-ftemplate-backtrace-limit=1")
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstandalone-debug")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstandalone-debug")
 endif()
 
 # src

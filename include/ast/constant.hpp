@@ -5,19 +5,19 @@
 
 class ConstantNode : public Node {
 public:
-	std::shared_ptr<Object> obj;
-	ConstantNode(std::shared_ptr<Object> obj) : obj(obj), Node(Node::Type::Constant) {}
+    std::shared_ptr<Object> obj;
+    ConstantNode(std::shared_ptr<Object> obj) : obj(obj), Node(Node::Type::Constant) {}
 public:
-	std::string toString() const override {
-		return obj->toString();
-	}
+    std::string toString() const override {
+        return obj->toString();
+    }
 
-	void storeInto(std::ostream& os) const override {
-		BinaryOut::write_byte(os, char(Node::Type::Constant));
-		obj->storeInto(os);
-	}
+    void storeInto(std::ostream& os) const override {
+        BinaryOut::write_byte(os, char(Node::Type::Constant));
+        obj->storeInto(os);
+    }
 
-	void readFrom(std::istream& is) override {
-		obj = Object::get_object(is);
-	}
+    void readFrom(std::istream& is) override {
+        obj = Object::get_object(is);
+    }
 };
