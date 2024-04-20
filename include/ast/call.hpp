@@ -22,9 +22,9 @@ public:
             if (i) ss << ",";
             ss << args[i]->toString();
         }
-		if (more) {
-			ss << ",..." << more->toString();
-		}
+        if (more) {
+            ss << ",..." << more->toString();
+        }
         ss << ")";
         return ss.str();
     }

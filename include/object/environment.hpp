@@ -74,12 +74,12 @@ public:
         return ss.str();
     }
 
-	void copyFrom(std::shared_ptr<Environment> env) {
-		_parent = env->_parent;
-		for (auto it = env->values.begin(); it != env->values.end(); it++) {
-			values.insert(std::make_pair(it->first, Item{it->second._access, it->second.value->copy()}));
-		}
-	}
+    void copyFrom(std::shared_ptr<Environment> env) {
+        _parent = env->_parent;
+        for (auto it = env->values.begin(); it != env->values.end(); it++) {
+            values.insert(std::make_pair(it->first, Item{it->second._access, it->second.value->copy()}));
+        }
+    }
 public:
     Environment(std::shared_ptr<Environment> _parent = nullptr) : _parent(_parent), globalLock(false) {
         // values.insert(std::make_pair("super", Item{Item::AccessToken::Public, _parent}));

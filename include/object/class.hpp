@@ -10,8 +10,8 @@ public:
     std::shared_ptr<Environment> inner, outer;
     unsigned long long _signature;
     Class(std::shared_ptr<Environment> outer) : outer(outer), Object(Object::Type::Class), inner(std::make_shared<Environment>(outer)), _signature(_cert++) {
-		isMutable = false;
-	}
+        isMutable = false;
+    }
 public:
     std::string toString() const override {
         return "Class:" + inner->toString();
@@ -20,7 +20,7 @@ public:
     std::shared_ptr<Object> copy() const override {
         std::shared_ptr<Class> result = std::make_shared<Class>();
         result->inner->copyFrom(inner);
-		result->inner->globalLock = true;
+        result->inner->globalLock = true;
         return result;
     }
 

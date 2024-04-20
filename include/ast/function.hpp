@@ -26,9 +26,9 @@ public:
             }
             ss << args[i];
         }
-		if (moreName != "__null__") {
-			ss << ",..." << moreName;
-		}
+        if (moreName != "__null__") {
+            ss << ",..." << moreName;
+        }
         ss << ")";
         ss << inner->toString();
         return ss.str();

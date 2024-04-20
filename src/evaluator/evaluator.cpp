@@ -14,7 +14,7 @@ std::shared_ptr<Object> Evaluator::evaluate_program(std::shared_ptr<ProgramNode>
 
 std::shared_ptr<Object> Evaluator::evaluate_constant(std::shared_ptr<ConstantNode> _constant) {
     auto obj = _constant->obj;
-	obj->markMutable(false);
+    obj->markMutable(false);
 }
 
 std::shared_ptr<Object> Evaluator::evaluate_region(std::shared_ptr<RegionNode> _region, std::shared_ptr<Environment> env) {
@@ -161,153 +161,153 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
 }
 
 std::shared_ptr<Object> Evaluator::evaluate_array(std::shared_ptr<ArrayNode> _arr, std::shared_ptr<Environment> env) {
-	auto arr = std::make_shared<Array>();
-	for (auto i : _arr->elements) {
-		arr->elements.push_back(evaluate_value(i, env));
-	}
-	return arr;
+    auto arr = std::make_shared<Array>();
+    for (auto i : _arr->elements) {
+        arr->elements.push_back(evaluate_value(i, env));
+    }
+    return arr;
 }
 
 std::shared_ptr<Object> Evaluator::evaluate_assign(std::shared_ptr<AssignNode> _assign, std::shared_ptr<Environment> env) {
-	auto w = evaluate_value(_assign->left, env);
-	if (!w->isMutable) {
-		not_mutable_error();
-		return make_error();
-	}
-	auto v = evaluate_value(_assign->right, env);
-	if (_assign->_op != "=") {
-		auto bef = _assign->_op.substr(0, _assign->_op.length() - 1);
-		v = calcuate_infix(w, v, bef);
-	}
-	if (w->type != v->type) {
-		type_different_error(w->typeOf(), v->typeOf());
-		return make_error();
-	}
-	w->assign(v);
+    auto w = evaluate_value(_assign->left, env);
+    if (!w->isMutable) {
+        not_mutable_error();
+        return make_error();
+    }
+    auto v = evaluate_value(_assign->right, env);
+    if (_assign->_op != "=") {
+        auto bef = _assign->_op.substr(0, _assign->_op.length() - 1);
+        v = calcuate_infix(w, v, bef);
+    }
+    if (w->type != v->type) {
+        type_different_error(w->typeOf(), v->typeOf());
+        return make_error();
+    }
+    w->assign(v);
 }
 
 std::shared_ptr<Object> Evaluator::evaluate_class(std::shared_ptr<ClassNode> _class, std::shared_ptr<Environment> env) {
-	std::shared_ptr<Class> cls;
-	if (_class->_ext != ":") {
-		auto ext = env->get(_class->_ext);
-		if (ext->type != Object::Type::Class) {
-			extand_nothing_error(_class->_ext);
-			return make_error();
-		}
-		cls = std::dynamic_pointer_cast<Class>(ext->copy());
-		auto _lvl = cls->inner->get("__level__");
-		if (_lvl->type != Object::Type::Integer) {
-			lvl_type_error();
-			return make_error();
-		}
-		_lvl->assign(std::make_shared<Integer>(std::dynamic_pointer_cast<Integer>(_lvl)->value + 1));
-	}
-	else {
-		cls = std::make_shared<Class>(env);
-		cls->inner->set("__level__", std::make_shared<Integer>(0));
-	}
-	if (_class->inner->type != Node::Type::Region) {
-		unhandled_error();
-		return make_error();
-	}
-	evaluate_region(std::dynamic_pointer_cast<RegionNode>(_class->inner), cls->inner);
-	return cls;
+    std::shared_ptr<Class> cls;
+    if (_class->_ext != ":") {
+        auto ext = env->get(_class->_ext);
+        if (ext->type != Object::Type::Class) {
+            extand_nothing_error(_class->_ext);
+            return make_error();
+        }
+        cls = std::dynamic_pointer_cast<Class>(ext->copy());
+        auto _lvl = cls->inner->get("__level__");
+        if (_lvl->type != Object::Type::Integer) {
+            lvl_type_error();
+            return make_error();
+        }
+        _lvl->assign(std::make_shared<Integer>(std::dynamic_pointer_cast<Integer>(_lvl)->value + 1));
+    }
+    else {
+        cls = std::make_shared<Class>(env);
+        cls->inner->set("__level__", std::make_shared<Integer>(0));
+    }
+    if (_class->inner->type != Node::Type::Region) {
+        unhandled_error();
+        return make_error();
+    }
+    evaluate_region(std::dynamic_pointer_cast<RegionNode>(_class->inner), cls->inner);
+    return cls;
 }
 
 std::shared_ptr<Object> Evaluator::evaluate_if(std::shared_ptr<IfNode> _if, std::shared_ptr<Environment> env) {
-	auto _cond = evaluate_value(_if->_cond, env);
-	std::shared_ptr<Object> _res;
-	if (isTrue(_cond)) {
-		auto innerEnv = std::make_shared<Environment>(env);
-		_res = evaluate_one(_if->_then, innerEnv);
-	}
-	else if (_if->_else) {
-		auto innerEnv = std::make_shared<Environment>(env);
-		_res = evaluate_one(_if->_else, innerEnv);
-	}
-	if (_res->isReturn) {
-		return _res;
-	}
-	return std::shared_ptr<Null>();
+    auto _cond = evaluate_value(_if->_cond, env);
+    std::shared_ptr<Object> _res;
+    if (isTrue(_cond)) {
+        auto innerEnv = std::make_shared<Environment>(env);
+        _res = evaluate_one(_if->_then, innerEnv);
+    }
+    else if (_if->_else) {
+        auto innerEnv = std::make_shared<Environment>(env);
+        _res = evaluate_one(_if->_else, innerEnv);
+    }
+    if (_res->isReturn) {
+        return _res;
+    }
+    return std::shared_ptr<Null>();
 }
 
 std::shared_ptr<Object> Evaluator::evaluate_creation(std::shared_ptr<CreationNode> _cr, std::shared_ptr<Environment> env) {
-	while (env->_parent) {
-		env = env->_parent;
-	}
-	for (auto i : _cr->creations) {
-		auto v = evaluate_value(i.second, env);
-		std::string _name = i.first;
-		if (i.first == "__spec_constructor" || i.first == "__spec_destructor") {
-			if (v->type != Object::Type::Function) {
-				conde_type_error();
-				return make_error();
-			}
-			auto _lvl = env->get("__level__");
-			if (_lvl->type != Object::Type::Integer) {
-				lvl_type_error();
-				return make_error();
-			}
-			_name += _lvl->toString();
-		}
-		if (i.first == "__spec_constructor") {
-			_name += "_" + std::to_string(std::dynamic_pointer_cast<Function>(v)->args.size());
-		}
-		if (env->getThere(_name)) {
-			if (_cr->allowOverwrite) {
-				env->remove(_name);
-			}
-			else {
-				already_valid_error(_name);
-				return make_error();
-			}
-		}
-		env->create(_name, v);
-		if (_cr->isConst) {
-			env->get(_name)->markMutable(false);
-		}
-		if (_cr->isPrivate) {
-			env->setAT(_name, Item::AccessToken::Private);
-		}
-	}
-	return std::make_shared<Null>();
+    while (env->_parent) {
+        env = env->_parent;
+    }
+    for (auto i : _cr->creations) {
+        auto v = evaluate_value(i.second, env);
+        std::string _name = i.first;
+        if (i.first == "__spec_constructor" || i.first == "__spec_destructor") {
+            if (v->type != Object::Type::Function) {
+                conde_type_error();
+                return make_error();
+            }
+            auto _lvl = env->get("__level__");
+            if (_lvl->type != Object::Type::Integer) {
+                lvl_type_error();
+                return make_error();
+            }
+            _name += _lvl->toString();
+        }
+        if (i.first == "__spec_constructor") {
+            _name += "_" + std::to_string(std::dynamic_pointer_cast<Function>(v)->args.size());
+        }
+        if (env->getThere(_name)) {
+            if (_cr->allowOverwrite) {
+                env->remove(_name);
+            }
+            else {
+                already_valid_error(_name);
+                return make_error();
+            }
+        }
+        env->create(_name, v);
+        if (_cr->isConst) {
+            env->get(_name)->markMutable(false);
+        }
+        if (_cr->isPrivate) {
+            env->setAT(_name, Item::AccessToken::Private);
+        }
+    }
+    return std::make_shared<Null>();
 }
 
 std::shared_ptr<Object> Evaluator::evaluate_enumerate(std::shared_ptr<EnumerateNode> _enum, std::shared_ptr<Environment> env) {
-	std::vector<std::pair<std::string, long long>> v;
-	long long _idx = 0;
-	for (auto i : _enum->items) {
-		v.push_back(std::make_pair(i, _idx++));
-	}
-	auto e = std::make_shared<Enumerate>(v);
-	return e;
+    std::vector<std::pair<std::string, long long>> v;
+    long long _idx = 0;
+    for (auto i : _enum->items) {
+        v.push_back(std::make_pair(i, _idx++));
+    }
+    auto e = std::make_shared<Enumerate>(v);
+    return e;
 }
 
 std::shared_ptr<Object> Evaluator::evaluate_expr(std::shared_ptr<ExprNode> _expr, std::shared_ptr<Environment> env) {
-	return evaluate_value(_expr->inner, env);
+    return evaluate_value(_expr->inner, env);
 }
 
 std::shared_ptr<Object> Evaluator::evaluate_for(std::shared_ptr<ForNode> _for, std::shared_ptr<Environment> env) {
-	std::shared_ptr<Object> _res;
-	auto innerEnv = std::make_shared<Environment>(env);
-	auto elems = evaluate_value(_for->_elem, env);
-	if (elems->type != Object::Type::Array) {
-		for_elem_error(elems->typeOf());
-		return make_error();
-	}
-	auto arr = std::dynamic_pointer_cast<Array>(elems);
-	for (auto i : arr->elements) {
-		innerEnv->set(_for->_var->toString(), i);
-		_res = evaluate_one(_for->_body, innerEnv);
-		if (_res->isReturn) {
-			return _res;
-		}
-	}
-	return std::make_shared<Null>();
+    std::shared_ptr<Object> _res;
+    auto innerEnv = std::make_shared<Environment>(env);
+    auto elems = evaluate_value(_for->_elem, env);
+    if (elems->type != Object::Type::Array) {
+        for_elem_error(elems->typeOf());
+        return make_error();
+    }
+    auto arr = std::dynamic_pointer_cast<Array>(elems);
+    for (auto i : arr->elements) {
+        innerEnv->set(_for->_var->toString(), i);
+        _res = evaluate_one(_for->_body, innerEnv);
+        if (_res->isReturn) {
+            return _res;
+        }
+    }
+    return std::make_shared<Null>();
 }
 
 std::shared_ptr<Object> Evaluator::evaluate_id(std::shared_ptr<IdentifierNode> _id, std::shared_ptr<Environment> env) {
-	return env->get(_id->toString());
+    return env->get(_id->toString());
 }
 
 void Evaluator::bind_args(std::vector<std::shared_ptr<Object>> v, std::vector<std::string> name, std::string more, std::shared_ptr<Environment> env) {

@@ -51,8 +51,8 @@ public:
     std::shared_ptr<Object> evaluate_value(std::shared_ptr<Node> _val, std::shared_ptr<Environment> env);
     std::shared_ptr<Object> evaluate_one(std::shared_ptr<Node> _stat, std::shared_ptr<Environment> env);
 public:
-	std::shared_ptr<Object> calcuate_infix(std::shared_ptr<Object> left, std::shared_ptr<Object> right, std::string op);
-	bool isTrue(std::shared_ptr<Object> obj);
+    std::shared_ptr<Object> calcuate_infix(std::shared_ptr<Object> left, std::shared_ptr<Object> right, std::string op);
+    bool isTrue(std::shared_ptr<Object> obj);
 public:
     bool import_file(std::shared_ptr<ImportNode> _imp, std::shared_ptr<Environment> toAttach) {
         std::string filePath = _imp->item;

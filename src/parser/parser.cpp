@@ -164,25 +164,25 @@ std::shared_ptr<Node> Parser::parse_function() {
     while (!shouldEnd() && _current->type != Token::Type::RParan) {
         parse_token();
         std::string _p;
-		if (_current->type == Token::Type::More) {
-			parse_token();
-			if (_current->type != Token::Type::Identifier) {
-				format_error("More-Argument must have a name.");
-				return make_error();
-			}
-			_p = _current->value;
-			parse_token();
-			if (_current->type != Token::Type::RParan) {
-				if (_current->type != Token::Type::Comma) {
-					format_error("Please use ',' to split arguments.");
-				}
-				else {
-					format_error("More-Argument must be the last argument.");
-				}
-				return make_error();
-			}
-			break;
-		}
+        if (_current->type == Token::Type::More) {
+            parse_token();
+            if (_current->type != Token::Type::Identifier) {
+                format_error("More-Argument must have a name.");
+                return make_error();
+            }
+            _p = _current->value;
+            parse_token();
+            if (_current->type != Token::Type::RParan) {
+                if (_current->type != Token::Type::Comma) {
+                    format_error("Please use ',' to split arguments.");
+                }
+                else {
+                    format_error("More-Argument must be the last argument.");
+                }
+                return make_error();
+            }
+            break;
+        }
         if (_current->type != Token::Type::Identifier) {
             format_error("Arguments must have a name.");
             return make_error();
@@ -302,10 +302,10 @@ std::shared_ptr<Node> Parser::parse_function_creation() {
         while (!shouldEnd() && _current->type != Token::Type::RParan) {
             parse_token();
             std::string _p;
-			if (_current->type == Token::Type::More) {
-				format_error("Cannot use More-Argument in constructors.");
-				return make_error();
-			}
+            if (_current->type == Token::Type::More) {
+                format_error("Cannot use More-Argument in constructors.");
+                return make_error();
+            }
             if (_current->type != Token::Type::Identifier) {
                 format_error("Arguments must have a name.");
                 return make_error();
@@ -616,15 +616,15 @@ std::shared_ptr<Node> Parser::parse_call(std::shared_ptr<Node> left) {
     }
     while (_current->type != Token::Type::RParan) {
         parse_token();
-		if (_current->type == Token::Type::More) {
-			parse_token();
-			_node->more = parse_expr();
-			if(_current->type != Token::Type::RParan) {
-				format_error("More-Argument must be the last argument.");
-				return make_error();
-			}
-			break;
-		}
+        if (_current->type == Token::Type::More) {
+            parse_token();
+            _node->more = parse_expr();
+            if(_current->type != Token::Type::RParan) {
+                format_error("More-Argument must be the last argument.");
+                return make_error();
+            }
+            break;
+        }
         _node->args.push_back(parse_expr());
         if (_current->type != Token::Type::Comma && _current->type != Token::Type::RParan) {
             format_error("You should use ',' to split arguments.");
