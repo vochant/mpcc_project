@@ -1,5 +1,7 @@
 # MPCC Project
 
+**Warning:** MPCC Project is not released yet. Before the first release, you cannot compile or run it.
+
 ## Introduction
 
 **MPCC Project** is a cross-platform integration tool for MPC programming language based on C++. MPC means Mirekintoc's "Portable & Customizable" programming language. It has a very small source code, which does not take too much time to understand, and is easy to modify, and also has a convenient plug-in loading scheme.
@@ -9,7 +11,7 @@
 print("Hello World");
 ```
 
-MPC is a scripted, explanatory, strongly typed dynamic programming language that stores code logic in the from of AST. The code can be easily converted to a binary format to save space, and this process is completely reversible (but it will lose code annotations, format and partial grammar! For example, `public` will become `var`, `constructor(a, b) {}` will become `var __spec_constructor2 = function(a, b) {}`)
+MPC is a scripted, explanatory, strongly typed dynamic programming language that stores code logic in the from of AST. The code can be easily converted to a binary format to save space, and this process is completely reversible (but it will lose code annotations, format and partial grammar! For example, `public` will become `var`, `constructor(a, b) {}` will become `var __spec_constructor0_2 = function(a, b) {}`)
 
 ```mpc
 class Integer {
@@ -32,7 +34,7 @@ class Integer {
 let a = Integer(114514);
 ```
 
-MPC is object-oriented, supports classes, encapsulation, constructors, destructors, but not inheritance, polymorphism, etc.
+MPC is object-oriented, supports classes, encapsulation, constructors, destructors, inheritance, polymorphism, etc.
 
 ## Building & Running
 
@@ -183,7 +185,7 @@ To create a plugin, you can follow the following steps:
 MPC provides the following data types by default. Except for Class, Native Data and Instance, which have non fixed type strings, they all have fixed type strings. The provided data types are as follows:
 
 ```plaintext
-Integer Float Boolean Array Class Instance Enumerate Object String Function NativeData NativeFunction Error Null
+Integer Float Boolean Array Class Instance Enumerate String Function NativeData NativeFunction Error Null
 ```
 
 The `typestr` function provided in the `type-utils` library located in the file `include/registry/typeutils.hpp` can retrieve the type of a value. The type of a class is the same as the type of its instance.
@@ -203,6 +205,9 @@ The following is the default provided libraries:
 | type-utils | include/registry/type_utils.hpp | Provide functions such as type conversion and type string | All |
 | system | include/registry/system.hpp | Provide the ability to execute system commands | All |
 | math | include/registry/math.hpp | Provide simple mathematical functions | All |
+| algorithm | include/registry/algorithm.hpp | Provide common algorithms and methods | All |
+| base | include/registry/base.hpp | Provide some basical language features | All |
+| config | include/registry/config.hpp | Change evaluator config | All |
 
 Users can also load the following built-in libraries according to their own needs:
 
