@@ -36,6 +36,17 @@ let a = Integer(114514);
 
 MPC is object-oriented, supports classes, encapsulation, constructors, destructors, inheritance, polymorphism, etc.
 
+## TODO
+
+[x] Inheritance & Polymorphism
+[ ] break, continue, else-extra
+[ ] const for function arguments
+[ ] More Arguments Anywhere for calling & array
+[ ] Object(Map)
+[ ] Function Binding
+[ ] Syndax Extra
+[ ] Lazy Mode (negative width, lambda or native constructors, etc.)
+
 ## Building & Running
 
 ### Operating System
@@ -93,12 +104,6 @@ To generate a binary file:
 
 ```shell
 mpcc -c <inputFileName> <outputFileName>
-```
-
-To change stdin/stdout:
-
-```shell
-mpcc -i <inputFile> -o <outputFile> ...
 ```
 
 To get additional information:
