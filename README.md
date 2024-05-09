@@ -12,7 +12,7 @@
 print("Hello World");
 ```
 
-MPC is a scripted, explanatory, strongly typed dynamic programming language that stores code logic in the from of AST. The code can be easily converted to a binary format to save space, and this process is completely reversible (but it will lose code annotations, format and partial grammar! For example, `public` will become `var`, `constructor(a, b) {}` will become `var __spec_constructor0_2 = function(a, b) {}`)
+MPC is a scripted, explanatory, strongly typed dynamic programming language that stores code logic in the from of AST. The code can be easily converted to a binary format to save space!
 
 ```mpc
 class Integer {
@@ -212,7 +212,7 @@ The following is the default provided libraries:
 | system | include/registry/system.hpp | Provide the ability to execute system commands | All |
 | math | include/registry/math.hpp | Provide simple mathematical functions | All |
 | algorithm | include/registry/algorithm.hpp | Provide common algorithms and methods | All |
-| base | include/registry/base.hpp | Provide some basical language features | All |
+| base | include/registry/base.hpp | Provide some basic language features | All |
 | config | include/registry/config.hpp | Change evaluator config | All |
 
 Users can also load the following built-in libraries according to their own needs:
