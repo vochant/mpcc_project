@@ -1,6 +1,7 @@
 # MPCC Project
 
-**Warning:** MPCC Project is not released yet. Before the first release, you cannot compile or run it.
+> [!CAUTION]
+> MPCC Project is not released yet. Before the first release, you cannot compile or run it.
 
 ## Introduction
 
