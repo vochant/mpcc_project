@@ -38,14 +38,14 @@ MPC is object-oriented, supports classes, encapsulation, constructors, destructo
 
 ## TODO
 
-[x] Inheritance & Polymorphism
-[ ] break, continue, else-extra
-[ ] const for function arguments
-[ ] More Arguments Anywhere for calling & array
-[ ] Object(Map)
-[ ] Function Binding
-[ ] Syndax Extra
-[ ] Lazy Mode (negative width, lambda or native constructors, etc.)
+- [x] Inheritance & Polymorphism
+- [ ] break, continue, else-extra
+- [ ] const for function arguments
+- [ ] More Arguments Anywhere for calling & array
+- [ ] Object(Map)
+- [ ] Function Binding
+- [ ] Syndax Extra
+- [ ] Lazy Mode (negative width, lambda or native constructors, etc.)
 
 ## Building & Running
 
