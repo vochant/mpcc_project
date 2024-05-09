@@ -1,6 +1,6 @@
 #pragma once
 
-#include "object/base.hpp"
+#include "object/environment.hpp"
 #include "object/null.hpp"
 
 #include <functional>
@@ -14,9 +14,9 @@ public:
     typedef std::shared_ptr<Object> valuetype;
     typedef std::vector<valuetype> arglist;
     typedef std::pair<Result, valuetype> resulttype;
-    typedef std::function<resulttype(arglist)> native_func;
+    typedef std::function<resulttype(arglist, std::shared_ptr<Environment>)> native_func;
     native_func func;
-    NativeFunction(native_func inner = [](arglist args)->resulttype {
+    NativeFunction(native_func inner = [](arglist args, std::shared_ptr<Environment> env)->resulttype {
         return std::make_pair(Result::OK, std::make_shared<Null>());
     }) : func(inner), Object(Object::Type::NativeFunction) {}
 public:

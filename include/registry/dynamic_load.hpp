@@ -16,7 +16,7 @@ public:
         env->set("load", std::make_shared<NativeFunction>(load));
     }
 private:
-    static NativeFunction::resulttype load(NativeFunction::arglist args) {
+    static NativeFunction::resulttype load(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
         if (args.size() != 2) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }

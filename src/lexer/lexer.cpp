@@ -386,5 +386,11 @@ std::shared_ptr<Token> Lexer::parseNext() {
 std::set<std::string> Lexer::reserved = {
     "__level__",
     "__builtin__",
-    "__null__"
+    "__null__",
+	"__indexes__",
+	"__construct__",
+	"__reserved__",
+	"__system__",
+	"__external__",
+	"__test__"
 };

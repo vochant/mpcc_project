@@ -5,6 +5,7 @@
 #include "registry/io.hpp"
 #include "registry/constants.hpp"
 #include "registry/fileio.hpp"
+#include "registry/base.hpp"
 
 #include "program/program.hpp"
 
@@ -19,5 +20,10 @@ public:
         _target->loadLibrary(std::make_shared<IOPlugin>());
         _target->loadLibrary(std::make_shared<ConstantsPlugin>());
         _target->loadLibrary(std::make_shared<FileIOPlugin>());
+
+		// DO NOT DELETE THIS!!!
+		// Classes Inheritance cannot run without it.
+		// Dynamic Variable Controlling cannot run without it.
+		_target->loadLibrary(std::make_shared<BasePlugin>());
     }
 };

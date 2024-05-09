@@ -12,7 +12,7 @@ unsigned long long _cert;
 
 size_t _line, _column;
 
-bool hasError, doImport, assignBeforeDeclare;
+bool hasError, doImport, assignBeforeDeclare, errorAsCrash;
 
 void err_begin(bool _abstract = false) {
     hasError = true;

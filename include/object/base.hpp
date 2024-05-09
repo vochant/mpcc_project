@@ -37,6 +37,14 @@ public:
     std::string typeOf() const {
         return typeOf(type);
     }
+	static std::shared_ptr<Object> toConstant(std::shared_ptr<Object> obj) {
+		obj->markMutable(false);
+		return obj;
+	}
+	static std::shared_ptr<Object> toCommon(std::shared_ptr<Object> obj) {
+		obj->isReturn = false;
+		return obj;
+	}
 public:
     bool isMutable, isReturn;
     virtual void storeInto(std::ostream& os) const = 0;

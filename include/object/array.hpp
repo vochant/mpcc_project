@@ -9,6 +9,7 @@ class Array : public Object {
 public:
     std::vector<std::shared_ptr<Object>> elements;
     Array() : Object(Object::Type::Array) {}
+	Array(std::vector<std::shared_ptr<Object>> elements) : elements(elements), Object(Object::Type::Array) {}
 public:
     std::string toString() const override {
         std::stringstream result;

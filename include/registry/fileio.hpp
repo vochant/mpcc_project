@@ -18,8 +18,8 @@ public:
         env->set("open_mode", std::make_shared<Enumerate>(std::map<std::string, unsigned long long>{
             { "read", 0 }, { "write", 1 }, { "append", 2 }, { "binary_read", 3 }, { "binary_write", 4 }, { "binary_append", 5 }
         }));
-        env->set("open", std::make_shared<NativeFunction>(open));
-        env->set("isok", std::make_shared<NativeFunction>(isok));
+        env->set("fopen", std::make_shared<NativeFunction>(open));
+        env->set("fisok", std::make_shared<NativeFunction>(isok));
         env->set("isfailed", std::make_shared<NativeFunction>(isfailed));
         env->set("fgetline", std::make_shared<NativeFunction>(getLine));
         env->set("fgetint", std::make_shared<NativeFunction>(getInt));
@@ -27,10 +27,10 @@ public:
         env->set("fgetchar", std::make_shared<NativeFunction>(getChar));
         env->set("fgetstring", std::make_shared<NativeFunction>(getString));
         env->set("fgetbool", std::make_shared<NativeFunction>(getBool));
-        env->set("close", std::make_shared<NativeFunction>(close));
+        env->set("fclose", std::make_shared<NativeFunction>(close));
     }
 private:
-    static NativeFunction::resulttype open(NativeFunction::arglist args) {
+    static NativeFunction::resulttype open(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
         std::string toOpen;
         unsigned long long openMode;
         if (args.size() != 2) {
@@ -76,7 +76,7 @@ private:
     static std::shared_ptr<std::fstream> dataCast(std::shared_ptr<NativeData> ptr) {
         return std::any_cast<std::shared_ptr<std::fstream>>(ptr->value);
     }
-    static NativeFunction::resulttype isok(NativeFunction::arglist args) {
+    static NativeFunction::resulttype isok(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
         if (args.size() != 1) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -89,7 +89,7 @@ private:
         }
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<Boolean>(dataCast(_cast)->good()));
     }
-    static NativeFunction::resulttype isfailed(NativeFunction::arglist args) {
+    static NativeFunction::resulttype isfailed(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
         if (args.size() != 1) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -102,7 +102,7 @@ private:
         }
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<Boolean>(dataCast(_cast)->fail()));
     }
-    static NativeFunction::resulttype fprint(NativeFunction::arglist args) {
+    static NativeFunction::resulttype fprint(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
         if (args.size() < 1) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -118,7 +118,7 @@ private:
         }
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<Null>());
     }
-    static NativeFunction::resulttype fprintln(NativeFunction::arglist args) {
+    static NativeFunction::resulttype fprintln(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
         if (args.size() < 1) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -136,7 +136,7 @@ private:
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<Null>());
     }
 
-    static NativeFunction::resulttype getLine(NativeFunction::arglist args) {
+    static NativeFunction::resulttype getLine(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
         if (args.size() != 1) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -152,7 +152,7 @@ private:
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<String>(str));
     }
 
-    static NativeFunction::resulttype getInt(NativeFunction::arglist args) {
+    static NativeFunction::resulttype getInt(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
         if (args.size() != 1) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -168,7 +168,7 @@ private:
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<Integer>(_val));
     }
 
-    static NativeFunction::resulttype getFloat(NativeFunction::arglist args) {
+    static NativeFunction::resulttype getFloat(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
         if (args.size() != 1) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -184,7 +184,7 @@ private:
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<Float>(_val));
     }
 
-    static NativeFunction::resulttype getChar(NativeFunction::arglist args) {
+    static NativeFunction::resulttype getChar(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
         if (args.size() != 1) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -200,7 +200,7 @@ private:
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<String>(ch));
     }
 
-    static NativeFunction::resulttype getString(NativeFunction::arglist args) {
+    static NativeFunction::resulttype getString(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
         if (args.size() != 1) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -216,7 +216,7 @@ private:
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<String>(str));
     }
 
-    static NativeFunction::resulttype getBool(NativeFunction::arglist args) {
+    static NativeFunction::resulttype getBool(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
         if (args.size() != 1) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -238,7 +238,7 @@ private:
         }
     }
 
-    static NativeFunction::resulttype close(NativeFunction::arglist args) {
+    static NativeFunction::resulttype close(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
         if (args.size() != 1) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
