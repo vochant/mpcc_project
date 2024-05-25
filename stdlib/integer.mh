@@ -1,0 +1,439 @@
+// <integer.mh> - MPC Long Integer Support
+
+// Copyright(C) 2019-2024 Minphtis Develop
+// Copyright(C) 2009-2024 Mirekintoc Void
+
+// This file is a part of the MPCC project and resolved MPC
+// Integer class. This file is a free-software and under
+// the MIT License.
+
+// Translated from cpputil/integer (C) Mirekintoc Void.
+
+class Integer {
+	private _num = [], length, flag = false;
+
+	private _init_from_int = function(x) {
+		if (flag = (x < 0)) x = -x;
+		length = 0;
+		while (x) {
+			_num.push(x % 10);
+			x /= 10;
+			length++;
+		}
+	}
+
+	private _check = function() {
+		while (length && _num[length - 1] == 0) {
+			length--;
+		}
+		if (length == 0) flag = false;
+	}
+
+	public Sign = function() { flag }
+
+	public Length = function() { length }
+
+	public operator> = function(x) {
+		cltcheck(x);
+		if (!flag && x.flag) return true;
+		if (flag && !x.flag) return false;
+		if (flag) {
+			if (length < x.length) return true;
+			if (length > x.length) return false;
+			for i(range(length - 1, 0)) {
+				if (_num[i] > x._num(i)) return false;
+				if (_num[i] < x._num(i)) return true;
+			}
+		}
+		else {
+			if (length > x.length) return true;
+			if (length < x.length) return false;
+			for i(range(length - 1, 0)) {
+				if (_num[i] > x._num(i)) return true;
+				if (_num[i] < x._num(i)) return false;
+			}
+		}
+		return false;
+	}
+
+	public operator>= = function(x) {
+		cltcheck(x);
+		if (!flag && x.flag) return true;
+		if (flag && !x.flag) return false;
+		if (flag) {
+			if (length < x.length) return true;
+			if (length > x.length) return false;
+			for i(range(length - 1, 0)) {
+				if (_num[i] > x._num(i)) return false;
+				if (_num[i] < x._num(i)) return true;
+			}
+		}
+		else {
+			if (length > x.length) return true;
+			if (length < x.length) return false;
+			for i(range(length - 1, 0)) {
+				if (_num[i] > x._num(i)) return true;
+				if (_num[i] < x._num(i)) return false;
+			}
+		}
+		return true;
+	}
+
+	public operator< = function(x) {
+		cltcheck(x);
+		if (!flag && x.flag) return false;
+		if (flag && !x.flag) return true;
+		if (!flag) {
+			if (length < x.length) return true;
+			if (length > x.length) return false;
+			for i(range(length - 1, 0)) {
+				if (_num[i] > x._num(i)) return false;
+				if (_num[i] < x._num(i)) return true;
+			}
+		}
+		else {
+			if (length > x.length) return true;
+			if (length < x.length) return false;
+			for i(range(length - 1, 0)) {
+				if (_num[i] > x._num(i)) return true;
+				if (_num[i] < x._num(i)) return false;
+			}
+		}
+		return false;
+	}
+
+	public operator<= = function(x) {
+		cltcheck(x);
+		if (!flag && x.flag) return false;
+		if (flag && !x.flag) return true;
+		if (!flag) {
+			if (length < x.length) return true;
+			if (length > x.length) return false;
+			for i(range(length - 1, 0)) {
+				if (_num[i] > x._num(i)) return false;
+				if (_num[i] < x._num(i)) return true;
+			}
+		}
+		else {
+			if (length > x.length) return true;
+			if (length < x.length) return false;
+			for i(range(length - 1, 0)) {
+				if (_num[i] > x._num(i)) return true;
+				if (_num[i] < x._num(i)) return false;
+			}
+		}
+		return true;
+	}
+
+	public operator== = function(x) {
+		cltcheck(x);
+		if (flag != x.flag) return false;
+		if (length != x.length) return false;
+		return _num == x._num;
+	}
+
+	public operator!= = function(x) {
+		cltcheck(x);
+		if (flag != x.flag) return true;
+		if (length != x.length) return true;
+		return _num != x._num;
+	}
+
+	public abs = function(...args) {
+		if (args.length > 1) return error();
+		if (args.length) {
+			cltcheck(args[0]);
+			if (args[0].flag) args[0] = -args[0];
+			return args[0];
+		}
+		let copy = this;
+		if (copy.flag) copy = -copy;
+		return copy;
+	}
+
+	private _positive_sum = function(x) {
+		cltcheck(x);
+		let _length = max(length, x.length);
+		let result = Integer();
+		result.flag = flag;
+		result.length = _length;
+		let _up = false, tmp;
+		for i(range(0, _length - 1)) {
+			tmp = _up ? 1 : 0;
+			if (i < length) tmp += _num[i];
+			if (i < x.length) tmp += x._num[i];
+			if (_up = (tmp >= 10)) tmp -= 10;
+			result._num.push(tmp);
+		}
+		if (_up) {
+			result._num.push(1);
+			result.length++;
+		}
+		return result;
+	}
+
+	public prefix- = function() {
+		let result = this;
+		if (result != 0) result.flag = !result.flag;
+		return result;
+	}
+
+	public operator- = function(x) {
+		cltcheck(x);
+		if (flag != x.flag) {
+			return _positive_sum(-x);
+		}
+		if (Abs() < x.Abs()) {
+			return -(x - this);
+		}
+		let result = Integer();
+		result.flag = x.flag;
+		result.length = length;
+		let ne = false, tmp;
+		for i(range(0, length - 1)) {
+			tmp = _num[i] + 10 - (ne ? 1 : 0);
+			if (i < x.length) tmp -= x._num[i];
+			if (!(ne = (tmp < 10))) {
+				tmp -= 10;
+			}
+			result._num.push(tmp);
+		}
+		result._check();
+		return result;
+	}
+
+	public operator+ = function(x) {
+		cltcheck(x);
+		let _length = max(length, x.length);
+		let result = Integer();
+		if (flag == x.flag) {
+			return _positive_sum(x);
+		}
+		else {
+			return this - (-x);
+		}
+	}
+
+	public operator* = function(x) {
+		cltcheck(x);
+		let result = Integer();
+		result.flag = flag ^ x.flag;
+		result.length = length + x.length;
+		for i(range(0, result.length - 1)) result._num.push(0);
+		for i(range(0, length - 1)) {
+			for j(range(0, x.length - 1)) {
+				result._num[i + j] += _num[i] * x._num[j];
+				k = i + j;
+				while (result._num[k] >= 10) {
+					result._num[k + 1] += result._num[k] / 10;
+					result._num[k] %= 10;
+					k++;
+				}
+			}
+		}
+		result._check();
+		return result;
+	}
+
+	public slice = function(begin, last) {
+		typecheck(begin, "integer");
+		typecheck(end, "integer");
+		let result = Integer(), i = 0;
+		result.flag = false;
+		while (i < last && begin + i < length) {
+			result._num.push(_num[begin + i]);
+			i++;
+		}
+		result.length = i;
+		return result;
+	}
+
+	public operator+=(x) {
+		cltcheck(x);
+		return this = (this + x);
+	}
+
+	public operator-=(x) {
+		cltcheck(x);
+		return this = (this - x);
+	}
+
+	public operator*=(x) {
+		cltcheck(x);
+		return this = (this * x);
+	}
+
+	public science = function(x) {
+		typecheck(x, "integer");
+		let result = Integer();
+		result.flag = false;
+		result.length = x + 1;
+		for i(range(0, x - 1)) {
+			result._num.push(0);
+		}
+		result._num.push(1);
+		return result;
+	}
+
+	public operator/ = function(_x) {
+		cltcheck(x);
+		let x = _x.Abs();
+		if (this < x) return 0;
+		let result = Integer(), base = Integer(), tmp = Abs();
+		result.flag = flag ^ _x.flag;
+		result.length = length - x.length + 1;
+		for i(range(0, result.length - 1)) {
+			result._num.push(0);
+		}
+		for i(range(0, result.length - 1)) {
+			base = tmp.Slice(result.length - i - 1, x.length + 1);
+			let res = 9;
+			while (res >= 0 && x * res > base) {
+				res--;
+			}
+			result._num[result.length - i - 1] = res;
+			tmp -= x * science(result.length - i - 1) * res;
+		}
+		result._check();
+	}
+
+	public operator% = function(_x) {
+		cltcheck(x);
+		let x = _x.Abs();
+		if (Abs() < x) return Sign() ? -Abs() : Abs();
+		let base = Integer(), tmp = Abs();
+		let last = length - x.length + 1;
+		for i(range(0, last)) {
+			base = tmp.Slice(last - i - 1, x.length + 1);
+			let res = 9;
+			while (res >= 0 && x * res > base) {
+				res--;
+			}
+			tmp -= x * science(last - i - 1) * res;
+		}
+		tmp._check();
+		if (Sign() ^ _x.Sign()) return -tmp;
+		else return tmp;
+	}
+
+	public operator/= = function(x) {
+		cltcheck(x);
+		return this = (this / x);
+	}
+
+	public operator%= = function(x) {
+		cltcheck(x);
+		return this = (this / x);
+	}
+
+	public pow = function(...args) {
+		if (args.len() == 1) {
+			typecheck(args[0], "integer");
+			let result = Integer(1), base = this, sup = args[0];
+			while (sup >= 1) {
+				if (sup & 1) {
+					result *= base;
+				}
+				base *= base;
+				sup >>= 1;
+			}
+			return result;
+		}
+		else if (args.len() == 2) {
+			cltcheck(args[0]);
+			typecheck(args[1], "integer");
+			let result = Integer(1), base = args[0], sup = args[1];
+			while (sup >= 1) {
+				if (sup & 1) {
+					result *= base;
+				}
+				base *= base;
+				sup >>= 1;
+			}
+			return result;
+		}
+		else return error();
+	}
+
+	private _read_charset = function(c) {
+		typecheck(c, "string");
+		if (c.len() != 1) return error();
+		if ('0' <= c && c <= '9') return ch ^ 48;
+		if ('a' <= c && c <= 'f') return (ch ^ 96) + 9;
+		if ('A' <= c && c <= 'F') return (ch ^ 64) + 9;
+		return 32;
+	}
+
+	private _init_from_string(x) {
+		length = 0;
+		let sl = x.len(), ptr = 0, _mul = Integer(), base = 10, bit, _f;
+		if (_f = (x[0] == '-')) {
+			ptr = 1;
+		}
+		if (x[ptr] == '0') {
+			if (sl == ptr + 1) {
+				return;
+			}
+			if (x[ptr + 1] == 'x') {
+				base = 16;
+				ptr += 2;
+			}
+			else if (x[ptr + 1] == 'b') {
+				base = 2;
+				ptr += 2;
+			}
+			else {
+				base = 8;
+				ptr++;
+			}
+		}
+		for i(range(sl - 1, ptr)) {
+			bit = _read_charset(x[i]);
+			if (bit >= base) {
+				length = 0;
+				return error();
+			}
+			this += _mul * bit;
+			_mul *=base;
+		}
+		flag = _f;
+	}
+
+	constructor() {
+		length = 0;
+	}
+
+	constructor(v) {
+		if (typestr(v) == "integer") {
+			_init_from_int(v);
+		}
+		if (typestr(v) == "string") {
+			_init_from_string(v);
+		}
+		if (cltype(v)) {
+			this = v;
+		}
+	}
+
+	public toString = function() {
+		if (length == 0) return "0";
+		let result = flag ? "-" : "";
+		for i(range(length - 1, 0)) {
+			result += _num[i].str();
+		}
+		return result;
+	}
+
+	private _PRINT_ = function() {
+		__print__(toString());
+	}
+
+	public Print = function() {
+		__print__(toString());
+	}
+
+	let Digit = function(pos) {
+		typecheck(pos);
+		_num[length - 1 - pos];
+	}
+}
