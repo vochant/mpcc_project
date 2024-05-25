@@ -14,16 +14,12 @@ public:
 
 class Environment {
 public:
-    std::shared_ptr<Environment> _parent;
+	std::shared_ptr<Object>* _this;
+    Environment* _parent;
     std::map<std::string, Item> values;
     bool globalLock;
 public:
-    std::shared_ptr<Object> get(const std::string _name) const {
-        auto it = values.find(_name);
-        if (it != values.end()) return it->second.value;
-        else if (_parent) return _parent->get(_name);
-        else return std::make_shared<Null>();
-    }
+    std::shared_ptr<Object> get(const std::string _name);
     void set(const std::string _name, const std::shared_ptr<Object> v) {
         values[_name] = Item{Item::AccessToken::Public, v};
     }
@@ -40,6 +36,7 @@ public:
         auto it = values.find(_name);
         if (it == values.end()) {
             values.insert(std::make_pair(_name, Item{Item::AccessToken::Public, v->copy()}));
+			values[_name].value->markMutable(true);
         }
     }
     Item::AccessToken getAT(const std::string _name) const {
@@ -81,7 +78,11 @@ public:
         }
     }
 public:
-    Environment(std::shared_ptr<Environment> _parent = nullptr) : _parent(_parent), globalLock(false) {
+    Environment(std::shared_ptr<Environment> _parent = nullptr) : _parent(_parent.get()), globalLock(false) {
+        // values.insert(std::make_pair("super", Item{Item::AccessToken::Public, _parent}));
+    }
+
+	Environment(Environment* _parent = nullptr) : _parent(_parent), globalLock(false) {
         // values.insert(std::make_pair("super", Item{Item::AccessToken::Public, _parent}));
     }
 };

@@ -7,9 +7,11 @@
 
 class Class : public Object {
 public:
-    std::shared_ptr<Environment> inner, outer;
+    std::shared_ptr<Environment> inner;
+	Environment* outer;
     unsigned long long _signature;
-    Class(std::shared_ptr<Environment> outer) : outer(outer), Object(Object::Type::Class), inner(std::make_shared<Environment>(outer)), _signature(_cert++) {}
+    Class(Environment* outer) : outer(outer), Object(Object::Type::Class), inner(std::make_shared<Environment>(outer)), _signature(_cert++) {}
+	Class(std::shared_ptr<Environment> outer) : outer(outer.get()), Object(Object::Type::Class), inner(std::make_shared<Environment>(outer)), _signature(_cert++) {}
 public:
     std::string toString() const override {
         return "Class:" + inner->toString();

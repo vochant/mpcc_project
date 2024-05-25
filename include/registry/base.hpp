@@ -41,7 +41,7 @@ public:
 	 * @param env Environment
 	 * @return NativeFunction::resulttype (Status & Return-Value)
 	 */
-	static NativeFunction::resulttype construct_next(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+	static NativeFunction::resulttype construct_next(NativeFunction::arglist args, Environment* env) {
 		auto _construct_level = env->get("__construct__");
 		if (_construct_level->type != Object::Type::Integer) {
 			return std::make_pair(NativeFunction::Result::UNHANDLED_ERR, std::make_shared<Null>());
@@ -75,7 +75,7 @@ public:
 	 * @param env Environment
 	 * @return NativeFunction::resulttype (Status & Return-Value)
 	 */
-	static NativeFunction::resulttype dynamic_let(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+	static NativeFunction::resulttype dynamic_let(NativeFunction::arglist args, Environment* env) {
 		if (args.size() != 2) {
 			return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Null>());
 		}
@@ -93,7 +93,7 @@ public:
 	 * @param env Environment
 	 * @return NativeFunction::resulttype (Status & Return-Value)
 	 */
-	static NativeFunction::resulttype dynamic_remove(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+	static NativeFunction::resulttype dynamic_remove(NativeFunction::arglist args, Environment* env) {
 		if (args.size() != 1) {
 			return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Null>());
 		}
@@ -115,7 +115,7 @@ public:
 	 * @param env Environment
 	 * @return NativeFunction::resulttype (Status & Return-Value)
 	 */
-	static NativeFunction::resulttype dynamic_access(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+	static NativeFunction::resulttype dynamic_access(NativeFunction::arglist args, Environment* env) {
 		if (args.size() != 1) {
 			return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Null>());
 		}
@@ -136,7 +136,7 @@ public:
 	 * @param env Environment
 	 * @return NativeFunction::resulttype (Status & Return-Value)
 	 */
-	static NativeFunction::resulttype emulate_up(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+	static NativeFunction::resulttype emulate_up(NativeFunction::arglist args, Environment* env) {
 		if (args.size() < 2) {
 			return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Null>());
 		}
@@ -185,7 +185,7 @@ public:
 	 * @param env Environment
 	 * @return NativeFunction::resulttype (Status & Return-Value)
 	 */
-	static NativeFunction::resulttype nisolated(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+	static NativeFunction::resulttype nisolated(NativeFunction::arglist args, Environment* env) {
 		if (args.size() < 1) {
 			return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Null>());
 		}

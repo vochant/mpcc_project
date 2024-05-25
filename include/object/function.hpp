@@ -11,10 +11,11 @@ class Function : public Object {
 public:
     std::shared_ptr<Node> inner;
     std::vector<std::string> args;
-    std::shared_ptr<Environment> outerEnv;
+    Environment* outerEnv;
     bool isLambda;
     std::string moreName;
-    Function(std::shared_ptr<FunctionNode> _node, std::shared_ptr<Environment> outerEnv) : inner(_node->inner), args(_node->args), isLambda(_node->isLambda), outerEnv(outerEnv), Object(Object::Type::Function) {}
+    Function(std::shared_ptr<FunctionNode> _node, std::shared_ptr<Environment> outerEnv) : inner(_node->inner), args(_node->args), isLambda(_node->isLambda), outerEnv(outerEnv.get()), Object(Object::Type::Function) {}
+	Function(std::shared_ptr<FunctionNode> _node, Environment* outerEnv) : inner(_node->inner), args(_node->args), isLambda(_node->isLambda), outerEnv(outerEnv), Object(Object::Type::Function) {}
 public:
     std::string toString() const override {
         std::stringstream ss;

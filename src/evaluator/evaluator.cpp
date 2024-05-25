@@ -9,7 +9,7 @@
  * @param env Environment
  * @return std::shared_ptr<Object> Result
  */
-std::shared_ptr<Object> Evaluator::evaluate_program(std::shared_ptr<ProgramNode> _prog, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_program(std::shared_ptr<ProgramNode> _prog, Environment* env) {
     auto _inner = _prog->mainRegion;
     if (_inner->type != Node::Type::Region) {
         program_error();
@@ -38,10 +38,14 @@ std::shared_ptr<Object> Evaluator::evaluate_constant(std::shared_ptr<ConstantNod
  * @param no_isolate Isolate or not.
  * @return std::shared_ptr<Object> Result
  */
-std::shared_ptr<Object> Evaluator::evaluate_region(std::shared_ptr<RegionNode> _region, std::shared_ptr<Environment> env, bool no_isolate = true) {
-	std::shared_ptr<Environment> to_use;
+std::shared_ptr<Object> Evaluator::evaluate_region(std::shared_ptr<RegionNode> _region, Environment* env, bool no_isolate = true) {
+	std::shared_ptr<Environment> own;
+	Environment* to_use;
 	if (no_isolate) to_use = env;
-	else to_use = std::make_shared<Environment>(env);
+	else {
+		own = std::make_shared<Environment>(env);
+		to_use = own.get();
+	}
     std::shared_ptr<Object> res = std::make_shared<Null>();
     for (auto i : _region->statements) {
         res = evaluate_one(i, to_use);
@@ -52,11 +56,11 @@ std::shared_ptr<Object> Evaluator::evaluate_region(std::shared_ptr<RegionNode> _
     return Object::toConstant(res->copy());
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_function(std::shared_ptr<FunctionNode> _func, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_function(std::shared_ptr<FunctionNode> _func, Environment* env) {
     return std::make_shared<Function>(_func, env);
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call, Environment* env) {
     auto body = evaluate_value(_call->to_run, env);
     std::vector<std::shared_ptr<Object>> args;
     for (auto i : _call->args) {
@@ -92,7 +96,7 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
             node_type_error();
             return make_error();
         }
-        return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_funcCast->inner), innerEnv));
+        return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_funcCast->inner), innerEnv.get()));
     }
     else if (body->type == Object::Type::Class) {
         auto _classCast = std::dynamic_pointer_cast<Class>(body);
@@ -119,7 +123,8 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
             return make_error();
         }
         _inst->inner->globalLock = true;
-        evaluate_region(std::dynamic_pointer_cast<RegionNode>(_func->inner), _innerEnv);
+        evaluate_region(std::dynamic_pointer_cast<RegionNode>(_func->inner), _innerEnv.get());
+		_inst->inner->_this = &std::dynamic_pointer_cast<Object>(_inst);
         return _inst;
     }
     else if (body->type == Object::Type::Instance) {
@@ -152,20 +157,20 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
                 unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
                 return make_error();
             }
-            return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_func->inner), _innerEnv));
+            return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_func->inner), _innerEnv.get()));
         }
         else if (_cobj->type == Object::Type::NativeFunction) {
             auto _func = std::dynamic_pointer_cast<NativeFunction>(_cobj);
-            auto[_stat, _rval] = _func->func(args, env);
-            if (_stat == NativeFunction::Result::FORMAT_ERR) {
+            auto[_sta, _rval] = _func->_func(args, env);
+            if (_sta == NativeFunction::Result::FORMAT_ERR) {
                 args_size_error("NativeFunction reported FORMAT_ERROR.");
                 return make_error();
             }
-            else if (_stat == NativeFunction::Result::DATA_ERR) {
+            else if (_sta == NativeFunction::Result::DATA_ERR) {
                 arg_data_error();
                 return make_error();
             }
-            else if (_stat == NativeFunction::Result::UNHANDLED_ERR) {
+            else if (_sta == NativeFunction::Result::UNHANDLED_ERR) {
                 unhandled_error("NativeFunction reported UNHANDLED_ERROR.");
                 return make_error();
             }
@@ -180,16 +185,16 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
     }
     else if (body->type == Object::Type::NativeFunction) {
         auto _funcCast = std::dynamic_pointer_cast<NativeFunction>(body);
-        auto[_stat, _rval] = _funcCast->func(args, env);
-        if (_stat == NativeFunction::Result::FORMAT_ERR) {
+        auto[_sta, _rval] = _funcCast->_func(args, env);
+        if (_sta == NativeFunction::Result::FORMAT_ERR) {
             args_size_error("NativeFunction reported FORMAT_ERROR");
             return make_error();
         }
-        else if (_stat == NativeFunction::Result::DATA_ERR) {
+        else if (_sta == NativeFunction::Result::DATA_ERR) {
             arg_data_error();
             return make_error();
         }
-        else if (_stat == NativeFunction::Result::UNHANDLED_ERR) {
+        else if (_sta == NativeFunction::Result::UNHANDLED_ERR) {
             unhandled_error("NativeFunction reported UNHANDLED_ERROR.");
             return make_error();
         }
@@ -203,7 +208,7 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
     }
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_array(std::shared_ptr<ArrayNode> _arr, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_array(std::shared_ptr<ArrayNode> _arr, Environment* env) {
     auto arr = std::make_shared<Array>();
     for (auto i : _arr->elements) {
         arr->elements.push_back(evaluate_value(i, env));
@@ -212,7 +217,7 @@ std::shared_ptr<Object> Evaluator::evaluate_array(std::shared_ptr<ArrayNode> _ar
     return arr;
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_assign(std::shared_ptr<AssignNode> _assign, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_assign(std::shared_ptr<AssignNode> _assign, Environment* env) {
     auto w = evaluate_value(_assign->left, env);
     if (!w->isMutable) {
         not_mutable_error();
@@ -225,15 +230,25 @@ std::shared_ptr<Object> Evaluator::evaluate_assign(std::shared_ptr<AssignNode> _
         val = calcuate_infix(w, v, bef);
     }
 	else val = v;
+	if (w->type == Object::Type::Null) {
+		w = v;
+		return Object::toConstant(w->copy());
+	}
     if (w->type != v->type) {
         type_different_error(w->typeOf(), v->typeOf());
         return make_error();
     }
+	if (w->type == Object::Type::Instance) {
+		if (!check_class_relationship(std::dynamic_pointer_cast<Instance>(w)->inner->get("__indexes__"), std::dynamic_pointer_cast<Instance>(v)->inner->get("__indexes__"))) {
+			type_different_error(w->typeOf(), v->typeOf());
+        	return make_error();
+		}
+	}
     w->assign(v);
 	return Object::toConstant(w->copy());
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_class(std::shared_ptr<ClassNode> _class, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_class(std::shared_ptr<ClassNode> _class, Environment* env) {
     std::shared_ptr<Class> cls;
     if (_class->_ext != ":") {
         auto ext = env->get(_class->_ext);
@@ -266,20 +281,20 @@ std::shared_ptr<Object> Evaluator::evaluate_class(std::shared_ptr<ClassNode> _cl
         unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
         return make_error();
     }
-    evaluate_region(std::dynamic_pointer_cast<RegionNode>(_class->inner), cls->inner);
+    evaluate_region(std::dynamic_pointer_cast<RegionNode>(_class->inner), cls->inner.get());
     return cls;
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_if(std::shared_ptr<IfNode> _if, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_if(std::shared_ptr<IfNode> _if, Environment* env) {
     auto _cond = evaluate_value(_if->_cond, env);
     std::shared_ptr<Object> _res;
     if (isTrue(_cond)) {
         auto innerEnv = std::make_shared<Environment>(env);
-        _res = evaluate_one(_if->_then, innerEnv);
+        _res = evaluate_one(_if->_then, innerEnv.get());
     }
     else if (_if->_else) {
         auto innerEnv = std::make_shared<Environment>(env);
-        _res = evaluate_one(_if->_else, innerEnv);
+        _res = evaluate_one(_if->_else, innerEnv.get());
     }
     if (_res->isReturn) {
         return _res;
@@ -287,10 +302,10 @@ std::shared_ptr<Object> Evaluator::evaluate_if(std::shared_ptr<IfNode> _if, std:
     return std::shared_ptr<Null>();
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_creation(std::shared_ptr<CreationNode> _cr, std::shared_ptr<Environment> env) {
-    while (env->_parent) {
-        env = env->_parent;
-    }
+std::shared_ptr<Object> Evaluator::evaluate_creation(std::shared_ptr<CreationNode> _cr, Environment* env) {
+	if (_cr->isGlobal) {
+		while (env->_parent) env = env->_parent;
+	}
     for (auto i : _cr->creations) {
         auto v = evaluate_value(i.second, env);
         std::string _name = i.first;
@@ -329,7 +344,7 @@ std::shared_ptr<Object> Evaluator::evaluate_creation(std::shared_ptr<CreationNod
     return std::make_shared<Null>();
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_enumerate(std::shared_ptr<EnumerateNode> _enum, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_enumerate(std::shared_ptr<EnumerateNode> _enum, Environment* env) {
     std::vector<std::pair<std::string, long long>> v;
     long long _idx = 0;
     for (auto i : _enum->items) {
@@ -340,11 +355,11 @@ std::shared_ptr<Object> Evaluator::evaluate_enumerate(std::shared_ptr<EnumerateN
     return e;
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_expr(std::shared_ptr<ExprNode> _expr, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_expr(std::shared_ptr<ExprNode> _expr, Environment* env) {
     return evaluate_value(_expr->inner, env);
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_for(std::shared_ptr<ForNode> _for, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_for(std::shared_ptr<ForNode> _for, Environment* env) {
     std::shared_ptr<Object> _res = std::make_shared<Null>();
     auto innerEnv = std::make_shared<Environment>(env);
     auto elems = evaluate_value(_for->_elem, env);
@@ -355,7 +370,7 @@ std::shared_ptr<Object> Evaluator::evaluate_for(std::shared_ptr<ForNode> _for, s
     auto arr = std::dynamic_pointer_cast<Array>(elems);
     for (auto i : arr->elements) {
         innerEnv->set(_for->_var->toString(), i);
-        _res = evaluate_one(_for->_body, innerEnv);
+        _res = evaluate_one(_for->_body, innerEnv.get());
         if (_res->isReturn) {
             return _res;
         }
@@ -363,11 +378,11 @@ std::shared_ptr<Object> Evaluator::evaluate_for(std::shared_ptr<ForNode> _for, s
     return std::make_shared<Null>();
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_id(std::shared_ptr<IdentifierNode> _id, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_id(std::shared_ptr<IdentifierNode> _id, Environment* env) {
     return env->get(_id->toString());
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_indecrement(std::shared_ptr<InDecrementNode> _idc, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_indecrement(std::shared_ptr<InDecrementNode> _idc, Environment* env) {
 	auto v = evaluate_value(_idc->body, env);
 	if (v->type == Object::Type::Instance) {
 		std::string _fname = _idc->isAfter ? (_idc->isDecrement ? "operator--" : "operator++") : (_idc->isDecrement ? "prefix--" : "prefix++");
@@ -383,11 +398,11 @@ std::shared_ptr<Object> Evaluator::evaluate_indecrement(std::shared_ptr<InDecrem
                 unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
                 return make_error();
             }
-            return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv));
+            return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv.get()));
         }
         else if (_func->type == Object::Type::NativeFunction) {
             auto _fc = std::dynamic_pointer_cast<NativeFunction>(_func);
-            auto res = _fc->func(NativeFunction::arglist(), env);
+            auto res = _fc->_func(NativeFunction::arglist(), env);
             if (res.first == NativeFunction::Result::FORMAT_ERR) {
                 args_size_error("Increment/Decrement function(native) reported FORMAT_ERROR.");
                 return make_error();
@@ -431,7 +446,7 @@ std::shared_ptr<Object> Evaluator::evaluate_indecrement(std::shared_ptr<InDecrem
     }
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _idx, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _idx, Environment* env) {
 	auto left = evaluate_value(_idx->left, env), index = evaluate_value(_idx->index, env);
 	if (left->type == Object::Type::Instance) {
 		auto func = std::dynamic_pointer_cast<Instance>(left)->inner->getThere("operator[]");
@@ -448,11 +463,11 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 				unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
 				return make_error();
 			}
-			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv));
+			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv.get()));
 		}
 		if (func->type == Object::Type::NativeFunction) {
 			auto _fc = std::dynamic_pointer_cast<NativeFunction>(func);
-            auto res = _fc->func(NativeFunction::arglist{index}, env);
+            auto res = _fc->_func(NativeFunction::arglist{index}, env);
             if (res.first == NativeFunction::Result::FORMAT_ERR) {
                 args_size_error("Index function(native) reported FORMAT_ERROR.");
                 return make_error();
@@ -560,7 +575,7 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 	return make_error();
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_infix(std::shared_ptr<InfixNode> _infix, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_infix(std::shared_ptr<InfixNode> _infix, Environment* env) {
 	auto left = evaluate_value(_infix->left, env);
 	if (_infix->_op == ".") {
 		if (_infix->right->type != Node::Type::Identifier) {
@@ -575,8 +590,12 @@ std::shared_ptr<Object> Evaluator::evaluate_infix(std::shared_ptr<InfixNode> _in
 				return make_error();
 			}
 			if (innerEnv->getAT(str) != Item::AccessToken::Public) {
-				sub_error("Instance member \"" + str + "\" is private.");
-				return make_error();
+				auto cll = innerEnv->getThere("__indexes__");
+				auto clr = env->get("__indexes__");
+				if (!check_class_relationship(cll, clr)) {
+					sub_error("Instance member \"" + str + "\" is private.");
+					return make_error();
+				}
 			}
 			return innerEnv->getThere(str);
 		}
@@ -628,11 +647,11 @@ std::shared_ptr<Object> Evaluator::evaluate_infix(std::shared_ptr<InfixNode> _in
 				unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
 				return make_error();
 			}
-			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv));
+			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv.get()));
 		}
 		if (func->type == Object::Type::NativeFunction) {
 			auto _fc = std::dynamic_pointer_cast<NativeFunction>(func);
-            auto res = _fc->func(NativeFunction::arglist{right}, env);
+            auto res = _fc->_func(NativeFunction::arglist{right}, env);
             if (res.first == NativeFunction::Result::FORMAT_ERR) {
                 args_size_error("Infix function(native) reported FORMAT_ERROR.");
                 return make_error();
@@ -665,11 +684,11 @@ std::shared_ptr<Object> Evaluator::evaluate_infix(std::shared_ptr<InfixNode> _in
 				unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
 				return make_error();
 			}
-			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv));
+			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv.get()));
 		}
 		if (func->type == Object::Type::NativeFunction) {
 			auto _fc = std::dynamic_pointer_cast<NativeFunction>(func);
-            auto res = _fc->func(NativeFunction::arglist{left}, env);
+            auto res = _fc->_func(NativeFunction::arglist{left}, env);
             if (res.first == NativeFunction::Result::FORMAT_ERR) {
                 args_size_error("Infix function(native) reported FORMAT_ERROR.");
                 return make_error();
@@ -690,7 +709,7 @@ std::shared_ptr<Object> Evaluator::evaluate_infix(std::shared_ptr<InfixNode> _in
 	return calcuate_infix(left, right, _infix->_op);
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_prefix(std::shared_ptr<PrefixNode> _prefix, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_prefix(std::shared_ptr<PrefixNode> _prefix, Environment* env) {
 	auto body = evaluate_value(_prefix->right, env);
 	if (body->type == Object::Type::Instance) {
 		auto func = std::dynamic_pointer_cast<Instance>(body)->inner->getThere("prefix" + _prefix->_op);
@@ -705,11 +724,11 @@ std::shared_ptr<Object> Evaluator::evaluate_prefix(std::shared_ptr<PrefixNode> _
 				unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
 				return make_error();
 			}
-			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv));
+			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv.get()));
 		}
 		if (func->type == Object::Type::NativeFunction) {
 			auto _fc = std::dynamic_pointer_cast<NativeFunction>(func);
-            auto res = _fc->func(NativeFunction::arglist(), env);
+            auto res = _fc->_func(NativeFunction::arglist(), env);
             if (res.first == NativeFunction::Result::FORMAT_ERR) {
                 args_size_error("Prefix function(native) reported FORMAT_ERROR.");
                 return make_error();
@@ -730,7 +749,7 @@ std::shared_ptr<Object> Evaluator::evaluate_prefix(std::shared_ptr<PrefixNode> _
 	return calcuate_prefix(body, _prefix->_op);
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_remove(std::shared_ptr<RemoveNode> _rem, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_remove(std::shared_ptr<RemoveNode> _rem, Environment* env) {
 	if (env->get(_rem->toRemove)->type == Object::Type::Null) {
 		not_found_error(_rem->toRemove);
 		return make_error();
@@ -739,13 +758,13 @@ std::shared_ptr<Object> Evaluator::evaluate_remove(std::shared_ptr<RemoveNode> _
 	return std::make_shared<Null>();
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_return(std::shared_ptr<ReturnNode> _ret, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_return(std::shared_ptr<ReturnNode> _ret, Environment* env) {
 	auto retval = evaluate_value(_ret->obj, env)->copy();
 	retval->isReturn = true; // Deprecate it later. Enumerate "spec" will replace it.
 	return retval;
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_statement(std::shared_ptr<StatementNode> _sta, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_statement(std::shared_ptr<StatementNode> _sta, Environment* env) {
 	if (_sta->inner->type == Node::Type::Creation) {
 		return evaluate_creation(std::dynamic_pointer_cast<CreationNode>(_sta->inner), env);
 	}
@@ -770,24 +789,22 @@ std::shared_ptr<Object> Evaluator::evaluate_statement(std::shared_ptr<StatementN
 	return make_error();
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_ternary(std::shared_ptr<TernaryNode> _ter, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_ternary(std::shared_ptr<TernaryNode> _ter, Environment* env) {
 	auto _cond = evaluate_value(_ter->_cond, env);
     if (isTrue(_cond)) {
-        auto innerEnv = std::make_shared<Environment>(env);
-        return evaluate_one(_ter->_if, innerEnv);
+        return evaluate_value(_ter->_if, env);
     }
     else {
-        auto innerEnv = std::make_shared<Environment>(env);
-        return evaluate_one(_ter->_else, innerEnv);
+        return evaluate_value(_ter->_else, env);
     }
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_while(std::shared_ptr<WhileNode> _while, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_while(std::shared_ptr<WhileNode> _while, Environment* env) {
 	bool last_check = _while->isDoWhile ? true : isTrue(evaluate_value(_while->_cond, env));
 	std::shared_ptr<Object> _res = std::make_shared<Null>();
 	while (last_check) {
 		auto innerEnv = std::make_shared<Environment>(env);
-		_res = evaluate_one(_while->_body, innerEnv);
+		_res = evaluate_one(_while->_body, innerEnv.get());
 		if (_res->isReturn || _res->type == Object::Type::Error) {
 			return _res;
 		}
@@ -796,7 +813,7 @@ std::shared_ptr<Object> Evaluator::evaluate_while(std::shared_ptr<WhileNode> _wh
 	return _res;
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_value(std::shared_ptr<Node> _val, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_value(std::shared_ptr<Node> _val, Environment* env) {
 	if (_val->type == Node::Type::Array) {
 		return evaluate_array(std::dynamic_pointer_cast<ArrayNode>(_val), env);
 	}
@@ -846,7 +863,7 @@ std::shared_ptr<Object> Evaluator::evaluate_value(std::shared_ptr<Node> _val, st
 	return make_error();
 }
 
-std::shared_ptr<Object> Evaluator::evaluate_one(std::shared_ptr<Node> _sta, std::shared_ptr<Environment> env) {
+std::shared_ptr<Object> Evaluator::evaluate_one(std::shared_ptr<Node> _sta, Environment* env) {
 	if (_sta->type == Node::Type::Region) {
 		return evaluate_region(std::dynamic_pointer_cast<RegionNode>(_sta), env, false);
 	}
@@ -869,8 +886,6 @@ std::shared_ptr<Object> Evaluator::evaluate_one(std::shared_ptr<Node> _sta, std:
 	return make_error();
 }
 
-
-
 void Evaluator::bind_args(std::vector<std::shared_ptr<Object>> v, std::vector<std::string> name, std::string more, std::shared_ptr<Environment> env) {
     for (size_t i = 0; i < name.size(); i++) {
         env->set(name[i], v[i]->copy());
@@ -884,4 +899,36 @@ void Evaluator::bind_args(std::vector<std::shared_ptr<Object>> v, std::vector<st
         env->set(more, arr);
 		env->get(more)->markMutable(true);
     }
+}
+
+void Evaluator::bind_args(std::vector<std::shared_ptr<Object>> v, std::vector<std::string> name, std::string more, Environment* env) {
+    for (size_t i = 0; i < name.size(); i++) {
+        env->set(name[i], v[i]->copy());
+		env->get(name[i])->markMutable(true);
+    }
+    if (more != "__null__") {
+        auto arr = std::make_shared<Array>();
+        for (size_t i = name.size(); i < v.size(); i++) {
+            arr->elements.push_back(v[i]);
+        }
+        env->set(more, arr);
+		env->get(more)->markMutable(true);
+    }
+}
+
+bool Evaluator::check_class_relationship(std::shared_ptr<Object> a, std::shared_ptr<Object> b) {
+	if (a->type != Object::Type::Array || b->type != Object::Type::Array) {
+		lvl_type_error();
+		return false;
+	}
+	auto ac = std::dynamic_pointer_cast<Array>(a), bc = std::dynamic_pointer_cast<Array>(b);
+	if (ac->elements.size() > bc->elements.size()) {
+		return false;
+	}
+	auto ae = ac->elements[ac->elements.size() - 1], be = bc->elements[ac->elements.size() - 1];
+	if (ae->type != Object::Type::Integer || be->type != Object::Type::Integer) {
+		lvl_type_error();
+		return false;
+	}
+	return std::dynamic_pointer_cast<Integer>(ae)->value == std::dynamic_pointer_cast<Integer>(be)->value;
 }

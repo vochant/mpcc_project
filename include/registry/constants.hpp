@@ -18,7 +18,7 @@ public:
         env->set("mpcc_version", std::make_shared<NativeFunction>(mpcc_version));
     }
 private:
-    static NativeFunction::resulttype is_linux(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype is_linux(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -29,7 +29,7 @@ private:
         #endif
     }
 
-    static NativeFunction::resulttype is_windows(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype is_windows(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -40,7 +40,7 @@ private:
         #endif
     }
 
-    static NativeFunction::resulttype is_apple(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype is_apple(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -51,7 +51,7 @@ private:
         #endif
     }
 
-    static NativeFunction::resulttype is_android(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype is_android(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -62,7 +62,7 @@ private:
         #endif
     }
 
-    static NativeFunction::resulttype is_unix(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype is_unix(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -73,7 +73,7 @@ private:
         #endif
     }
 
-    static NativeFunction::resulttype posix_supported(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype posix_supported(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -84,14 +84,14 @@ private:
         #endif
     }
 
-    static NativeFunction::resulttype is_debug(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype is_debug(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<Boolean>(IS_DEBUG));
     }
 
-    static NativeFunction::resulttype mpcc_version(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype mpcc_version(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }

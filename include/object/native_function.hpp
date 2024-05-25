@@ -14,12 +14,15 @@ public:
     typedef std::shared_ptr<Object> valuetype;
     typedef std::vector<valuetype> arglist;
     typedef std::pair<Result, valuetype> resulttype;
-    typedef std::function<resulttype(arglist, std::shared_ptr<Environment>)> native_func;
-    native_func func;
-    NativeFunction(native_func inner = [](arglist args, std::shared_ptr<Environment> env)->resulttype {
+    typedef std::function<resulttype(arglist, Environment*)> native_func;
+    native_func _func;
+    NativeFunction(native_func inner = [](arglist args, Environment* env)->resulttype {
         return std::make_pair(Result::OK, std::make_shared<Null>());
-    }) : func(inner), Object(Object::Type::NativeFunction) {}
+    }) : _func(inner), Object(Object::Type::NativeFunction) {}
 public:
+	resulttype func(arglist args, std::shared_ptr<Environment> env) {
+		return _func(args, env.get());
+	}
     std::string toString() const override {
         if (COLORED_OUTPUTS) {
             return "\033[32m[Native Function]\033[0m";

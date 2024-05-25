@@ -4,7 +4,9 @@
 
 class Null : public Object {
 public:
-    Null() : Object(Object::Type::Null) {}
+    Null() : Object(Object::Type::Null) {
+		isMutable = false;
+	}
 public:
     std::string toString() const override {
         return "null";

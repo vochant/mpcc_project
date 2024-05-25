@@ -29,14 +29,14 @@ public:
         env->set("termformat", std::make_shared<NativeFunction>(termFormat));
     }
 private:
-    static NativeFunction::resulttype print(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype print(NativeFunction::arglist args, Environment* env) {
         for (auto i : args) {
             std::cout << i->toString();
         }
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<Null>());
     }
 
-    static NativeFunction::resulttype println(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype println(NativeFunction::arglist args, Environment* env) {
         for (auto i : args) {
             std::cout << i->toString();
         }
@@ -44,7 +44,7 @@ private:
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<Null>());
     }
 
-    static NativeFunction::resulttype getLine(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype getLine(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -53,7 +53,7 @@ private:
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<String>(str));
     }
 
-    static NativeFunction::resulttype getInt(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype getInt(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -62,7 +62,7 @@ private:
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<Integer>(_val));
     }
 
-    static NativeFunction::resulttype getFloat(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype getFloat(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -71,7 +71,7 @@ private:
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<Float>(_val));
     }
 
-    static NativeFunction::resulttype getChar(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype getChar(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -80,7 +80,7 @@ private:
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<String>(ch));
     }
 
-    static NativeFunction::resulttype getString(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype getString(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -89,7 +89,7 @@ private:
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<String>(str));
     }
 
-    static NativeFunction::resulttype getBool(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype getBool(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
             return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
         }
@@ -104,7 +104,7 @@ private:
         }
     }
 
-    static NativeFunction::resulttype termFormat(NativeFunction::arglist args, std::shared_ptr<Environment> env) {
+    static NativeFunction::resulttype termFormat(NativeFunction::arglist args, Environment* env) {
         for (auto i : args) {
             if (i->type != Object::Type::String) {
                 return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
