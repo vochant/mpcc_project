@@ -1,0 +1,35 @@
+{
+	"name": "mpclanguage",
+	"displayName": "mpclanguage",
+	"description": "Supported MPC Programming Language",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.89.0"
+	},
+	"categories": [
+		"Programming Languages"
+	],
+	"contributes": {
+		"languages": [
+			{
+				"id": "com.minphtis.mpclf",
+				"aliases": [
+					"MPC",
+					"com.minphtis.mpclf"
+				],
+				"extensions": [
+					".mpc",
+					".mh"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "com.minphtis.mpclf",
+				"scopeName": "source.mpc",
+				"path": "./syntaxes/com.minphtis.mpclf.tmLanguage.json"
+			}
+		]
+	}
+}
