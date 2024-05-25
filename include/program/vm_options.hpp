@@ -7,6 +7,7 @@
 
 #include <random>
 #include <iostream>
+#include <set>
 
 unsigned long long _cert;
 
@@ -35,3 +36,5 @@ void err_end() {
     }
     std::cerr << "\n";
 }
+
+std::set<std::string> implist;

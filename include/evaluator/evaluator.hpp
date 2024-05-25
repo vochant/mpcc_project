@@ -67,6 +67,7 @@ public:
 public:
     static bool import_file(std::shared_ptr<ImportNode> _imp, Environment* toAttach) {
         std::string filePath = _imp->item;
+		if (implist.count(filePath)) return false;
         std::shared_ptr<ProgramNode> _innerProg;
         std::ifstream is(filePath.substr(filePath.length() - 6) == ".precf" ? filePath : (filePath + ".precf"), std::ios::in | std::ios::binary);
         if (is.good()) {
@@ -93,6 +94,7 @@ public:
             _innerProg = std::dynamic_pointer_cast<ProgramNode>(_prog);
         }
         evaluate_program(_innerProg, toAttach);
+		implist.insert(filePath);
         return false;
     }
 

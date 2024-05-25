@@ -564,7 +564,12 @@ void Parser::parse_import_now(std::shared_ptr<RegionNode> defr) {
         format_error("Import statement need a fixed path.");
         return;
     }
-    auto _innerProg = import_file(String::unescape(_current->value));
+	auto fileName = String::unescape(_current->value);
+	if (implist.count(fileName)) {
+		return;
+	}
+    auto _innerProg = import_file(fileName);
+	implist.insert(fileName);
     parse_token();
     if (_current->type == Token::Type::Semicolon) {
         parse_token();
