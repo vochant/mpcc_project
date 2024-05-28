@@ -20,4 +20,20 @@ public:
 	 * @param env The environment to attach.
 	 */
     virtual void attach(std::shared_ptr<Environment> env) const = 0;
+
+	static NativeFunction::resulttype UnhandledError() {
+		return std::make_pair(NativeFunction::Result::UNHANDLED_ERR, std::make_shared<Null>());
+	}
+
+	static NativeFunction::resulttype FormatError() {
+		return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Null>());
+	}
+
+	static NativeFunction::resulttype DataError() {
+		return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Null>());
+	}
+
+	static NativeFunction::resulttype OK(std::shared_ptr<Object> obj) {
+		return std::make_pair(NativeFunction::Result::OK, obj);
+	}
 };

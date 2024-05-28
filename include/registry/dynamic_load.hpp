@@ -18,16 +18,16 @@ public:
 private:
     static NativeFunction::resulttype load(NativeFunction::arglist args, Environment* env) {
         if (args.size() != 2) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         if (args[0]->type != Object::Type::String || args[1]->type != Object::Type::String) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         std::string _library = std::dynamic_pointer_cast<String>(args[0])->value;
         std::string _symbol = std::dynamic_pointer_cast<String>(args[1])->value;
         auto result = get_ext_function(_library, _symbol);
         if (result.second) {
-            return std::make_pair(NativeFunction::Result::UNHANDLED_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         return std::make_pair(NativeFunction::Result::OK, result.first);
     }

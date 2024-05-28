@@ -17,7 +17,7 @@ public:
         Program, Import, Assign, Statement,
         Enumerate, Error, Index, TypeName,
         InDecrement, Expr, Array, Function,
-        Return, Ternary
+        Return, Ternary, Group
     } type;
     Node(Type type) : type(type) {}
 public:

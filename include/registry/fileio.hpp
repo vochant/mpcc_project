@@ -34,15 +34,15 @@ private:
         std::string toOpen;
         unsigned long long openMode;
         if (args.size() != 2) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         if (args[0]->type != Object::Type::String || args[1]->type != Object::Type::Integer) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         toOpen = args[0]->toString();
         openMode = std::dynamic_pointer_cast<Integer>(args[1])->value;
         if (openMode > 5) {
-            return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         std::shared_ptr<NativeData> res;
         std::shared_ptr<std::fstream> fs;
@@ -66,7 +66,7 @@ private:
             fs->open(toOpen, std::ios::app | std::ios::binary);
             break;
         default:
-            return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         res->value = std::make_any<std::shared_ptr<std::fstream>>(fs);
     }
@@ -78,40 +78,40 @@ private:
     }
     static NativeFunction::resulttype isok(NativeFunction::arglist args, Environment* env) {
         if (args.size() != 1) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         if (args[0]->type != Object::Type::NativeData) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         auto _cast = std::dynamic_pointer_cast<NativeData>(args[0]);
         if (!isGood(_cast)) {
-            return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<Boolean>(dataCast(_cast)->good()));
     }
     static NativeFunction::resulttype isfailed(NativeFunction::arglist args, Environment* env) {
         if (args.size() != 1) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         if (args[0]->type != Object::Type::NativeData) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         auto _cast = std::dynamic_pointer_cast<NativeData>(args[0]);
         if (!isGood(_cast)) {
-            return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         return std::make_pair(NativeFunction::Result::OK, std::make_shared<Boolean>(dataCast(_cast)->fail()));
     }
     static NativeFunction::resulttype fprint(NativeFunction::arglist args, Environment* env) {
         if (args.size() < 1) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         if (args[0]->type != Object::Type::NativeData) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         auto _cast = std::dynamic_pointer_cast<NativeData>(args[0]);
         if (!isGood(_cast)) {
-            return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         for (auto i : args) {
             (*dataCast(_cast)) << i->toString();
@@ -120,14 +120,14 @@ private:
     }
     static NativeFunction::resulttype fprintln(NativeFunction::arglist args, Environment* env) {
         if (args.size() < 1) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         if (args[0]->type != Object::Type::NativeData) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         auto _cast = std::dynamic_pointer_cast<NativeData>(args[0]);
         if (!isGood(_cast)) {
-            return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         for (auto i : args) {
             (*dataCast(_cast)) << i->toString();
@@ -138,14 +138,14 @@ private:
 
     static NativeFunction::resulttype getLine(NativeFunction::arglist args, Environment* env) {
         if (args.size() != 1) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         if (args[0]->type != Object::Type::NativeData) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         auto _cast = std::dynamic_pointer_cast<NativeData>(args[0]);
         if (!isGood(_cast)) {
-            return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         std::string str;
         std::getline((*dataCast(_cast)), str);
@@ -154,14 +154,14 @@ private:
 
     static NativeFunction::resulttype getInt(NativeFunction::arglist args, Environment* env) {
         if (args.size() != 1) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         if (args[0]->type != Object::Type::NativeData) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         auto _cast = std::dynamic_pointer_cast<NativeData>(args[0]);
         if (!isGood(_cast)) {
-            return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         long long _val;
         (*dataCast(_cast)) >> _val;
@@ -170,14 +170,14 @@ private:
 
     static NativeFunction::resulttype getFloat(NativeFunction::arglist args, Environment* env) {
         if (args.size() != 1) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         if (args[0]->type != Object::Type::NativeData) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         auto _cast = std::dynamic_pointer_cast<NativeData>(args[0]);
         if (!isGood(_cast)) {
-            return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         double _val;
         (*dataCast(_cast)) >> _val;
@@ -186,14 +186,14 @@ private:
 
     static NativeFunction::resulttype getChar(NativeFunction::arglist args, Environment* env) {
         if (args.size() != 1) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         if (args[0]->type != Object::Type::NativeData) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         auto _cast = std::dynamic_pointer_cast<NativeData>(args[0]);
         if (!isGood(_cast)) {
-            return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         char ch;
         (*dataCast(_cast)) >> ch;
@@ -202,14 +202,14 @@ private:
 
     static NativeFunction::resulttype getString(NativeFunction::arglist args, Environment* env) {
         if (args.size() != 1) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         if (args[0]->type != Object::Type::NativeData) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         auto _cast = std::dynamic_pointer_cast<NativeData>(args[0]);
         if (!isGood(_cast)) {
-            return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         std::string str;
         (*dataCast(_cast)) >> str;
@@ -218,14 +218,14 @@ private:
 
     static NativeFunction::resulttype getBool(NativeFunction::arglist args, Environment* env) {
         if (args.size() != 1) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         if (args[0]->type != Object::Type::NativeData) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         auto _cast = std::dynamic_pointer_cast<NativeData>(args[0]);
         if (!isGood(_cast)) {
-            return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         std::string str;
         (*dataCast(_cast)) >> str;
@@ -240,14 +240,14 @@ private:
 
     static NativeFunction::resulttype close(NativeFunction::arglist args, Environment* env) {
         if (args.size() != 1) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         if (args[0]->type != Object::Type::NativeData) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         auto _cast = std::dynamic_pointer_cast<NativeData>(args[0]);
         if (!isGood(_cast)) {
-            return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         dataCast(_cast)->close();
     }

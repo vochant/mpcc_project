@@ -25,6 +25,7 @@ void idc_error(std::string name);
 void out_of_range_error(std::string text);
 void invalid_error(std::string name);
 void sub_error(std::string name);
+void wrong_infix_error(std::string lt, std::string rt, std::string op);
 class Evaluator {
 public:
     Evaluator() {}
@@ -54,6 +55,7 @@ public:
     static std::shared_ptr<Object> evaluate_while(std::shared_ptr<WhileNode> _while, Environment* env);
     static std::shared_ptr<Object> evaluate_value(std::shared_ptr<Node> _val, Environment* env);
     static std::shared_ptr<Object> evaluate_one(std::shared_ptr<Node> _sta, Environment* env);
+	static std::shared_ptr<Object> evaluate_group(std::shared_ptr<GroupNode> _gp, Environment* env);
 public:
 	static bool check_class_relationship(std::shared_ptr<Object> a, std::shared_ptr<Object> b);
     static std::shared_ptr<Object> calcuate_infix(std::shared_ptr<Object> left, std::shared_ptr<Object> right, std::string op);

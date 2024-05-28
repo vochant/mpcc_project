@@ -19,7 +19,7 @@ public:
     }
     std::string toString() const override {
         std::stringstream ss;
-        ss << "function(";
+        ss << isLambda ? "$(" : "function(";
         for (size_t i = 0; i < args.size(); i++) {
             if (i != 0) {
                 ss << ",";

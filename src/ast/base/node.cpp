@@ -82,6 +82,9 @@ std::shared_ptr<Node> Node::get_node(std::istream& is) {
     case Type::While:
         _bas = std::make_shared<WhileNode>(false);
         break;
+	case Type::Group:
+		_bas = std::make_shared<GroupNode>(nullptr);
+		break;
     default:
         _bas = std::make_shared<ErrorNode>();
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "evaluator/evaluator.hpp"
+#include <cmath>
 
 /**
  * @brief Evaluate a Program.
@@ -513,7 +514,7 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 					out_of_range_error("Index Statement: String: Expected [0, " + std::to_string(_val->value.length() - 1) + "], got [" + std::to_string(_beg) + ", " + std::to_string(_end) + "].");
 					return make_error();
 				}
-				result += _val->value.substr(_beg, _end - _beg);
+				result += _val->value.substr(_beg, _end - _beg + 1);
 			}
 			if (_idx->elements.size() & 1) {
 				auto _beg = std::dynamic_pointer_cast<Integer>(_idx->elements[_idx->elements.size() - 1])->value;
@@ -556,7 +557,7 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 					out_of_range_error("Index Statement: Array: Expected [0, " + std::to_string(_val->elements.size() - 1) + "], got [" + std::to_string(_beg) + ", " + std::to_string(_end) + "].");
 					return make_error();
 				}
-				result.insert(result.end(), _val->elements.begin() + _beg, _val->elements.begin() + _end);
+				result.insert(result.end(), _val->elements.begin() + _beg, _val->elements.begin() + _end + 1);
 			}
 			if (_idx->elements.size() & 1) {
 				auto _beg = std::dynamic_pointer_cast<Integer>(_idx->elements[_idx->elements.size() - 1])->value;
@@ -859,6 +860,9 @@ std::shared_ptr<Object> Evaluator::evaluate_value(std::shared_ptr<Node> _val, En
 	if (_val->type == Node::Type::Ternary) {
 		return evaluate_ternary(std::dynamic_pointer_cast<TernaryNode>(_val), env);
 	}
+	if (_val->type == Node::Type::Group) {
+		return evaluate_group(std::dynamic_pointer_cast<GroupNode>(_val), env);
+	}
 	data_type_error("Unknown value type.");
 	return make_error();
 }
@@ -884,6 +888,10 @@ std::shared_ptr<Object> Evaluator::evaluate_one(std::shared_ptr<Node> _sta, Envi
 	}
 	data_type_error("Unknown statement type.");
 	return make_error();
+}
+
+std::shared_ptr<Object> Evaluator::evaluate_group(std::shared_ptr<GroupNode> gp, Environment* env) {
+	return evaluate_value(gp->v, env);
 }
 
 void Evaluator::bind_args(std::vector<std::shared_ptr<Object>> v, std::vector<std::string> name, std::string more, std::shared_ptr<Environment> env) {
@@ -931,4 +939,83 @@ bool Evaluator::check_class_relationship(std::shared_ptr<Object> a, std::shared_
 		return false;
 	}
 	return std::dynamic_pointer_cast<Integer>(ae)->value == std::dynamic_pointer_cast<Integer>(be)->value;
+}
+
+std::shared_ptr<Object> Evaluator::calcuate_infix(std::shared_ptr<Object> left, std::shared_ptr<Object> right, std::string op) {
+	// Logical
+	if (op == "||" || op == "&&") {
+		return calcuate_infix_boolean(std::make_shared<Boolean>(isTrue(left)), std::make_shared<Boolean>(isTrue(right)), op);
+	}
+	// String
+	if (left->type == Object::Type::String) {
+		if (right->type == Object::Type::String) {
+			return calcuate_infix_string(std::dynamic_pointer_cast<String>(left), std::dynamic_pointer_cast<String>(right), op);
+		}
+		return calcuate_infix_string(std::dynamic_pointer_cast<String>(left), std::make_shared<String>(right->toString()), op);
+	}
+	if (right->type == Object::Type::String) {
+		return calcuate_infix_string(std::make_shared<String>(left->toString()), std::dynamic_pointer_cast<String>(right), op);
+	}
+	// Common Check
+	if (left->type != Object::Type::Boolean && left->type != Object::Type::Integer && left->type != Object::Type::Float) {
+		wrong_infix_error(left->typeOf(), right->typeOf(), op);
+	}
+	if (right->type != Object::Type::Boolean && right->type != Object::Type::Integer && right->type != Object::Type::Float) {
+		wrong_infix_error(left->typeOf(), right->typeOf(), op);
+	}
+	// Common (Boolean, Integer, Float)
+	if (left->type == Object::Type::Boolean) {
+		if (right->type == Object::Type::Boolean) /* true + true = 2 */ {
+			return calcuate_infix_integer(std::make_shared<Integer>(isTrue(left)), std::make_shared<Integer>(isTrue(right)), op);
+		}
+		if (right->type == Object::Type::Integer) {
+			return calcuate_infix_integer(std::make_shared<Integer>(isTrue(left)), std::dynamic_pointer_cast<Integer>(right), op);
+		}
+		if (right->type == Object::Type::Float) {
+			return calcuate_infix_float(std::make_shared<Float>(isTrue(left)), std::dynamic_pointer_cast<Float>(right), op);
+		}
+	}
+	if (left->type == Object::Type::Integer) {
+		if (right->type == Object::Type::Boolean) {
+			return calcuate_infix_integer(std::dynamic_pointer_cast<Integer>(left), std::make_shared<Integer>(isTrue(right)), op);
+		}
+		if (right->type == Object::Type::Integer) {
+			return calcuate_infix_integer(std::dynamic_pointer_cast<Integer>(left), std::dynamic_pointer_cast<Integer>(right), op);
+		}
+		if (right->type == Object::Type::Float) {
+			return calcuate_infix_float(std::make_shared<Float>(std::dynamic_pointer_cast<Integer>(left)->value), std::dynamic_pointer_cast<Float>(right), op);
+		}
+	}
+	if (left->type == Object::Type::Float) {
+		if (right->type == Object::Type::Boolean) {
+			return calcuate_infix_float(std::dynamic_pointer_cast<Float>(left), std::make_shared<Float>(isTrue(right)), op);
+		}
+		if (right->type == Object::Type::Integer) {
+			return calcuate_infix_float(std::dynamic_pointer_cast<Float>(left), std::make_shared<Float>(std::dynamic_pointer_cast<Integer>(right)->value), op);
+		}
+		if (right->type == Object::Type::Float) {
+			return calcuate_infix_float(std::dynamic_pointer_cast<Float>(left), std::dynamic_pointer_cast<Float>(right), op);
+		}
+	}
+	return make_error();
+}
+
+bool Evaluator::isTrue(std::shared_ptr<Object> obj) {
+	if (obj->type == Object::Type::Boolean) {
+		return std::dynamic_pointer_cast<Boolean>(obj)->_case;
+	}
+	if (obj->type == Object::Type::Integer) {
+		return std::dynamic_pointer_cast<Integer>(obj)->value != 0;
+	}
+	if (obj->type == Object::Type::Float) {
+		auto f = std::dynamic_pointer_cast<Float>(obj)->value;
+		return f != 0.0 && !std::isnan(f);
+	}
+	if (obj->type == Object::Type::Null || obj->type == Object::Type::Error) {
+		return false;
+	}
+	if (obj->type == Object::Type::String) {
+		return obj->toString().length() > 0;
+	}
+	return true;
 }

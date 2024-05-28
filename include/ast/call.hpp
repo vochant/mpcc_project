@@ -12,7 +12,7 @@ public:
     std::shared_ptr<Node> to_run;
     std::vector<std::shared_ptr<Node>> args;
     std::shared_ptr<Node> more;
-    CallNode(std::shared_ptr<Node> to_run) : to_run(to_run), Node(Node::Type::Call),  {}
+    CallNode(std::shared_ptr<Node> to_run) : to_run(to_run), Node(Node::Type::Call) {}
 public:
     std::string toString() const override {
         std::stringstream ss;

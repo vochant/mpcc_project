@@ -46,7 +46,7 @@ private:
 
     static NativeFunction::resulttype getLine(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         std::string str;
         std::getline(std::cin, str);
@@ -55,7 +55,7 @@ private:
 
     static NativeFunction::resulttype getInt(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         long long _val;
         std::cin >> _val;
@@ -64,7 +64,7 @@ private:
 
     static NativeFunction::resulttype getFloat(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         double _val;
         std::cin >> _val;
@@ -73,7 +73,7 @@ private:
 
     static NativeFunction::resulttype getChar(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         char ch;
         std::cin >> ch;
@@ -82,7 +82,7 @@ private:
 
     static NativeFunction::resulttype getString(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         std::string str;
         std::cin >> str;
@@ -91,7 +91,7 @@ private:
 
     static NativeFunction::resulttype getBool(NativeFunction::arglist args, Environment* env) {
         if (args.size() > 0) {
-            return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+            return FormatError();
         }
         std::string str;
         std::cin >> str;
@@ -107,7 +107,7 @@ private:
     static NativeFunction::resulttype termFormat(NativeFunction::arglist args, Environment* env) {
         for (auto i : args) {
             if (i->type != Object::Type::String) {
-                return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+                return FormatError();
             }
         }
         for (auto i : args) {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ast/base/node.hpp"
-#include "object/base.hpp"
+#include "object/string.hpp"
 
 class ConstantNode : public Node {
 public:
@@ -9,6 +9,9 @@ public:
     ConstantNode(std::shared_ptr<Object> obj) : obj(obj), Node(Node::Type::Constant) {}
 public:
     std::string toString() const override {
+		if (obj->type == Object::Type::String) {
+			return String::escape(obj->toString());
+		}
         return obj->toString();
     }
 

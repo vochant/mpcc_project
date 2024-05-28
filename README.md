@@ -138,12 +138,12 @@ To create a plugin, you can follow the following steps:
    public:
        static NativeFunction::resulttype sum(NativeFunction::arglist args) {
            if (args.size() == 0) {
-               return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+               return FormatError();
            }
            long long _sum = 0;
            for (auto i : args) {
                if (i->type != Object::Type::Integer) {
-                   return std::make_pair(NativeFunction::Result::FORMAT_ERR, std::make_shared<Error>());
+                   return FormatError();
                }
                _sum += std::dynamic_pointer_cast<Integer>(i)->value;
            }

@@ -610,7 +610,7 @@ std::shared_ptr<Node> Parser::parse_group() {
         return make_error();
     }
     parse_token();
-    return _res;
+    return std::make_shared<GroupNode>(_res);
 }
 
 std::shared_ptr<Node> Parser::parse_call(std::shared_ptr<Node> left) {
