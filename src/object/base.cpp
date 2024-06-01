@@ -32,3 +32,17 @@ std::shared_ptr<Object> Object::get_object(std::istream& is) {
         return std::make_shared<Error>();
     }
 }
+
+const std::map<Object::Type, std::string> Object::typeNames = {
+	{Object::Type::Array, "Array"},
+	{Object::Type::Boolean, "Boolean"},
+	{Object::Type::Class, "Class"},
+	{Object::Type::Enumerate, "Enumerate"},
+	{Object::Type::Error, "Error"},
+	{Object::Type::Float, "Float"},
+	{Object::Type::Function, "Function"},
+	{Object::Type::Instance, "Instance"},
+	{Object::Type::Integer, "Integer"},
+	{Object::Type::NativeData, "Data[Native]"},
+	{Object::Type::NativeFunction, "Function[Native]"}
+}

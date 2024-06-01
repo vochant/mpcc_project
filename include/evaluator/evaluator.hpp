@@ -26,6 +26,7 @@ void out_of_range_error(std::string text);
 void invalid_error(std::string name);
 void sub_error(std::string name);
 void wrong_infix_error(std::string lt, std::string rt, std::string op);
+void wrong_prefix_error(std::string bt, std::string op);
 class Evaluator {
 public:
     Evaluator() {}
@@ -58,13 +59,14 @@ public:
 	static std::shared_ptr<Object> evaluate_group(std::shared_ptr<GroupNode> _gp, Environment* env);
 public:
 	static bool check_class_relationship(std::shared_ptr<Object> a, std::shared_ptr<Object> b);
-    static std::shared_ptr<Object> calcuate_infix(std::shared_ptr<Object> left, std::shared_ptr<Object> right, std::string op);
+    static std::shared_ptr<Object> calcuate_infix(std::shared_ptr<Object> left, std::shared_ptr<Object> right, std::string op, Environment* env);
 	static std::shared_ptr<Object> calcuate_prefix(std::shared_ptr<Object> body, std::string op);
-	static std::shared_ptr<Integer> calcuate_infix_integer(std::shared_ptr<Integer> left, std::shared_ptr<Integer> right, std::string op);
-	static std::shared_ptr<Float> calcuate_infix_float(std::shared_ptr<Float> left, std::shared_ptr<Float> right, std::string op);
-	static std::shared_ptr<String> calcuate_infix_string(std::shared_ptr<String> left, std::shared_ptr<String> right, std::string op);
-	static std::shared_ptr<Boolean> calcuate_infix_boolean(std::shared_ptr<Boolean> left, std::shared_ptr<Boolean> right, std::string op);
+	static std::shared_ptr<Object> calcuate_infix_integer(std::shared_ptr<Integer> left, std::shared_ptr<Integer> right, std::string op);
+	static std::shared_ptr<Object> calcuate_infix_float(std::shared_ptr<Float> left, std::shared_ptr<Float> right, std::string op);
+	static std::shared_ptr<Object> calcuate_infix_string(std::shared_ptr<String> left, std::shared_ptr<String> right, std::string op);
+	static std::shared_ptr<Object> calcuate_infix_boolean(std::shared_ptr<Boolean> left, std::shared_ptr<Boolean> right, std::string op);
 	static std::shared_ptr<Object> calcuate_infix_array(std::shared_ptr<Array> left, std::shared_ptr<Array> right, std::string op);
+	static std::shared_ptr<Object> calcuate_infix_compare(std::shared_ptr<Object> left, std::shared_ptr<Object> right, std::string op, Environment* env);
     static bool isTrue(std::shared_ptr<Object> obj);
 public:
     static bool import_file(std::shared_ptr<ImportNode> _imp, Environment* toAttach) {

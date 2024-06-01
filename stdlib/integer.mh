@@ -10,7 +10,7 @@
 // Translated from cpputil/integer (C) Mirekintoc Void.
 
 class Integer {
-	private _num = [], length, flag = false;
+	private _num = [], length = 0, flag = false;
 
 	private _init_from_int = function(x) {
 		if (flag = (x < 0)) x = -x;

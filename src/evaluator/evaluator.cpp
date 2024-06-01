@@ -228,12 +228,22 @@ std::shared_ptr<Object> Evaluator::evaluate_assign(std::shared_ptr<AssignNode> _
 	std::shared_ptr<Object> val;
     if (_assign->_op != "=") {
         auto bef = _assign->_op.substr(0, _assign->_op.length() - 1);
-        val = calcuate_infix(w, v, bef);
+        val = calcuate_infix(w, v, bef, env);
     }
 	else val = v;
 	if (w->type == Object::Type::Null) {
-		w = v;
-		return Object::toConstant(w->copy());
+		if (_assign->left->type != Node::Type::Identifier) {
+			err_begin();
+			std::cout << "Unexpected re-definition for NULL.";
+			err_end();
+			return make_error();
+		}
+		auto id = std::dynamic_pointer_cast<IdentifierNode>(_assign->left)->id;
+		while (env->values.count(id) == 0) {
+			env = env->_parent;
+		}
+		env->set(id, v);
+		return Object::toConstant(v);
 	}
     if (w->type != v->type) {
         type_different_error(w->typeOf(), v->typeOf());
@@ -633,81 +643,7 @@ std::shared_ptr<Object> Evaluator::evaluate_infix(std::shared_ptr<InfixNode> _in
 		return func;
 	}
 	auto right = evaluate_value(_infix->right, env);
-	if (left->type == Object::Type::Instance) {
-		auto func = std::dynamic_pointer_cast<Instance>(left)->inner->getThere("operator" + _infix->_op);
-		if (func->type == Object::Type::Function) {
-			auto _fc = std::dynamic_pointer_cast<Function>(func);
-			if (_fc->args.size() != 1 || _fc->hasMore()) {
-				args_size_error("Infix functions can contain 1 arg only and cannot use MoreArgument.");
-				return make_error();
-			}
-			auto innerEnv = std::make_shared<Environment>(env);
-			innerEnv->set(_fc->args[0], right);
-			innerEnv->get(_fc->args[0])->markMutable(true);
-			if (_fc->inner->type != Node::Type::Region) {
-				unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
-				return make_error();
-			}
-			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv.get()));
-		}
-		if (func->type == Object::Type::NativeFunction) {
-			auto _fc = std::dynamic_pointer_cast<NativeFunction>(func);
-            auto res = _fc->_func(NativeFunction::arglist{right}, env);
-            if (res.first == NativeFunction::Result::FORMAT_ERR) {
-                args_size_error("Infix function(native) reported FORMAT_ERROR.");
-                return make_error();
-            }
-            if (res.first == NativeFunction::Result::DATA_ERR) {
-                arg_data_error();
-                return make_error();
-            }
-            if (res.first == NativeFunction::Result::UNHANDLED_ERR) {
-                unhandled_error("NativeFunction reported UNHANDLED_ERROR.");
-                return make_error();
-            }
-            return res.second;
-		}
-		data_type_error("Not a function/native-function - Instance->inner->getThere(\"operator" + _infix->_op + "\").");
-		return make_error();
-	}
-	if (right->type == Object::Type::Instance) {
-		auto func = std::dynamic_pointer_cast<Instance>(right)->inner->getThere("operator" + _infix->_op);
-		if (func->type == Object::Type::Function) {
-			auto _fc = std::dynamic_pointer_cast<Function>(func);
-			if (_fc->args.size() != 1 || _fc->hasMore()) {
-				args_size_error("Infix functions can contain 1 arg only and cannot use MoreArgument.");
-				return make_error();
-			}
-			auto innerEnv = std::make_shared<Environment>(env);
-			innerEnv->set(_fc->args[0], left);
-			innerEnv->get(_fc->args[0])->markMutable(true);
-			if (_fc->inner->type != Node::Type::Region) {
-				unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
-				return make_error();
-			}
-			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv.get()));
-		}
-		if (func->type == Object::Type::NativeFunction) {
-			auto _fc = std::dynamic_pointer_cast<NativeFunction>(func);
-            auto res = _fc->_func(NativeFunction::arglist{left}, env);
-            if (res.first == NativeFunction::Result::FORMAT_ERR) {
-                args_size_error("Infix function(native) reported FORMAT_ERROR.");
-                return make_error();
-            }
-            if (res.first == NativeFunction::Result::DATA_ERR) {
-                arg_data_error();
-                return make_error();
-            }
-            if (res.first == NativeFunction::Result::UNHANDLED_ERR) {
-                unhandled_error("NativeFunction reported UNHANDLED_ERROR.");
-                return make_error();
-            }
-            return res.second;
-		}
-		data_type_error("Not a function/native-function - Instance->inner->getThere(\"operator" + _infix->_op + "\").");
-		return make_error();
-	}
-	return calcuate_infix(left, right, _infix->_op);
+	return calcuate_infix(left, right, _infix->_op, env);
 }
 
 std::shared_ptr<Object> Evaluator::evaluate_prefix(std::shared_ptr<PrefixNode> _prefix, Environment* env) {
@@ -941,7 +877,86 @@ bool Evaluator::check_class_relationship(std::shared_ptr<Object> a, std::shared_
 	return std::dynamic_pointer_cast<Integer>(ae)->value == std::dynamic_pointer_cast<Integer>(be)->value;
 }
 
-std::shared_ptr<Object> Evaluator::calcuate_infix(std::shared_ptr<Object> left, std::shared_ptr<Object> right, std::string op) {
+std::shared_ptr<Object> Evaluator::calcuate_infix(std::shared_ptr<Object> left, std::shared_ptr<Object> right, std::string op, Environment* env) {
+	// Instances
+	if (left->type == Object::Type::Instance) {
+		auto func = std::dynamic_pointer_cast<Instance>(left)->inner->getThere("operator" +  op);
+		if (func->type == Object::Type::Function) {
+			auto _fc = std::dynamic_pointer_cast<Function>(func);
+			if (_fc->args.size() != 1 || _fc->hasMore()) {
+				args_size_error("Infix functions can contain 1 arg only and cannot use MoreArgument.");
+				return make_error();
+			}
+			auto innerEnv = std::make_shared<Environment>(env);
+			innerEnv->set(_fc->args[0], right);
+			innerEnv->get(_fc->args[0])->markMutable(true);
+			if (_fc->inner->type != Node::Type::Region) {
+				unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
+				return make_error();
+			}
+			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv.get()));
+		}
+		if (func->type == Object::Type::NativeFunction) {
+			auto _fc = std::dynamic_pointer_cast<NativeFunction>(func);
+            auto res = _fc->_func(NativeFunction::arglist{right}, env);
+            if (res.first == NativeFunction::Result::FORMAT_ERR) {
+                args_size_error("Infix function(native) reported FORMAT_ERROR.");
+                return make_error();
+            }
+            if (res.first == NativeFunction::Result::DATA_ERR) {
+                arg_data_error();
+                return make_error();
+            }
+            if (res.first == NativeFunction::Result::UNHANDLED_ERR) {
+                unhandled_error("NativeFunction reported UNHANDLED_ERROR.");
+                return make_error();
+            }
+            return res.second;
+		}
+		data_type_error("Not a function/native-function - Instance->inner->getThere(\"operator" + op + "\").");
+		return make_error();
+	}
+	if (right->type == Object::Type::Instance) {
+		auto func = std::dynamic_pointer_cast<Instance>(right)->inner->getThere("operator" + op);
+		if (func->type == Object::Type::Function) {
+			auto _fc = std::dynamic_pointer_cast<Function>(func);
+			if (_fc->args.size() != 1 || _fc->hasMore()) {
+				args_size_error("Infix functions can contain 1 arg only and cannot use MoreArgument.");
+				return make_error();
+			}
+			auto innerEnv = std::make_shared<Environment>(env);
+			innerEnv->set(_fc->args[0], left);
+			innerEnv->get(_fc->args[0])->markMutable(true);
+			if (_fc->inner->type != Node::Type::Region) {
+				unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
+				return make_error();
+			}
+			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv.get()));
+		}
+		if (func->type == Object::Type::NativeFunction) {
+			auto _fc = std::dynamic_pointer_cast<NativeFunction>(func);
+            auto res = _fc->_func(NativeFunction::arglist{left}, env);
+            if (res.first == NativeFunction::Result::FORMAT_ERR) {
+                args_size_error("Infix function(native) reported FORMAT_ERROR.");
+                return make_error();
+            }
+            if (res.first == NativeFunction::Result::DATA_ERR) {
+                arg_data_error();
+                return make_error();
+            }
+            if (res.first == NativeFunction::Result::UNHANDLED_ERR) {
+                unhandled_error("NativeFunction reported UNHANDLED_ERROR.");
+                return make_error();
+            }
+            return res.second;
+		}
+		data_type_error("Not a function/native-function - Instance->inner->getThere(\"operator" + op + "\").");
+		return make_error();
+	}
+	// Equations
+	if (op == ">" || op == "<" || op == "==" || op == "!=" || op == ">=" || op == "<=") {
+		return calcuate_infix_compare(left, right, op, env);
+	}
 	// Logical
 	if (op == "||" || op == "&&") {
 		return calcuate_infix_boolean(std::make_shared<Boolean>(isTrue(left)), std::make_shared<Boolean>(isTrue(right)), op);
@@ -955,6 +970,10 @@ std::shared_ptr<Object> Evaluator::calcuate_infix(std::shared_ptr<Object> left, 
 	}
 	if (right->type == Object::Type::String) {
 		return calcuate_infix_string(std::make_shared<String>(left->toString()), std::dynamic_pointer_cast<String>(right), op);
+	}
+	// Array
+	if (left->type == Object::Type::Array && right->type == Object::Type::Array) {
+		return calcuate_infix_array(std::dynamic_pointer_cast<Array>(left), std::dynamic_pointer_cast<Array>(right), op);
 	}
 	// Common Check
 	if (left->type != Object::Type::Boolean && left->type != Object::Type::Integer && left->type != Object::Type::Float) {
@@ -1000,6 +1019,299 @@ std::shared_ptr<Object> Evaluator::calcuate_infix(std::shared_ptr<Object> left, 
 	return make_error();
 }
 
+std::shared_ptr<Object> Evaluator::calcuate_prefix(std::shared_ptr<Object> body, std::string op) {
+	if (op == "!") {
+		return std::make_shared<Boolean>(!isTrue(body));
+	}
+	if (op == "-") {
+		if (body->type == Object::Type::Float) {
+			return std::make_shared<Float>(-std::dynamic_pointer_cast<Float>(body)->value);
+		}
+		if (body->type == Object::Type::Integer) {
+			return std::make_shared<Integer>(-std::dynamic_pointer_cast<Integer>(body)->value);
+		}
+		if (body->type == Object::Type::Boolean) {
+			return std::make_shared<Integer>(-(long long) isTrue(body));
+		}
+		wrong_prefix_error(body->typeOf(), op);
+		return make_error();
+	}
+	if (op == "+") {
+		if (body->type == Object::Type::Float) {
+			return body->copy();
+		}
+		if (body->type == Object::Type::Integer) {
+			return body->copy();
+		}
+		if (body->type == Object::Type::Boolean) {
+			return std::make_shared<Integer>(isTrue(body));
+		}
+		wrong_prefix_error(body->typeOf(), op);
+		return make_error();
+	}
+	if (op == "~") {
+		if (body->type == Object::Type::Integer) {
+			return std::make_shared<Integer>(~std::dynamic_pointer_cast<Integer>(body)->value);
+		}
+		if (body->type == Object::Type::Boolean) {
+			return std::make_shared<Integer>(~(long long) isTrue(body));
+		}
+		wrong_prefix_error(body->typeOf(), op);
+		return make_error();
+	}
+	wrong_prefix_error(body->typeOf(), op);
+	return make_error();
+}
+
+std::shared_ptr<Object> Evaluator::calcuate_infix_boolean(std::shared_ptr<Boolean> left, std::shared_ptr<Boolean> right, std::string op) {
+	if (op == "||") {
+		return std::make_shared<Boolean>(isTrue(left) || isTrue(right));
+	}
+	if (op == "&&") {
+		return std::make_shared<Boolean>(isTrue(left) && isTrue(right));
+	}
+	wrong_infix_error("Boolean", "Boolean", "Boolean::operator" + op);
+	return make_error();
+}
+
+std::shared_ptr<Object> Evaluator::calcuate_infix_integer(std::shared_ptr<Integer> left, std::shared_ptr<Integer> right, std::string op) {
+	auto a = left->value, b = right->value;
+	if (op == "+") {
+		return std::make_shared<Integer>(a + b);
+	}
+	if (op == "-") {
+		return std::make_shared<Integer>(a - b);
+	}
+	if (op == "*") {
+		return std::make_shared<Integer>(a * b);
+	}
+	if (op == "/") {
+		return std::make_shared<Integer>(a / b);
+	}
+	if (op == "%") {
+		return std::make_shared<Integer>(a % b);
+	}
+	if (op == "&") {
+		return std::make_shared<Integer>(a & b);
+	}
+	if (op == "|") {
+		return std::make_shared<Integer>(a | b);
+	}
+	if (op == "^") {
+		return std::make_shared<Integer>(a ^ b);
+	}
+	if (op == "<<") {
+		return std::make_shared<Integer>(a << b);
+	}
+	if (op == ">>") {
+		return std::make_shared<Integer>(a >> b);
+	}
+	wrong_infix_error("Integer", "Integer", "Integer::operator" + op);
+	return make_error();
+}
+
+std::shared_ptr<Object> Evaluator::calcuate_infix_float(std::shared_ptr<Float> left, std::shared_ptr<Float> right, std::string op) {
+	auto a = left->value, b = right->value;
+	if (op == "+") {
+		return std::make_shared<Float>(a + b);
+	}
+	if (op == "-") {
+		return std::make_shared<Float>(a - b);
+	}
+	if (op == "*") {
+		return std::make_shared<Float>(a * b);
+	}
+	if (op == "/") {
+		return std::make_shared<Float>(a / b);
+	}
+	if (op == "%") {
+		return std::make_shared<Float>(fmod(a, b));
+	}
+	wrong_infix_error("Float", "Float", "Float::operator" + op);
+	return make_error();
+}
+
+std::shared_ptr<Object> Evaluator::calcuate_infix_string(std::shared_ptr<String> left, std::shared_ptr<String> right, std::string op) {
+	if (op != "+") {
+		wrong_infix_error("String", "String", "String::operator" + op);
+		return make_error();
+	}
+	return std::make_shared<String>(left->value + right->value);
+}
+
+std::shared_ptr<Object> Evaluator::calcuate_infix_array(std::shared_ptr<Array> left, std::shared_ptr<Array> right, std::string op) {
+	if (op != "+") {
+		wrong_infix_error("Array", "Array", "Array::operator" + op);
+		return make_error();
+	}
+	auto ac = std::dynamic_pointer_cast<Array>(left->copy()), bc = std::dynamic_pointer_cast<Array>(right->copy()), res = std::make_shared<Array>();
+	res->elements.insert(res->elements.end(), ac->elements.begin(), ac->elements.end());
+	res->elements.insert(res->elements.end(), bc->elements.begin(), bc->elements.end());
+	return res;
+}
+
+std::shared_ptr<Object> Evaluator::calcuate_infix_compare(std::shared_ptr<Object> left, std::shared_ptr<Object> right, std::string op, Environment* env) {
+	if (left->type == Object::Type::String && right->type != Object::Type::String) {
+		right = std::make_shared<String>(right->toString());
+	}
+	else if (right->type == Object::Type::String && left->type != Object::Type::String) {
+		left = std::make_shared<String>(left->toString());
+	}
+	else if (left->type == Object::Type::Float) {
+		if (right->type == Object::Type::Integer) {
+			right = std::make_shared<Float>(std::dynamic_pointer_cast<Integer>(right)->value);
+		}
+		else if (right->type == Object::Type::Boolean) {
+			right = std::make_shared<Float>(isTrue(right));
+		}
+		else if (right->type != Object::Type::Float) {
+			return std::make_shared<Boolean>(false);
+		}
+	}
+	else if (right->type == Object::Type::Float) {
+		if (left->type == Object::Type::Integer) {
+			left = std::make_shared<Float>(std::dynamic_pointer_cast<Integer>(left)->value);
+		}
+		else if (left->type == Object::Type::Boolean) {
+			left = std::make_shared<Float>(isTrue(left));
+		}
+		else if (right->type != Object::Type::Float) {
+			return std::make_shared<Boolean>(false);
+		}
+	}
+	else if (left->type == Object::Type::Integer) {
+		if (right->type == Object::Type::Boolean) {
+			right = std::make_shared<Integer>(isTrue(right));
+		}
+		else if (right->type != Object::Type::Integer) {
+			return std::make_shared<Boolean>(false);
+		}
+	}
+	else if (right->type == Object::Type::Integer) {
+		if (left->type == Object::Type::Boolean) {
+			left = std::make_shared<Integer>(isTrue(left));
+		}
+		else if (left->type != Object::Type::Integer) {
+			return std::make_shared<Boolean>(false);
+		}
+	}
+	if (left->type != right->type) {
+		return std::make_shared<Boolean>(false);
+	}
+	if (op == "==") {
+		if (left->type == Object::Type::Array) {
+			auto ac = std::dynamic_pointer_cast<Array>(left), bc = std::dynamic_pointer_cast<Array>(right);
+			if (ac->elements.size() != bc->elements.size()) {
+				return std::make_shared<Boolean>(false);
+			}
+			for (size_t i = 0; i < ac->elements.size(); i++) {
+				if (!isTrue(calcuate_infix_compare(ac->elements[i], bc->elements[i], "==", env))) {
+					return std::make_shared<Boolean>(false);
+				}
+			}
+			return std::make_shared<Boolean>(true);
+		}
+		else if (left->type == Object::Type::String) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<String>(left)->value == std::dynamic_pointer_cast<String>(right)->value);
+		}
+		else if (left->type == Object::Type::Integer) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<Integer>(left)->value == std::dynamic_pointer_cast<Integer>(right)->value);
+		}
+		else if (left->type == Object::Type::Float) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<Float>(left)->value == std::dynamic_pointer_cast<Float>(right)->value);
+		}
+		else if (left->type == Object::Type::Boolean) {
+			return std::make_shared<Boolean>(isTrue(left) ^ isTrue(right));
+		}
+	}
+	if (op == "!=") {
+		if (left->type == Object::Type::Array) {
+			auto ac = std::dynamic_pointer_cast<Array>(left), bc = std::dynamic_pointer_cast<Array>(right);
+			if (ac->elements.size() != bc->elements.size()) {
+				return std::make_shared<Boolean>(true);
+			}
+			for (size_t i = 0; i < ac->elements.size(); i++) {
+				if (!isTrue(calcuate_infix_compare(ac->elements[i], bc->elements[i], "==", env))) {
+					return std::make_shared<Boolean>(true);
+				}
+			}
+			return std::make_shared<Boolean>(false);
+		}
+		else if (left->type == Object::Type::String) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<String>(left)->value != std::dynamic_pointer_cast<String>(right)->value);
+		}
+		else if (left->type == Object::Type::Integer) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<Integer>(left)->value != std::dynamic_pointer_cast<Integer>(right)->value);
+		}
+		else if (left->type == Object::Type::Float) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<Float>(left)->value != std::dynamic_pointer_cast<Float>(right)->value);
+		}
+		else if (left->type == Object::Type::Boolean) {
+			return std::make_shared<Boolean>(!(isTrue(left) ^ isTrue(right)));
+		}
+		else {
+			return std::make_shared<Boolean>(false);
+		}
+	}
+	if (op == ">") {
+		if (left->type == Object::Type::Integer) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<Integer>(left)->value > std::dynamic_pointer_cast<Integer>(right)->value);
+		}
+		else if (left->type == Object::Type::Float) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<Float>(left)->value > std::dynamic_pointer_cast<Float>(right)->value);
+		}
+		else if (left->type == Object::Type::String) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<String>(left)->value > std::dynamic_pointer_cast<String>(right)->value);
+		}
+		else {
+			return std::make_shared<Boolean>(false);
+		}
+	}
+	if (op == ">=") {
+		if (left->type == Object::Type::Integer) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<Integer>(left)->value >= std::dynamic_pointer_cast<Integer>(right)->value);
+		}
+		else if (left->type == Object::Type::Float) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<Float>(left)->value >= std::dynamic_pointer_cast<Float>(right)->value);
+		}
+		else if (left->type == Object::Type::String) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<String>(left)->value >= std::dynamic_pointer_cast<String>(right)->value);
+		}
+		else {
+			return std::make_shared<Boolean>(false);
+		}
+	}
+	if (op == "<") {
+		if (left->type == Object::Type::Integer) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<Integer>(left)->value < std::dynamic_pointer_cast<Integer>(right)->value);
+		}
+		else if (left->type == Object::Type::Float) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<Float>(left)->value < std::dynamic_pointer_cast<Float>(right)->value);
+		}
+		else if (left->type == Object::Type::String) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<String>(left)->value < std::dynamic_pointer_cast<String>(right)->value);
+		}
+		else {
+			return std::make_shared<Boolean>(false);
+		}
+	}
+	if (op == "<=") {
+		if (left->type == Object::Type::Integer) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<Integer>(left)->value <= std::dynamic_pointer_cast<Integer>(right)->value);
+		}
+		else if (left->type == Object::Type::Float) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<Float>(left)->value <= std::dynamic_pointer_cast<Float>(right)->value);
+		}
+		else if (left->type == Object::Type::String) {
+			return std::make_shared<Boolean>(std::dynamic_pointer_cast<String>(left)->value <= std::dynamic_pointer_cast<String>(right)->value);
+		}
+		else {
+			return std::make_shared<Boolean>(false);
+		}
+	}
+	return  std::make_shared<Boolean>(false);
+}
+
 bool Evaluator::isTrue(std::shared_ptr<Object> obj) {
 	if (obj->type == Object::Type::Boolean) {
 		return std::dynamic_pointer_cast<Boolean>(obj)->_case;
@@ -1018,4 +1330,143 @@ bool Evaluator::isTrue(std::shared_ptr<Object> obj) {
 		return obj->toString().length() > 0;
 	}
 	return true;
+}
+
+void arg_data_error() {
+	err_begin(true);
+	std::cout << "Argument Data Error.";
+	err_end();
+}
+
+void unhandled_error(std::string reason) {
+	err_begin(true);
+	std::cout << "Unhandled Error by " << reason;
+	err_end();
+}
+
+void program_error() {
+	err_begin(true);
+	std::cout << "Program Init Error.";
+	err_end();
+}
+
+void node_type_error() {
+	err_begin(true);
+	std::cout << "Unexpected Node Type.";
+	err_end();
+}
+
+void args_size_erorr(std::string msg) {
+	err_begin(true);
+	std::cout << "Argument Size Error: " << msg;
+	err_end();
+}
+
+void invalid_constructor_error() {
+	err_begin(true);
+	std::cout << "Invalid Constructor.";
+	err_end();
+}
+
+void data_type_error(std::string msg) {
+	err_begin(true);
+	std::cout << "Data Type Error: " << msg;
+	err_end();
+}
+
+void data_value_error() {
+	err_begin(true);
+	std::cout << "Unsupported Data Value.";
+	err_end();
+}
+
+void not_found_error(std::string name) {
+	err_begin(true);
+	std::cout << name << ": Not Found.";
+	err_end();
+}
+
+void more_type_error(std::string msg) {
+	err_begin(true);
+	std::cout << "Illegal type of More Argument: " << msg;
+	err_end();
+}
+
+void not_mutable_error() {
+	err_begin(true);
+	std::cout << "Cannot Assign a Constant!";
+	err_end();
+}
+
+void type_different_error(std::string l, std::string r) {
+	err_begin(true);
+	std::cout << "Cannot assign type " << l << " into type " << r;
+	err_end();
+}
+
+void extand_nothing_error(std::string name) {
+	err_begin(true);
+	std::cout << "Trying to inheritance nothing.";
+	err_end();
+}
+
+void lvl_type_error() {
+	err_begin(true);
+	std::cout << "Incorrect \"Instance.__level__\".";
+	err_end();
+}
+
+void conde_type_error() {
+	err_begin(true);
+	std::cout << "Unsupported type for Increment/Decrement.";
+	err_end();
+}
+
+void already_valid_error(std::string name) {
+	err_begin(true);
+	std::cout << "Variable \"" << name << "\" already exists.";
+	err_end();
+}
+
+void for_elem_error(std::string name) {
+	err_begin(true);
+	std::cout << "FOR Element Error for \"" << name << "\"";
+	err_end();
+}
+
+void idc_error(std::string name) {
+	err_begin(true);
+	std::cout << "Increment/Decrement Error: " << name;
+	err_end();
+}
+
+void out_of_range_error(std::string text) {
+	err_begin(true);
+	std::cout << "Out of Range: " << text;
+	err_end();
+}
+
+void invalid_error(std::string name) {
+	// Deprecated
+	err_begin(true);
+	std::cout << "Deprecated/Invalid Error: " << name;
+	err_end();
+}
+
+void sub_error(std::string name) {
+	err_begin(true);
+	std::cout << "Object Index Error: " << name;
+	err_end();
+}
+
+void wrong_infix_error(std::string lt, std::string rt, std::string op) {
+	err_begin(true);
+	std::cout << "Invalid Index : \"" << op << "\" between " << lt << " and " << rt;
+	err_end();
+}
+
+void wrong_prefix_error(std::string bt, std::string op) {
+	err_begin(true);
+	std::cout << "Invalid Prefix: \"" << op << "\" for " << bt;
+	err_end();
 }

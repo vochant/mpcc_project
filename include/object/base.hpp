@@ -15,7 +15,7 @@ public:
     enum class Type{
         Integer, Float, String, Boolean, 
         Function, NativeFunction, Class,
-        Instance, Array, Byte,
+        Instance, Array,
         Null, Error, NativeData,
         Enumerate, Unlimited // This is a placeholder.
     } type;
