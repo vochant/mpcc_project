@@ -1,7 +1,5 @@
 #pragma once
 
-
-#define COLORED_OUTPUTS ${COLORED_OUTPUTS}
 #define EXECUTABLE_NAME "mpcc"
 
 #define EXECUTABLE_DESCRIPTION "MPCC Project - Toolchain for MPC PL"

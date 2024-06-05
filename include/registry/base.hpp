@@ -9,6 +9,8 @@
 #include "object/string.hpp"
 #include "evaluator/evaluator.hpp"
 
+#include "i18n/interface.hpp"
+
 /**
  * @brief MPC Base Language Features, most of MPC source codes and OSL (Offical Standard Library) requires it to run.
  * @class
@@ -168,13 +170,13 @@ public:
 			auto fcast = std::dynamic_pointer_cast<Function>(args[1]);
 			auto innerEnv = std::make_shared<Environment>(env);
 			Evaluator::bind_args({obj}, fcast->args, fcast->moreName, innerEnv);
-			return Object::toCommon(Evaluator::evaluate_region(std::dynamic_pointer_cast<RegionNode>(fcast->inner), innerEnv.get()));
+			return Object::toCommon(Evaluator::evaluate_scope(std::dynamic_pointer_cast<ScopeNode>(fcast->inner), innerEnv.get()));
 		};
 		auto ncaller = [args, env](std::shared_ptr<Object> obj)->std::shared_ptr<Object> {
 			auto ncast = std::dynamic_pointer_cast<NativeFunction>(args[1]);
 			auto[r, v] = ncast->_func({obj}, env);
 			if (r == NativeFunction::Result::FORMAT_ERR) {
-				args_size_error("NativeFunction reported FORMAT_ERROR.");
+				args_size_error(i18n.lookup("error.call.nativeFormat"));
 				return std::make_shared<Error>();
 			}
 			if (r == NativeFunction::Result::DATA_ERR) {
@@ -182,7 +184,7 @@ public:
 				return std::make_shared<Error>();
 			}
 			if (r == NativeFunction::Result::UNHANDLED_ERR) {
-				unhandled_error("NativeFunction reported UNHANDLED_ERROR.");
+				unhandled_error(i18n.lookup("error.call.nativeUnhandled"));
 				return std::make_shared<Error>();
 			}
 			return v;
@@ -208,13 +210,13 @@ public:
 			auto fcast = std::dynamic_pointer_cast<Function>(args[1]);
 			auto innerEnv = std::make_shared<Environment>(env);
 			Evaluator::bind_args({obj}, fcast->args, fcast->moreName, innerEnv);
-			return Object::toCommon(Evaluator::evaluate_region(std::dynamic_pointer_cast<RegionNode>(fcast->inner), innerEnv.get()));
+			return Object::toCommon(Evaluator::evaluate_scope(std::dynamic_pointer_cast<ScopeNode>(fcast->inner), innerEnv.get()));
 		};
 		auto ncaller = [args, env](std::shared_ptr<Object> obj)->std::shared_ptr<Object> {
 			auto ncast = std::dynamic_pointer_cast<NativeFunction>(args[1]);
 			auto[r, v] = ncast->_func({obj}, env);
 			if (r == NativeFunction::Result::FORMAT_ERR) {
-				args_size_error("NativeFunction reported FORMAT_ERROR.");
+				args_size_error(i18n.lookup("error.call.nativeFormat"));
 				return std::make_shared<Error>();
 			}
 			if (r == NativeFunction::Result::DATA_ERR) {
@@ -222,7 +224,7 @@ public:
 				return std::make_shared<Error>();
 			}
 			if (r == NativeFunction::Result::UNHANDLED_ERR) {
-				unhandled_error("NativeFunction reported UNHANDLED_ERROR.");
+				unhandled_error(i18n.lookup("error.call.nativeUnhandled"));
 				return std::make_shared<Error>();
 			}
 			return v;
@@ -312,10 +314,10 @@ public:
 		}
 		auto innerEnv = std::make_shared<Environment>(env);
 		Evaluator::bind_args(args, _f->args, _f->moreName, innerEnv);
-		if (_f->inner->type != Node::Type::Region) {
+		if (_f->inner->type != Node::Type::Scope) {
 			return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Null>());
 		}
-		auto res = Object::toCommon(Evaluator::evaluate_region(std::dynamic_pointer_cast<RegionNode>(_f->inner), innerEnv.get()));
+		auto res = Object::toCommon(Evaluator::evaluate_scope(std::dynamic_pointer_cast<ScopeNode>(_f->inner), innerEnv.get()));
 		env->get("__construct__")->assign(std::make_shared<Integer>(_clevel - 1));
 		return std::make_pair(NativeFunction::Result::OK, res);
 	}
@@ -407,21 +409,21 @@ public:
 			if (_fc->args.size() > arguments.size() && (_fc->hasMore() || _fc->args.size() == arguments.size())) {
 				args_size_error([_fc, arguments]()->std::string {
 					if (_fc->hasMore()) {
-						return "Required at least " + std::to_string(_fc->args.size()) + " args, but found only " + std::to_string(arguments.size()) + " args.";
+						return i18n.lookup("error.call.tooLessArgs", {{"[Expected]", std::to_string(_fc->args.size())}, {"[Current]", std::to_string(arguments.size())}});
 					}
 					else {
-						return "Required " + std::to_string(_fc->args.size()) + " args, but found only " + std::to_string(arguments.size()) + " args.";
+						return i18n.lookup("error.call.incorrectArgs", {{"[Expected]", std::to_string(_fc->args.size())}, {"[Current]", std::to_string(arguments.size())}});
 					}
 				}());
 				return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Null>());
 			}
 			auto innerEnv = std::make_shared<Environment>(ptr);
 			Evaluator::bind_args(arguments, _fc->args, _fc->moreName, innerEnv);
-			if (_fc->inner->type != Node::Type::Region) {
+			if (_fc->inner->type != Node::Type::Scope) {
 				node_type_error();
 				return std::make_pair(NativeFunction::Result::UNHANDLED_ERR, std::make_shared<Null>());
 			}
-			return std::make_pair(NativeFunction::Result::OK, Object::toCommon(Evaluator::evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv.get())));
+			return std::make_pair(NativeFunction::Result::OK, Object::toCommon(Evaluator::evaluate_scope(std::dynamic_pointer_cast<ScopeNode>(_fc->inner), innerEnv.get())));
 		}
 		if (args[1]->type == Object::Type::NativeFunction) {
 			auto _func = std::dynamic_pointer_cast<NativeFunction>(args[1]);
@@ -449,19 +451,19 @@ public:
 		if (_fc->args.size() > arguments.size() && (_fc->hasMore() || _fc->args.size() == arguments.size())) {
 			args_size_error([_fc, arguments]()->std::string {
 				if (_fc->hasMore()) {
-					return "Required at least " + std::to_string(_fc->args.size()) + " args, but found only " + std::to_string(arguments.size()) + " args.";
+					return i18n.lookup("error.call.tooLessArgs", {{"[Expected]", std::to_string(_fc->args.size())}, {"[Current]", std::to_string(arguments.size())}});
 				}
 				else {
-					return "Required " + std::to_string(_fc->args.size()) + " args, but found only " + std::to_string(arguments.size()) + " args.";
+					return i18n.lookup("error.call.incorrectArgs", {{"[Expected]", std::to_string(_fc->args.size())}, {"[Current]", std::to_string(arguments.size())}});
 				}
 			}());
 			return std::make_pair(NativeFunction::Result::DATA_ERR, std::make_shared<Null>());
 		}
 		Evaluator::bind_args(arguments, _fc->args, _fc->moreName, env);
-		if (_fc->inner->type != Node::Type::Region) {
+		if (_fc->inner->type != Node::Type::Scope) {
 			node_type_error();
 			return std::make_pair(NativeFunction::Result::UNHANDLED_ERR, std::make_shared<Null>());
 		}
-		return std::make_pair(NativeFunction::Result::OK, Object::toCommon(Evaluator::evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), env)));
+		return std::make_pair(NativeFunction::Result::OK, Object::toCommon(Evaluator::evaluate_scope(std::dynamic_pointer_cast<ScopeNode>(_fc->inner), env)));
 	}	
 };

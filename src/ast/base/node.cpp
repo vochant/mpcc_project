@@ -2,10 +2,11 @@
 
 #include "ast/_all.hpp"
 
+#include "i18n/interface.hpp"
+
 void illegal_program_error() {
     err_begin();
-    std::cerr << "Unknown program!\n";
-    std::cerr << "Is it using unsupported formatting or future versions?";
+    std::cerr << i18n.lookup("error.ast.program");
     err_end();
 }
 
@@ -67,8 +68,8 @@ std::shared_ptr<Node> Node::get_node(std::istream& is) {
     case Type::Program:
         _bas = std::make_shared<ProgramNode>(nullptr);
         break;
-    case Type::Region:
-        _bas = std::make_shared<RegionNode>();
+    case Type::Scope:
+        _bas = std::make_shared<ScopeNode>();
         break;
     case Type::Remove:
         _bas = std::make_shared<RemoveNode>("");

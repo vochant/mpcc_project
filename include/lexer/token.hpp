@@ -7,7 +7,7 @@ class Token {
 public:
     enum class Type {
         Integer, String, Extand, If, Else, Identifier,
-        Let, For, While, End, Error, Region, Float,
+        Let, For, While, End, Error, Scope, Float,
         LParan, RParan, LBrace, RBrace, LBracket, RBracket,
         Comma, Semicolon, Return, End, Import,
         Class, Constructor, Destructor, Plus, Minus, Asterisk,

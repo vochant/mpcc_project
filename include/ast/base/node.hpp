@@ -12,7 +12,7 @@ class Node {
 public:
     enum class Type {
         Creation, Call, If, For, While,
-        Infix, Prefix, Region, Function,
+        Infix, Prefix, Scope, Function,
         Identifier, Constant, Class, Remove,
         Program, Import, Assign, Statement,
         Enumerate, Error, Index, TypeName,

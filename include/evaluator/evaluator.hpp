@@ -14,7 +14,7 @@ void data_type_error(std::string msg);
 void data_value_error();
 void not_found_error(std::string name);
 void more_type_error(std::string msg);
-void not_mutable_error();
+void not_mutable_error(std::string what);
 void type_different_error(std::string l, std::string r);
 void extand_nothing_error(std::string name);
 void lvl_type_error();
@@ -33,7 +33,7 @@ public:
 public:
     static std::shared_ptr<Object> evaluate_program(std::shared_ptr<ProgramNode> _prog, Environment* env);
     static std::shared_ptr<Object> evaluate_constant(std::shared_ptr<ConstantNode> _constant);
-    static std::shared_ptr<Object> evaluate_region(std::shared_ptr<RegionNode> _region, Environment* env, bool no_isolate = true);
+    static std::shared_ptr<Object> evaluate_scope(std::shared_ptr<ScopeNode> _scope, Environment* env, bool no_isolate = true);
     static std::shared_ptr<Object> evaluate_function(std::shared_ptr<FunctionNode> _func, Environment* env);
     static std::shared_ptr<Object> evaluate_call(std::shared_ptr<CallNode> _call, Environment* env);
     static std::shared_ptr<Object> evaluate_array(std::shared_ptr<ArrayNode> _arr, Environment* env);

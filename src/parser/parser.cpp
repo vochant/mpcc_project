@@ -10,22 +10,22 @@ std::shared_ptr<Node> Parser::make_error() {
 }
 
 std::shared_ptr<Node> Parser::parse_program() {
-    auto region = std::make_shared<RegionNode>();
+    auto scope = std::make_shared<ScopeNode>();
     while (_current->type != Token::Type::End) {
         if (_current->type == Token::Type::Import && doImport) {
-            parse_import_now(region);
+            parse_import_now(scope);
             continue;
         }
-        region->statements.push_back(parse_statement());
+        scope->statements.push_back(parse_statement());
     }
     parse_token();
-    return std::make_shared<ProgramNode>(region);
+    return std::make_shared<ProgramNode>(scope);
 }
 
 std::shared_ptr<Node> Parser::parse_statement() {
     switch (_current->type) {
     case Token::Type::LBrace:
-        return parse_region();
+        return parse_scope();
     case Token::Type::Class:
         return parse_class_creation();
     case Token::Type::Const:
@@ -58,25 +58,25 @@ std::shared_ptr<Node> Parser::parse_statement() {
     }
 }
 
-std::shared_ptr<Node> Parser::parse_region() {
+std::shared_ptr<Node> Parser::parse_scope() {
     if (_current->type != Token::Type::LBrace) {
-        format_error("Regions must start with a left brace.");
+        format_error("Scopes must start with a left brace.");
         return make_error();
     }
     parse_token();
-    auto region = std::make_shared<RegionNode>();
+    auto scope = std::make_shared<ScopeNode>();
     while (!shouldEnd()) {
         if (_current->type == Token::Type::Import && doImport) {
-            parse_import_now(region);
+            parse_import_now(scope);
             continue;
         }
-        region->statements.push_back(parse_statement());
+        scope->statements.push_back(parse_statement());
     }
     if (_current->type != Token::Type::RBrace) {
         end_not_correct_error();
     }
     parse_token();
-    return region;
+    return scope;
 }
 
 std::shared_ptr<Node> Parser::parse_expr() {
@@ -196,7 +196,7 @@ std::shared_ptr<Node> Parser::parse_function() {
         _obj->args.push_back(_p);
     }
     parse_token();
-    _obj->inner = parse_region();
+    _obj->inner = parse_scope();
     return _obj;
 }
 
@@ -327,7 +327,7 @@ std::shared_ptr<Node> Parser::parse_function_creation() {
         _name = "__spec_constructor";
     }
 
-    _obj->inner = parse_region();
+    _obj->inner = parse_scope();
     auto _creationNode = std::make_shared<CreationNode>(false, false, false, true);
     _creationNode->creations.push_back(std::make_pair(_name, _obj));
     return _creationNode;
@@ -554,7 +554,7 @@ std::shared_ptr<Node> Parser::parse_import() {
     return _node;
 }
 
-void Parser::parse_import_now(std::shared_ptr<RegionNode> defr) {
+void Parser::parse_import_now(std::shared_ptr<ScopeNode> defr) {
     if (_current->type != Token::Type::Import) {
         unhandled_compiler_error();
         return;
@@ -579,11 +579,11 @@ void Parser::parse_import_now(std::shared_ptr<RegionNode> defr) {
         return;
     }
     auto _cast = std::dynamic_pointer_cast<ProgramNode>(_innerProg);
-    if (_cast->mainRegion->type != Node::Type::Region) {
+    if (_cast->mainScope->type != Node::Type::Scope) {
         import_error();
         return;
     }
-    defr->mergeWith(std::dynamic_pointer_cast<RegionNode>(_cast->mainRegion));
+    defr->mergeWith(std::dynamic_pointer_cast<ScopeNode>(_cast->mainScope));
 }
 
 std::shared_ptr<Node> Parser::parse_assign(std::shared_ptr<Node> left) {

@@ -19,7 +19,7 @@
 #include "ast/infix.hpp"
 #include "ast/prefix.hpp"
 #include "ast/program.hpp"
-#include "ast/region.hpp"
+#include "ast/scope.hpp"
 #include "ast/remove.hpp"
 #include "ast/return.hpp"
 #include "ast/statement.hpp"

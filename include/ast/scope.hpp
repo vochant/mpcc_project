@@ -5,10 +5,10 @@
 #include <vector>
 #include <sstream>
 
-class RegionNode : public Node {
+class ScopeNode : public Node {
 public:
     std::vector<std::shared_ptr<Node>> statements;
-    RegionNode() : Node(Node::Type::Region) {}
+    ScopeNode() : Node(Node::Type::Scope) {}
 public:
     std::string toString() const override {
         std::stringstream ss;
@@ -20,14 +20,14 @@ public:
         return ss.str();
     }
 
-    void mergeWith(std::shared_ptr<RegionNode> ano) {
+    void mergeWith(std::shared_ptr<ScopeNode> ano) {
         for (auto i : ano->statements) {
             statements.push_back(i);
         }
     }
 
     void storeInto(std::ostream& os) const override {
-        BinaryOut::write_byte(os, char(Node::Type::Region));
+        BinaryOut::write_byte(os, char(Node::Type::Scope));
         BinaryOut::write_data(os, statements.size());
         for (auto i : statements) {
             i->storeInto(os);

@@ -21,10 +21,13 @@ endif()
 
 # src
 set(LIBRARY_SOURCES
+    src/ast/base/node.cpp
     src/lexer/token.cpp
     src/lexer/lexer.cpp
     src/parser/parser.cpp
     src/object/base.cpp
+    src/object/environment.cpp
+    src/object/instance.cpp
     src/evaluator/evaluator.cpp
     src/program/program.cpp
 )

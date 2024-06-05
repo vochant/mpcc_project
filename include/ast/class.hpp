@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ast/region.hpp"
+#include "ast/scope.hpp"
 
 #include <vector>
 

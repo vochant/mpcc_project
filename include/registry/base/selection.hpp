@@ -11,9 +11,9 @@
 
 class PluginProvider {
 private:
-    std::shared_ptr<Program> _target;
+    Program* _target;
 public:
-    PluginProvider(std::shared_ptr<Program> _target) : _target(_target) {}
+    PluginProvider(Program* _target) : _target(_target) {}
     void attach() {
         // Load your plugin there.
         _target->loadLibrary(std::make_shared<DLoadPlugin>());

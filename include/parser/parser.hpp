@@ -35,7 +35,7 @@ public:
 private:
     std::shared_ptr<Node> import_file(std::string filePath);
     std::shared_ptr<Node> parse_statement();
-    std::shared_ptr<Node> parse_region();
+    std::shared_ptr<Node> parse_scope();
     std::shared_ptr<Node> parse_expr();
     std::shared_ptr<Node> parse_expr_level(OperatorPriority pri);
     std::shared_ptr<Node> parse_if();
@@ -54,7 +54,7 @@ private:
     std::shared_ptr<Node> parse_prefix();
     std::shared_ptr<Node> parse_remove();
     std::shared_ptr<Node> parse_import();
-    void parse_import_now(std::shared_ptr<RegionNode> defr);
+    void parse_import_now(std::shared_ptr<ScopeNode> defr);
     std::shared_ptr<Node> parse_assign(std::shared_ptr<Node> left);
     std::shared_ptr<Node> parse_ternary(std::shared_ptr<Node> cond);
     std::shared_ptr<Node> parse_group();

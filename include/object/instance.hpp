@@ -10,6 +10,8 @@ public:
     Instance(std::shared_ptr<Class> parentClass) : parentClass(parentClass), Object(Object::Type::Class) {
 		inner->copyFrom(parentClass->inner);
 	}
+
+	~Instance();
 public:
     std::string toString() const override {
         return "Instance:" + inner->toString();

@@ -3,21 +3,23 @@
 #include "evaluator/evaluator.hpp"
 #include <cmath>
 
+#include "i18n/interface.hpp"
+
 /**
  * @brief Evaluate a Program.
  * 
- * @param _prog ProgramNode, contains a RegionNode.
+ * @param _prog ProgramNode, contains a ScopeNode.
  * @param env Environment
  * @return std::shared_ptr<Object> Result
  */
 std::shared_ptr<Object> Evaluator::evaluate_program(std::shared_ptr<ProgramNode> _prog, Environment* env) {
-    auto _inner = _prog->mainRegion;
-    if (_inner->type != Node::Type::Region) {
+    auto _inner = _prog->mainScope;
+    if (_inner->type != Node::Type::Scope) {
         program_error();
         return make_error();
     }
-    auto _cast = std::dynamic_pointer_cast<RegionNode>(_inner);
-    return evaluate_region(_cast, env);
+    auto _cast = std::dynamic_pointer_cast<ScopeNode>(_inner);
+    return evaluate_scope(_cast, env);
 }
 
 /**
@@ -32,14 +34,14 @@ std::shared_ptr<Object> Evaluator::evaluate_constant(std::shared_ptr<ConstantNod
 }
 
 /**
- * @brief Evaluate a RegionNode
+ * @brief Evaluate a ScopeNode
  * 
- * @param _region RegionNode, contains statement(s).
+ * @param _scope ScopeNode, contains statement(s).
  * @param env Environment
  * @param no_isolate Isolate or not.
  * @return std::shared_ptr<Object> Result
  */
-std::shared_ptr<Object> Evaluator::evaluate_region(std::shared_ptr<RegionNode> _region, Environment* env, bool no_isolate = true) {
+std::shared_ptr<Object> Evaluator::evaluate_scope(std::shared_ptr<ScopeNode> _scope, Environment* env, bool no_isolate = true) {
 	std::shared_ptr<Environment> own;
 	Environment* to_use;
 	if (no_isolate) to_use = env;
@@ -48,7 +50,7 @@ std::shared_ptr<Object> Evaluator::evaluate_region(std::shared_ptr<RegionNode> _
 		to_use = own.get();
 	}
     std::shared_ptr<Object> res = std::make_shared<Null>();
-    for (auto i : _region->statements) {
+    for (auto i : _scope->statements) {
         res = evaluate_one(i, to_use);
         if (res->isReturn || res->type == Object::Type::Error) {
             return Object::toConstant(res->copy());
@@ -70,7 +72,7 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
     if (_call->more) {
         auto _more = evaluate_value(_call->more, env);
         if (_more->type != Object::Type::Array) {
-            more_type_error("Expected Array, got " + _more->typeOf() + ".");
+            more_type_error(i18n.lookup("error.evaluator.moreExpect", {{"Type", _more->typeOf()}}));
             return make_error();
         }
         auto _moreCast = std::dynamic_pointer_cast<Array>(_more);
@@ -83,21 +85,21 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
         if (_funcCast->args.size() > args.size() && (_funcCast->hasMore() || _funcCast->args.size() == args.size())) {
             args_size_error([_funcCast, args]()->std::string {
 				if (_funcCast->hasMore()) {
-					return "Required at least " + std::to_string(_funcCast->args.size()) + " args, but found only " + std::to_string(args.size()) + " args.";
+					return i18n.lookup("error.call.tooLessArgs", {{"[Expected]", std::to_string(_funcCast->args.size())}, {"[Current]", std::to_string(args.size())}});
 				}
 				else {
-					return "Required " + std::to_string(_funcCast->args.size()) + " args, but found only " + std::to_string(args.size()) + " args.";
+					return i18n.lookup("error.call.incorrectArgs", {{"[Expected]", std::to_string(_funcCast->args.size())}, {"[Current]", std::to_string(args.size())}});
 				}
 			}());
             return make_error();
         }
         auto innerEnv = std::make_shared<Environment>(_funcCast->isLambda ? env : _funcCast->outerEnv);
         bind_args(args, _funcCast->args, _funcCast->moreName, innerEnv);
-        if (_funcCast->inner->type != Node::Type::Region) {
+        if (_funcCast->inner->type != Node::Type::Scope) {
             node_type_error();
             return make_error();
         }
-        return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_funcCast->inner), innerEnv.get()));
+        return Object::toCommon(evaluate_scope(std::dynamic_pointer_cast<ScopeNode>(_funcCast->inner), innerEnv.get()));
     }
     else if (body->type == Object::Type::Class) {
         auto _classCast = std::dynamic_pointer_cast<Class>(body);
@@ -109,7 +111,7 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
             return make_error();
         }
         if (_cobj->type != Object::Type::Function) {
-            data_type_error("Constructors must be a function.");
+            data_type_error(i18n.lookup("error.evaluator.constructorType"));
             return make_error();
         }
         auto _func = std::dynamic_pointer_cast<Function>(_cobj);
@@ -119,12 +121,12 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
         }
         auto _innerEnv = std::make_shared<Environment>(_inst->inner);
         bind_args(args, _func->args, _func->moreName, _innerEnv);
-        if (_func->inner->type != Node::Type::Region) {
+        if (_func->inner->type != Node::Type::Scope) {
             node_type_error();
             return make_error();
         }
         _inst->inner->globalLock = true;
-        evaluate_region(std::dynamic_pointer_cast<RegionNode>(_func->inner), _innerEnv.get());
+        evaluate_scope(std::dynamic_pointer_cast<ScopeNode>(_func->inner), _innerEnv.get());
 		_inst->inner->_this = &std::dynamic_pointer_cast<Object>(_inst);
         return _inst;
     }
@@ -140,10 +142,10 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
             if (_func->args.size() > args.size() && (_func->hasMore() || _func->args.size() == args.size())) {
                 args_size_error([_func, args]()->std::string {
 				if (_func->hasMore()) {
-					return "Required at least " + std::to_string(_func->args.size()) + " args, but found only " + std::to_string(args.size()) + " args.";
+					return i18n.lookup("error.call.tooLessArgs", {{"[Expected]", std::to_string(_func->args.size())}, {"[Current]", std::to_string(args.size())}});
 				}
 				else {
-					return "Required " + std::to_string(_func->args.size()) + " args, but found only " + std::to_string(args.size()) + " args.";
+					return i18n.lookup("error.call.incorrectArgs", {{"[Expected]", std::to_string(_func->args.size())}, {"[Current]", std::to_string(args.size())}});
 				}
 			}());
                 return make_error();
@@ -154,17 +156,17 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
             }
             auto _innerEnv = std::make_shared<Environment>(_instCast->inner);
             bind_args(args, _func->args, _func->moreName, _innerEnv);
-            if (_func->inner->type != Node::Type::Region) {
-                unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
+            if (_func->inner->type != Node::Type::Scope) {
+                unhandled_error(i18n.lookup("error.ast.functionInner"));
                 return make_error();
             }
-            return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_func->inner), _innerEnv.get()));
+            return Object::toCommon(evaluate_scope(std::dynamic_pointer_cast<ScopeNode>(_func->inner), _innerEnv.get()));
         }
         else if (_cobj->type == Object::Type::NativeFunction) {
             auto _func = std::dynamic_pointer_cast<NativeFunction>(_cobj);
             auto[_sta, _rval] = _func->_func(args, env);
             if (_sta == NativeFunction::Result::FORMAT_ERR) {
-                args_size_error("NativeFunction reported FORMAT_ERROR.");
+                args_size_error(i18n.lookup("error.call.nativeFormat"));
                 return make_error();
             }
             else if (_sta == NativeFunction::Result::DATA_ERR) {
@@ -172,7 +174,7 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
                 return make_error();
             }
             else if (_sta == NativeFunction::Result::UNHANDLED_ERR) {
-                unhandled_error("NativeFunction reported UNHANDLED_ERROR.");
+                unhandled_error(i18n.lookup("error.call.nativeFormat"));
                 return make_error();
             }
             else {
@@ -180,7 +182,7 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
             }
         }
 		else {
-			data_type_error("Not a function/native-function - Instance->inner->getThere(\"operator()\").");
+			data_type_error(i18n.lookup("error.call.notExecutable", {{"[Subject]", "<Instance>.operator()"}}));
 			return make_error();
 		}
     }
@@ -188,7 +190,7 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
         auto _funcCast = std::dynamic_pointer_cast<NativeFunction>(body);
         auto[_sta, _rval] = _funcCast->_func(args, env);
         if (_sta == NativeFunction::Result::FORMAT_ERR) {
-            args_size_error("NativeFunction reported FORMAT_ERROR");
+            args_size_error(i18n.lookup("error.call.nativeFormat"));
             return make_error();
         }
         else if (_sta == NativeFunction::Result::DATA_ERR) {
@@ -196,7 +198,7 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
             return make_error();
         }
         else if (_sta == NativeFunction::Result::UNHANDLED_ERR) {
-            unhandled_error("NativeFunction reported UNHANDLED_ERROR.");
+            unhandled_error(i18n.lookup("error.call.nativeUnhandled"));
             return make_error();
         }
         else {
@@ -204,7 +206,7 @@ std::shared_ptr<Object> Evaluator::evaluate_call(std::shared_ptr<CallNode> _call
         }
     }
     else {
-        data_type_error("Not a function/native-function");
+        data_type_error(i18n.lookup("error.call.notExecutable1"));
         return make_error();
     }
 }
@@ -221,7 +223,7 @@ std::shared_ptr<Object> Evaluator::evaluate_array(std::shared_ptr<ArrayNode> _ar
 std::shared_ptr<Object> Evaluator::evaluate_assign(std::shared_ptr<AssignNode> _assign, Environment* env) {
     auto w = evaluate_value(_assign->left, env);
     if (!w->isMutable) {
-        not_mutable_error();
+        not_mutable_error(_assign->left->toString());
         return make_error();
     }
     auto v = evaluate_value(_assign->right, env);
@@ -234,7 +236,7 @@ std::shared_ptr<Object> Evaluator::evaluate_assign(std::shared_ptr<AssignNode> _
 	if (w->type == Object::Type::Null) {
 		if (_assign->left->type != Node::Type::Identifier) {
 			err_begin();
-			std::cout << "Unexpected re-definition for NULL.";
+			std::cerr << i18n.lookup("error.evaluator.nullAssignUnexpected");
 			err_end();
 			return make_error();
 		}
@@ -288,11 +290,11 @@ std::shared_ptr<Object> Evaluator::evaluate_class(std::shared_ptr<ClassNode> _cl
 		_ids->elements.push_back(std::make_shared<Integer>(cls->_signature));
 		cls->inner->set("__indexes__", _ids);
     }
-    if (_class->inner->type != Node::Type::Region) {
-        unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
+    if (_class->inner->type != Node::Type::Scope) {
+        unhandled_error(i18n.lookup("error.call.functionInner"));
         return make_error();
     }
-    evaluate_region(std::dynamic_pointer_cast<RegionNode>(_class->inner), cls->inner.get());
+    evaluate_scope(std::dynamic_pointer_cast<ScopeNode>(_class->inner), cls->inner.get());
     return cls;
 }
 
@@ -401,21 +403,21 @@ std::shared_ptr<Object> Evaluator::evaluate_indecrement(std::shared_ptr<InDecrem
         if (_func->type == Object::Type::Function) {
             auto _fc = std::dynamic_pointer_cast<Function>(_func);
             if (_fc->args.size() > 0 || _fc->hasMore()) {
-                args_size_error("Increment/Decrement functions must not have args.");
+                args_size_error(i18n.lookup("error.call.xcrementArgs"));
                 return make_error();
             }
             auto innerEnv = std::make_shared<Environment>(_fc->isLambda ? env : _fc->outerEnv);
-            if (_fc->inner->type != Node::Type::Region) {
-                unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
+            if (_fc->inner->type != Node::Type::Scope) {
+                unhandled_error(i18n.lookup("error.call.functionInner"));
                 return make_error();
             }
-            return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv.get()));
+            return Object::toCommon(evaluate_scope(std::dynamic_pointer_cast<ScopeNode>(_fc->inner), innerEnv.get()));
         }
         else if (_func->type == Object::Type::NativeFunction) {
             auto _fc = std::dynamic_pointer_cast<NativeFunction>(_func);
             auto res = _fc->_func(NativeFunction::arglist(), env);
             if (res.first == NativeFunction::Result::FORMAT_ERR) {
-                args_size_error("Increment/Decrement function(native) reported FORMAT_ERROR.");
+                args_size_error(i18n.lookup("error.call.nativeFormat.xcrement", {{"[Subject]", "Increment/Decrement"}}));
                 return make_error();
             }
             if (res.first == NativeFunction::Result::DATA_ERR) {
@@ -423,13 +425,13 @@ std::shared_ptr<Object> Evaluator::evaluate_indecrement(std::shared_ptr<InDecrem
                 return make_error();
             }
             if (res.first == NativeFunction::Result::UNHANDLED_ERR) {
-                unhandled_error("NativeFunction reported UNHANDLED_ERROR.");
+                unhandled_error(i18n.lookup("error.call.nativeUnhandled", {{"[Subject]", "Increment/Decrement"}}));
                 return make_error();
             }
             return res.second;
         }
         else {
-            data_type_error("Not a function/native-function - Instance->inner->getThere(\"" + _fname + "\").");
+            data_type_error(i18n.lookup("error.call.notExecutable", {{"[Subject]", "<Instance>." + _fname}}));
             return make_error();
         }
 		
@@ -464,23 +466,23 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 		if (func->type == Object::Type::Function) {
 			auto _fc = std::dynamic_pointer_cast<Function>(func);
 			if (_fc->args.size() != 1 || _fc->hasMore()) {
-				args_size_error("Index functions can contain 1 arg only and cannot use MoreArgument.");
+				args_size_error(i18n.lookup("error.call.indexArgs"));
 				return make_error();
 			}
 			auto innerEnv = std::make_shared<Environment>(env);
 			innerEnv->set(_fc->args[0], index);
 			innerEnv->get(_fc->args[0])->markMutable(true);
-			if (_fc->inner->type != Node::Type::Region) {
-				unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
+			if (_fc->inner->type != Node::Type::Scope) {
+				unhandled_error(i18n.lookup("error.call.functionInner"));
 				return make_error();
 			}
-			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv.get()));
+			return Object::toCommon(evaluate_scope(std::dynamic_pointer_cast<ScopeNode>(_fc->inner), innerEnv.get()));
 		}
 		if (func->type == Object::Type::NativeFunction) {
 			auto _fc = std::dynamic_pointer_cast<NativeFunction>(func);
             auto res = _fc->_func(NativeFunction::arglist{index}, env);
             if (res.first == NativeFunction::Result::FORMAT_ERR) {
-                args_size_error("Index function(native) reported FORMAT_ERROR.");
+                args_size_error(i18n.lookup("error.call.nativeFormat1", {{"[Subject]", "Index"}}));
                 return make_error();
             }
             if (res.first == NativeFunction::Result::DATA_ERR) {
@@ -488,12 +490,12 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
                 return make_error();
             }
             if (res.first == NativeFunction::Result::UNHANDLED_ERR) {
-                unhandled_error("NativeFunction reported UNHANDLED_ERROR.");
+                unhandled_error(i18n.lookup("error.call.nativeUnhandled1", {{"[Subject]", "Index"}}));
                 return make_error();
             }
             return res.second;
 		}
-		data_type_error("Not a function/native-function - Instance->inner->getThere(\"operator()\").");
+		data_type_error(i18n.lookup("error.notExecutable", {{"[Subject]", "<Instance>.operator[]"}}));
 		return make_error();
 	}
 	if (left->type == Object::Type::String) {
@@ -501,7 +503,7 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 			auto _idx = std::dynamic_pointer_cast<Integer>(index);
 			auto _val = std::dynamic_pointer_cast<String>(left);
 			if (_idx->value >= _val->value.length() || _idx->value < 0) {
-				out_of_range_error("Index Statement: String: Expected [0, " + std::to_string(_val->value.length() - 1) + "], got " + std::to_string(_idx->value) + ".");
+				out_of_range_error(i18n.lookup("error.index.stringAt", {{"[Begin]", "0"}, {"[End]", std::to_string(_val->value.length() - 1)}, {"Index", std::to_string(_idx->value)}}));
 				return make_error();
 			}
 			return std::make_shared<String>(_val->value[_idx->value]);
@@ -512,16 +514,16 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 			std::string result;
 			for (size_t i = 0; i + 1 < _idx->elements.size(); i += 2) {
 				if (_idx->elements[i]->type != Object::Type::Integer || _idx->elements[i + 1]->type != Object::Type::Integer) {
-					data_type_error("Indexes must be Integer or Array of Integer.");
+					data_type_error(i18n.lookup("error.index.type"));
 					return make_error();
 				}
 				auto _beg = std::dynamic_pointer_cast<Integer>(_idx->elements[i])->value, _end = std::dynamic_pointer_cast<Integer>(_idx->elements[i + 1])->value;
 				if (_end < _beg) {
-					out_of_range_error("Index Statement: String: Negative Width: End(" + std::to_string(_end) + ") < Begin(" + std::to_string(_beg) + ").");
+					out_of_range_error(i18n.lookup("error.index.incorrectRange.string", {{"[End]", std::to_string(_end)}, {"[Begin]", std::to_string(_beg)}}));
 					return make_error();
 				}
 				if (_end > _val->value.length() || _beg < 0) {
-					out_of_range_error("Index Statement: String: Expected [0, " + std::to_string(_val->value.length() - 1) + "], got [" + std::to_string(_beg) + ", " + std::to_string(_end) + "].");
+					out_of_range_error(i18n.lookup("error.index.stringAt1", {{"[Begin]", "1"}, {"[End]", std::to_string(_val->value.length() - 1)}, {"[I0]", std::to_string(_beg)}, {"[I1]", std::to_string(_end)}}));
 					return make_error();
 				}
 				result += _val->value.substr(_beg, _end - _beg + 1);
@@ -529,14 +531,14 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 			if (_idx->elements.size() & 1) {
 				auto _beg = std::dynamic_pointer_cast<Integer>(_idx->elements[_idx->elements.size() - 1])->value;
 				if (_beg >= _val->value.length() || _beg < 0) {
-					out_of_range_error("Index Statement: String: Expected [0, " + std::to_string(_val->value.length() - 1) + "], got " + std::to_string(_beg) + ".");
+					out_of_range_error(i18n.lookup("error.index.stringAt", {{"[Begin]", "0"}, {"[End]", std::to_string(_val->value.length() - 1)}, {"Index", std::to_string(_beg)}}));
 					return make_error();
 				}
 				result += _val->value.substr(_beg);
 			}
 			return std::make_shared<String>(result);
 		}
-		data_type_error("Indexes must be Integer of Array of Integer.");
+		data_type_error(i18n.lookup("error.index.type"));
 		return make_error();
 	}
 	if (left->type == Object::Type::Array) {
@@ -544,7 +546,7 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 			auto _idx = std::dynamic_pointer_cast<Integer>(index);
 			auto _val = std::dynamic_pointer_cast<Array>(left);
 			if (_idx->value >= _val->elements.size() || _idx->value < 0) {
-				out_of_range_error("Index Statement: Array: Expected [0, " + std::to_string(_val->elements.size() - 1) + "], got " + std::to_string(_idx->value) + ".");
+				out_of_range_error(i18n.lookup("error.index.arrayAt", {{"[Begin]", "0"}, {"[End]", std::to_string(_val->elements.size() - 1)}, {"[Index]", std::to_string(_idx->value)}}));
 				return make_error();
 			}
 			return Object::toConstant(_val->elements[_idx->value]->copy());
@@ -555,16 +557,16 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 			std::vector<std::shared_ptr<Object>> result;
 			for (size_t i = 0; i + 1 < _idx->elements.size(); i += 2) {
 				if (_idx->elements[i]->type != Object::Type::Integer || _idx->elements[i + 1]->type != Object::Type::Integer) {
-					data_type_error("Indexes must be Integer or Array of Integer.");
+					data_type_error(i18n.lookup("error.index.type"));
 					return make_error();
 				}
 				auto _beg = std::dynamic_pointer_cast<Integer>(_idx->elements[i])->value, _end = std::dynamic_pointer_cast<Integer>(_idx->elements[i + 1])->value;
 				if (_end < _beg) {
-					out_of_range_error("Index Statement: Array: Negative Width: End(" + std::to_string(_end) + ") < Begin(" + std::to_string(_beg) + ").");
+					out_of_range_error(i18n.lookup("error.index.incorrectRange.array", {{"[End]", std::to_string(_end)}, {"[Start]", std::to_string(_beg)}}));
 					return make_error();
 				}
 				if (_end > _val->elements.size() || _beg < 0) {
-					out_of_range_error("Index Statement: Array: Expected [0, " + std::to_string(_val->elements.size() - 1) + "], got [" + std::to_string(_beg) + ", " + std::to_string(_end) + "].");
+					out_of_range_error(i18n.lookup("error.index.arrayAt1", {{"[Begin]", "0"}, {"[End]", std::to_string(_val->elements.size() - 1)}, {"[I0]", std::to_string(_beg)}, {"[I1]", std::to_string(_end)}}));
 					return make_error();
 				}
 				result.insert(result.end(), _val->elements.begin() + _beg, _val->elements.begin() + _end + 1);
@@ -572,17 +574,17 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 			if (_idx->elements.size() & 1) {
 				auto _beg = std::dynamic_pointer_cast<Integer>(_idx->elements[_idx->elements.size() - 1])->value;
 				if (_beg >= _val->elements.size() || _beg < 0) {
-					out_of_range_error("Index Statement: Array: Expected [0, " + std::to_string(_val->elements.size() - 1) + "], got " + std::to_string(_beg) + ".");
+					out_of_range_error(i18n.lookup("error.index.arrayAt", {{"[Begin]", "0"}, {"[End]", std::to_string(_val->elements.size() - 1)}, {"[Index]", std::to_string(_beg)}}));
 					return make_error();
 				}
 				result.insert(result.end(), _val->elements.begin() + _beg, _val->elements.end());
 			}
 			return std::make_shared<Array>(result);
 		}
-		data_type_error("Indexes must be Integer of Array of Integer.");
+		data_type_error(i18n.lookup("error.index.type"));
 		return make_error();
 	}
-	data_type_error("Index Statement supports Instances, Strings and Arrays only.");
+	data_type_error(i18n.lookup("error.index.typeSupport"));
 	return make_error();
 }
 
@@ -590,21 +592,21 @@ std::shared_ptr<Object> Evaluator::evaluate_infix(std::shared_ptr<InfixNode> _in
 	auto left = evaluate_value(_infix->left, env);
 	if (_infix->_op == ".") {
 		if (_infix->right->type != Node::Type::Identifier) {
-			sub_error("Supports Object->[Identifier] only.");
+			sub_error(i18n.lookup("error.infix.notIdentifier"));
 			return make_error();
 		}
 		if (left->type == Object::Type::Instance) {
 			auto innerEnv = std::dynamic_pointer_cast<Instance>(left)->inner;
 			auto str = std::dynamic_pointer_cast<IdentifierNode>(_infix->right)->id;
 			if (innerEnv->getThere(str)->type != Object::Type::Null) {
-				sub_error("Instance does not have member \"" + str + "\".");
+				sub_error(i18n.lookup("error.infix.noSuchMember"));
 				return make_error();
 			}
 			if (innerEnv->getAT(str) != Item::AccessToken::Public) {
 				auto cll = innerEnv->getThere("__indexes__");
 				auto clr = env->get("__indexes__");
 				if (!check_class_relationship(cll, clr)) {
-					sub_error("Instance member \"" + str + "\" is private.");
+					sub_error(i18n.lookup("error.infix.memberPrivate"));
 					return make_error();
 				}
 			}
@@ -617,7 +619,7 @@ std::shared_ptr<Object> Evaluator::evaluate_infix(std::shared_ptr<InfixNode> _in
 				return std::make_shared<Integer>(eu->_enum[str]);
 			}
 			else {
-				sub_error("Enumerate value " + str + " not found.");
+				sub_error(i18n.lookup("error.infix.noSuchEnumerate"));
 				return make_error();
 			}
 		}
@@ -634,7 +636,7 @@ std::shared_ptr<Object> Evaluator::evaluate_infix(std::shared_ptr<InfixNode> _in
 		auto _ret_stat = std::make_shared<ReturnNode>(_call_stat);
 		auto _sta = std::make_shared<StatementNode>();
 		_sta->inner = _ret_stat;
-		auto inner = std::make_shared<RegionNode>();
+		auto inner = std::make_shared<ScopeNode>();
 		inner->statements.push_back(_sta);
 		auto fc = std::make_shared<FunctionNode>();
 		fc->inner = inner;
@@ -653,21 +655,21 @@ std::shared_ptr<Object> Evaluator::evaluate_prefix(std::shared_ptr<PrefixNode> _
 		if (func->type == Object::Type::Function) {
 			auto _fc = std::dynamic_pointer_cast<Function>(func);
 			if (_fc->args.size() != 0 || _fc->hasMore()) {
-				args_size_error("Prefix functions must not have args.");
+				args_size_error(i18n.lookup("error.call.prefixArgs"));
 				return make_error();
 			}
 			auto innerEnv = std::make_shared<Environment>(env);
-			if (_fc->inner->type != Node::Type::Region) {
-				unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
+			if (_fc->inner->type != Node::Type::Scope) {
+				unhandled_error(i18n.lookup("error.ast.functionInner"));
 				return make_error();
 			}
-			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv.get()));
+			return Object::toCommon(evaluate_scope(std::dynamic_pointer_cast<ScopeNode>(_fc->inner), innerEnv.get()));
 		}
 		if (func->type == Object::Type::NativeFunction) {
 			auto _fc = std::dynamic_pointer_cast<NativeFunction>(func);
             auto res = _fc->_func(NativeFunction::arglist(), env);
             if (res.first == NativeFunction::Result::FORMAT_ERR) {
-                args_size_error("Prefix function(native) reported FORMAT_ERROR.");
+                args_size_error(i18n.lookup("error.call.nativeFormat"));
                 return make_error();
             }
             if (res.first == NativeFunction::Result::DATA_ERR) {
@@ -675,12 +677,12 @@ std::shared_ptr<Object> Evaluator::evaluate_prefix(std::shared_ptr<PrefixNode> _
                 return make_error();
             }
             if (res.first == NativeFunction::Result::UNHANDLED_ERR) {
-                unhandled_error("NativeFunction reported UNHANDLED_ERROR.");
+                unhandled_error(i18n.lookup("error.call.nativeUnhandled"));
                 return make_error();
             }
             return res.second;
 		}
-		data_type_error("Not a function/native-function - Instance->inner->getThere(\"prefix" + _prefix->_op + "\").");
+		data_type_error(i18n.lookup("error.call.notExecutable", {{"[Subject]", "<Instance>->prefix" + _prefix->_op}}));
 		return make_error();
 	}
 	return calcuate_prefix(body, _prefix->_op);
@@ -722,7 +724,7 @@ std::shared_ptr<Object> Evaluator::evaluate_statement(std::shared_ptr<StatementN
 	if (_sta->inner->type == Node::Type::Expr) {
 		return evaluate_expr(std::dynamic_pointer_cast<ExprNode>(_sta->inner), env);
 	}
-	unhandled_error("Statement contained unexcepted type.");
+	unhandled_error(i18n.lookup("error.stat.type"));
 	return make_error();
 }
 
@@ -799,13 +801,13 @@ std::shared_ptr<Object> Evaluator::evaluate_value(std::shared_ptr<Node> _val, En
 	if (_val->type == Node::Type::Group) {
 		return evaluate_group(std::dynamic_pointer_cast<GroupNode>(_val), env);
 	}
-	data_type_error("Unknown value type.");
+	data_type_error(i18n.lookup("error.value.type"));
 	return make_error();
 }
 
 std::shared_ptr<Object> Evaluator::evaluate_one(std::shared_ptr<Node> _sta, Environment* env) {
-	if (_sta->type == Node::Type::Region) {
-		return evaluate_region(std::dynamic_pointer_cast<RegionNode>(_sta), env, false);
+	if (_sta->type == Node::Type::Scope) {
+		return evaluate_scope(std::dynamic_pointer_cast<ScopeNode>(_sta), env, false);
 	}
 	if (_sta->type == Node::Type::Creation) {
 		return evaluate_creation(std::dynamic_pointer_cast<CreationNode>(_sta), env);
@@ -822,7 +824,7 @@ std::shared_ptr<Object> Evaluator::evaluate_one(std::shared_ptr<Node> _sta, Envi
 	if (_sta->type == Node::Type::While) {
 		return evaluate_while(std::dynamic_pointer_cast<WhileNode>(_sta), env);
 	}
-	data_type_error("Unknown statement type.");
+	data_type_error(i18n.lookup("error.statement.type"));
 	return make_error();
 }
 
@@ -884,23 +886,23 @@ std::shared_ptr<Object> Evaluator::calcuate_infix(std::shared_ptr<Object> left, 
 		if (func->type == Object::Type::Function) {
 			auto _fc = std::dynamic_pointer_cast<Function>(func);
 			if (_fc->args.size() != 1 || _fc->hasMore()) {
-				args_size_error("Infix functions can contain 1 arg only and cannot use MoreArgument.");
+				args_size_error(i18n.lookup("error.call.infixArgs"));
 				return make_error();
 			}
 			auto innerEnv = std::make_shared<Environment>(env);
 			innerEnv->set(_fc->args[0], right);
 			innerEnv->get(_fc->args[0])->markMutable(true);
-			if (_fc->inner->type != Node::Type::Region) {
-				unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
+			if (_fc->inner->type != Node::Type::Scope) {
+				unhandled_error(i18n.lookup("error.call.functionInner"));
 				return make_error();
 			}
-			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv.get()));
+			return Object::toCommon(evaluate_scope(std::dynamic_pointer_cast<ScopeNode>(_fc->inner), innerEnv.get()));
 		}
 		if (func->type == Object::Type::NativeFunction) {
 			auto _fc = std::dynamic_pointer_cast<NativeFunction>(func);
             auto res = _fc->_func(NativeFunction::arglist{right}, env);
             if (res.first == NativeFunction::Result::FORMAT_ERR) {
-                args_size_error("Infix function(native) reported FORMAT_ERROR.");
+                args_size_error(i18n.lookup("error.call.nativeFormat"));
                 return make_error();
             }
             if (res.first == NativeFunction::Result::DATA_ERR) {
@@ -908,12 +910,12 @@ std::shared_ptr<Object> Evaluator::calcuate_infix(std::shared_ptr<Object> left, 
                 return make_error();
             }
             if (res.first == NativeFunction::Result::UNHANDLED_ERR) {
-                unhandled_error("NativeFunction reported UNHANDLED_ERROR.");
+                unhandled_error(i18n.lookup("error.call.nativeUnhandled"));
                 return make_error();
             }
             return res.second;
 		}
-		data_type_error("Not a function/native-function - Instance->inner->getThere(\"operator" + op + "\").");
+		data_type_error(i18n.lookup("error.call.notExecutable", {{"[Subject]", "<Instance>.operator" + op}}));
 		return make_error();
 	}
 	if (right->type == Object::Type::Instance) {
@@ -921,23 +923,23 @@ std::shared_ptr<Object> Evaluator::calcuate_infix(std::shared_ptr<Object> left, 
 		if (func->type == Object::Type::Function) {
 			auto _fc = std::dynamic_pointer_cast<Function>(func);
 			if (_fc->args.size() != 1 || _fc->hasMore()) {
-				args_size_error("Infix functions can contain 1 arg only and cannot use MoreArgument.");
+				args_size_error(i18n.lookup("error.call.infixArgs"));
 				return make_error();
 			}
 			auto innerEnv = std::make_shared<Environment>(env);
 			innerEnv->set(_fc->args[0], left);
 			innerEnv->get(_fc->args[0])->markMutable(true);
-			if (_fc->inner->type != Node::Type::Region) {
-				unhandled_error("Function->inner should be RegionNode, but found somewhere not.");
+			if (_fc->inner->type != Node::Type::Scope) {
+				unhandled_error(i18n.lookup("error.call.functionInner"));
 				return make_error();
 			}
-			return Object::toCommon(evaluate_region(std::dynamic_pointer_cast<RegionNode>(_fc->inner), innerEnv.get()));
+			return Object::toCommon(evaluate_scope(std::dynamic_pointer_cast<ScopeNode>(_fc->inner), innerEnv.get()));
 		}
 		if (func->type == Object::Type::NativeFunction) {
 			auto _fc = std::dynamic_pointer_cast<NativeFunction>(func);
             auto res = _fc->_func(NativeFunction::arglist{left}, env);
             if (res.first == NativeFunction::Result::FORMAT_ERR) {
-                args_size_error("Infix function(native) reported FORMAT_ERROR.");
+                args_size_error(i18n.lookup("error.call.nativeFormat"));
                 return make_error();
             }
             if (res.first == NativeFunction::Result::DATA_ERR) {
@@ -945,12 +947,12 @@ std::shared_ptr<Object> Evaluator::calcuate_infix(std::shared_ptr<Object> left, 
                 return make_error();
             }
             if (res.first == NativeFunction::Result::UNHANDLED_ERR) {
-                unhandled_error("NativeFunction reported UNHANDLED_ERROR.");
+                unhandled_error(i18n.lookup("error.call.nativeUnhandled"));
                 return make_error();
             }
             return res.second;
 		}
-		data_type_error("Not a function/native-function - Instance->inner->getThere(\"operator" + op + "\").");
+		data_type_error(i18n.lookup("error.call.notExecutable", {{"[Subject]", "<Instance>.operator" + op}}));
 		return make_error();
 	}
 	// Equations
@@ -1334,139 +1336,139 @@ bool Evaluator::isTrue(std::shared_ptr<Object> obj) {
 
 void arg_data_error() {
 	err_begin(true);
-	std::cout << "Argument Data Error.";
+	std::cout << i18n.lookup("error.call.argData");
 	err_end();
 }
 
 void unhandled_error(std::string reason) {
 	err_begin(true);
-	std::cout << "Unhandled Error by " << reason;
+	std::cout << i18n.lookup("error.unhandled", {{"Reason", reason}});
 	err_end();
 }
 
 void program_error() {
 	err_begin(true);
-	std::cout << "Program Init Error.";
+	std::cout << i18n.lookup("error.program.init");
 	err_end();
 }
 
 void node_type_error() {
 	err_begin(true);
-	std::cout << "Unexpected Node Type.";
+	std::cout << i18n.lookup("error.unexpected_node_type");
 	err_end();
 }
 
-void args_size_erorr(std::string msg) {
+void args_size_error(std::string msg) {
 	err_begin(true);
-	std::cout << "Argument Size Error: " << msg;
+	std::cout << i18n.lookup("error.argsize", {{"[How]", msg}});
 	err_end();
 }
 
 void invalid_constructor_error() {
 	err_begin(true);
-	std::cout << "Invalid Constructor.";
+	std::cout << i18n.lookup("error.iconstructor");
 	err_end();
 }
 
 void data_type_error(std::string msg) {
 	err_begin(true);
-	std::cout << "Data Type Error: " << msg;
+	std::cout << i18n.lookup("error.datatype", {{"[How]", msg}});
 	err_end();
 }
 
 void data_value_error() {
 	err_begin(true);
-	std::cout << "Unsupported Data Value.";
+	std::cout << i18n.lookup("error.datavalue");
 	err_end();
 }
 
 void not_found_error(std::string name) {
 	err_begin(true);
-	std::cout << name << ": Not Found.";
+	std::cout << i18n.lookup("error.notfound", {{"[Subject]", name}});
 	err_end();
 }
 
 void more_type_error(std::string msg) {
 	err_begin(true);
-	std::cout << "Illegal type of More Argument: " << msg;
+	std::cout << i18n.lookup("error.moretype", {{"[What]", msg}});
 	err_end();
 }
 
-void not_mutable_error() {
+void not_mutable_error(std::string what) {
 	err_begin(true);
-	std::cout << "Cannot Assign a Constant!";
+	std::cout << i18n.lookup("error.assignconstant", {{"[What]", what}});
 	err_end();
 }
 
 void type_different_error(std::string l, std::string r) {
 	err_begin(true);
-	std::cout << "Cannot assign type " << l << " into type " << r;
+	std::cout << i18n.lookup("error.assignBetweenTypes", {{"[T1]", l}, {"[T2]", r}});
 	err_end();
 }
 
 void extand_nothing_error(std::string name) {
 	err_begin(true);
-	std::cout << "Trying to inheritance nothing.";
+	std::cout << i18n.lookup("error.inherit", {{"[Name]", name}});
 	err_end();
 }
 
 void lvl_type_error() {
 	err_begin(true);
-	std::cout << "Incorrect \"Instance.__level__\".";
+	std::cout << i18n.lookup("error.leveltype");
 	err_end();
 }
 
 void conde_type_error() {
 	err_begin(true);
-	std::cout << "Unsupported type for Increment/Decrement.";
+	std::cout << i18n.lookup("error.xcrementType");
 	err_end();
 }
 
 void already_valid_error(std::string name) {
 	err_begin(true);
-	std::cout << "Variable \"" << name << "\" already exists.";
+	std::cout << i18n.lookup("error.alreadyExists", {{"[Name]", name}});
 	err_end();
 }
 
 void for_elem_error(std::string name) {
 	err_begin(true);
-	std::cout << "FOR Element Error for \"" << name << "\"";
+	std::cout << i18n.lookup("error.forElement", {{"[Name]", name}});
 	err_end();
 }
 
 void idc_error(std::string name) {
 	err_begin(true);
-	std::cout << "Increment/Decrement Error: " << name;
+	std::cout << i18n.lookup("error.xcrement", {{"[How]", name}});
 	err_end();
 }
 
 void out_of_range_error(std::string text) {
 	err_begin(true);
-	std::cout << "Out of Range: " << text;
+	std::cout << i18n.lookup("error.outOfRange", {{"[What]", text}});
 	err_end();
 }
 
 void invalid_error(std::string name) {
 	// Deprecated
 	err_begin(true);
-	std::cout << "Deprecated/Invalid Error: " << name;
+	std::cout << i18n.lookup("error.invalid", {{"[What]", name}});
 	err_end();
 }
 
 void sub_error(std::string name) {
 	err_begin(true);
-	std::cout << "Object Index Error: " << name;
+	std::cout << i18n.lookup("error.memberError", {{"[How]", name}});
 	err_end();
 }
 
 void wrong_infix_error(std::string lt, std::string rt, std::string op) {
 	err_begin(true);
-	std::cout << "Invalid Index : \"" << op << "\" between " << lt << " and " << rt;
+	std::cout << i18n.lookup("error.infix",{{"[What]", op}, {"[Left]", lt}, {"[Right]", rt}});
 	err_end();
 }
 
 void wrong_prefix_error(std::string bt, std::string op) {
 	err_begin(true);
-	std::cout << "Invalid Prefix: \"" << op << "\" for " << bt;
+	std::cout << i18n.lookup("error.prefix", {{"[What]", op}, {"[Type]", bt}});
 	err_end();
 }
