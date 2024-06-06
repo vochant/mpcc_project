@@ -3,6 +3,7 @@
 #include "object/native_function.hpp"
 
 #include <windows.h>
+#include <filesystem>
 
 typedef NativeFunction::resulttype (*base_function_t)(NativeFunction::arglist);
 
@@ -18,4 +19,10 @@ std::pair<std::shared_ptr<NativeFunction>, bool> get_ext_function(const std::str
         return std::make_pair(std::make_shared<NativeFunction>(), true);
     }
     return std::make_pair(std::make_shared<NativeFunction>(func), false);
+}
+
+std::filesystem::path get_executable_path() {
+	char szPath[1024];
+	GetModuleFileNameA(NULL, szPath, sizeof(szPath)-1);
+	return std::filesystem::path(szPath);
 }

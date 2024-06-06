@@ -2,7 +2,7 @@
 
 #include "object/base.hpp"
 #include <any>
-#include <program/vm_options.hpp>
+#include <program/util.hpp>
 
 class NativeData : public Object {
 public:

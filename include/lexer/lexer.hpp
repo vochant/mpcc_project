@@ -6,7 +6,7 @@
 #include <memory>
 #include <set>
 
-#include "program/vm_options.hpp"
+#include "program/util.hpp"
 #include "lexer/token.hpp"
 
 void reserved_err(std::string _res);

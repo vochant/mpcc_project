@@ -3,11 +3,7 @@
 #include "registry/base/plugin.hpp"
 #include "object/string.hpp"
 
-#ifdef _WIN32
-# include "system/windows_lib.hpp"
-#else
-# include "system/posix_lib.hpp"
-#endif
+#include "system/current.hpp"
 
 class DLoadPlugin : public Plugin {
 public:

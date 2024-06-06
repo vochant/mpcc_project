@@ -2,7 +2,7 @@
 
 #include "ast/scope.hpp"
 #include "ast/error.hpp"
-#include "program/vm_options.hpp"
+#include "program/util.hpp"
 
 class ProgramNode : public Node {
 public:

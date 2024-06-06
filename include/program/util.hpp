@@ -3,21 +3,22 @@
 #include "config.h"
 
 #define VERSION_NUMBER 0
-#define COLORED_OUTPUTS true
 #define IS_DEBUG true
-#define DEFAULT_I18N zh_CN
 #define CONSOLE_BUILD
 #define doImport true
+
+std::string _i18n_name = "zh_CN";
 
 #include <random>
 #include <iostream>
 #include <set>
+#include <filesystem>
 
 unsigned long long _cert;
 
 size_t _line, _column;
 
-bool hasError, assignBeforeDeclare, errorAsCrash;
+bool hasError;
 
 void err_begin(bool _abstract = false) {
     hasError = true;
@@ -41,4 +42,6 @@ void err_end() {
     std::cerr << "\n";
 }
 
-std::set<std::string> implist;
+std::set<std::string> implist; // Imported files
+
+std::filesystem::path respath;

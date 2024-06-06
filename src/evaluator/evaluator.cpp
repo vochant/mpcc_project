@@ -503,7 +503,7 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 			auto _idx = std::dynamic_pointer_cast<Integer>(index);
 			auto _val = std::dynamic_pointer_cast<String>(left);
 			if (_idx->value >= _val->value.length() || _idx->value < 0) {
-				out_of_range_error(i18n.lookup("error.index.stringAt", {{"[Begin]", "0"}, {"[End]", std::to_string(_val->value.length() - 1)}, {"Index", std::to_string(_idx->value)}}));
+				out_of_range_error(i18n.lookup("error.index.stringAt", {{"key": "[Begin]", "value": "0"} {"[End]", std::to_string(_val->value.length() - 1)}, {"Index", std::to_string(_idx->value)}}));
 				return make_error();
 			}
 			return std::make_shared<String>(_val->value[_idx->value]);
@@ -523,7 +523,7 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 					return make_error();
 				}
 				if (_end > _val->value.length() || _beg < 0) {
-					out_of_range_error(i18n.lookup("error.index.stringAt1", {{"[Begin]", "1"}, {"[End]", std::to_string(_val->value.length() - 1)}, {"[I0]", std::to_string(_beg)}, {"[I1]", std::to_string(_end)}}));
+					out_of_range_error(i18n.lookup("error.index.stringAt1", {{"key": "[Begin]", "value": "1"} {"[End]", std::to_string(_val->value.length() - 1)}, {"[I0]", std::to_string(_beg)}, {"[I1]", std::to_string(_end)}}));
 					return make_error();
 				}
 				result += _val->value.substr(_beg, _end - _beg + 1);
@@ -531,7 +531,7 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 			if (_idx->elements.size() & 1) {
 				auto _beg = std::dynamic_pointer_cast<Integer>(_idx->elements[_idx->elements.size() - 1])->value;
 				if (_beg >= _val->value.length() || _beg < 0) {
-					out_of_range_error(i18n.lookup("error.index.stringAt", {{"[Begin]", "0"}, {"[End]", std::to_string(_val->value.length() - 1)}, {"Index", std::to_string(_beg)}}));
+					out_of_range_error(i18n.lookup("error.index.stringAt", {{"key": "[Begin]", "value": "0"} {"[End]", std::to_string(_val->value.length() - 1)}, {"Index", std::to_string(_beg)}}));
 					return make_error();
 				}
 				result += _val->value.substr(_beg);
@@ -546,7 +546,7 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 			auto _idx = std::dynamic_pointer_cast<Integer>(index);
 			auto _val = std::dynamic_pointer_cast<Array>(left);
 			if (_idx->value >= _val->elements.size() || _idx->value < 0) {
-				out_of_range_error(i18n.lookup("error.index.arrayAt", {{"[Begin]", "0"}, {"[End]", std::to_string(_val->elements.size() - 1)}, {"[Index]", std::to_string(_idx->value)}}));
+				out_of_range_error(i18n.lookup("error.index.arrayAt", {{"key": "[Begin]", "value": "0"} {"[End]", std::to_string(_val->elements.size() - 1)}, {"[Index]", std::to_string(_idx->value)}}));
 				return make_error();
 			}
 			return Object::toConstant(_val->elements[_idx->value]->copy());
@@ -566,7 +566,7 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 					return make_error();
 				}
 				if (_end > _val->elements.size() || _beg < 0) {
-					out_of_range_error(i18n.lookup("error.index.arrayAt1", {{"[Begin]", "0"}, {"[End]", std::to_string(_val->elements.size() - 1)}, {"[I0]", std::to_string(_beg)}, {"[I1]", std::to_string(_end)}}));
+					out_of_range_error(i18n.lookup("error.index.arrayAt1", {{"key": "[Begin]", "value": "0"} {"[End]", std::to_string(_val->elements.size() - 1)}, {"[I0]", std::to_string(_beg)}, {"[I1]", std::to_string(_end)}}));
 					return make_error();
 				}
 				result.insert(result.end(), _val->elements.begin() + _beg, _val->elements.begin() + _end + 1);
@@ -574,7 +574,7 @@ std::shared_ptr<Object> Evaluator::evaluate_index(std::shared_ptr<IndexNode> _id
 			if (_idx->elements.size() & 1) {
 				auto _beg = std::dynamic_pointer_cast<Integer>(_idx->elements[_idx->elements.size() - 1])->value;
 				if (_beg >= _val->elements.size() || _beg < 0) {
-					out_of_range_error(i18n.lookup("error.index.arrayAt", {{"[Begin]", "0"}, {"[End]", std::to_string(_val->elements.size() - 1)}, {"[Index]", std::to_string(_beg)}}));
+					out_of_range_error(i18n.lookup("error.index.arrayAt", {{"key": "[Begin]", "value": "0"} {"[End]", std::to_string(_val->elements.size() - 1)}, {"[Index]", std::to_string(_beg)}}));
 					return make_error();
 				}
 				result.insert(result.end(), _val->elements.begin() + _beg, _val->elements.end());

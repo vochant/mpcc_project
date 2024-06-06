@@ -1,0 +1,15 @@
+{
+	"ident": "com.minphtis.mpcc",
+	"version": 1,
+	"features": [
+		"zh_CN.language"
+	],
+	"repo": {
+		"zh_CN.language": [
+			{
+				"from": "foreign",
+				"path": "zh_CN.json@zh_CN.language"
+			}
+		]
+	}
+}

@@ -4,6 +4,8 @@
 #include "ast/_all.hpp"
 #include "parser/parser.hpp"
 
+#include "i18n/interface.hpp"
+
 std::shared_ptr<Node> Parser::make_error() {
     parse_token();
     return std::make_shared<ErrorNode>();
@@ -60,7 +62,7 @@ std::shared_ptr<Node> Parser::parse_statement() {
 
 std::shared_ptr<Node> Parser::parse_scope() {
     if (_current->type != Token::Type::LBrace) {
-        format_error("Scopes must start with a left brace.");
+        format_error(i18n.lookup("error.scopeLeft"));
         return make_error();
     }
     parse_token();
@@ -124,12 +126,12 @@ std::shared_ptr<Node> Parser::parse_for() {
     auto _node = std::make_shared<ForNode>();
     _node->_var = parse_identifier();
     if (_current->type != Token::Type::LParan) {
-        format_error("For-Repeat must be written in the format of \"for var(range) statement\".");
+        format_error(i18n.lookup("error.forStat"));
     }
     parse_token();
     _node->_elem = parse_expr();
     if (_current->type != Token::Type::RParan) {
-        format_error("For-Repeat must be written in the format of \"for var(range) statement\".");
+        format_error(i18n.lookup("error.forStat"));
     }
     parse_token();
     _node->_body = parse_statement();
@@ -158,7 +160,7 @@ std::shared_ptr<Node> Parser::parse_function() {
 
     parse_token();
     if (_current->type != Token::Type::LParan) {
-        format_error("Functions must have an arguments list.");
+        format_error(i18n.lookup("error.functionNoArgs"));
         return make_error();
     }
     while (!shouldEnd() && _current->type != Token::Type::RParan) {
@@ -167,14 +169,14 @@ std::shared_ptr<Node> Parser::parse_function() {
         if (_current->type == Token::Type::More) {
             parse_token();
             if (_current->type != Token::Type::Identifier) {
-                format_error("More-Argument must have a name.");
+                format_error(i18n.lookup("error.moreName"));
                 return make_error();
             }
             _p = _current->value;
             parse_token();
             if (_current->type != Token::Type::RParan) {
                 if (_current->type != Token::Type::Comma) {
-                    format_error("Please use ',' to split arguments.");
+                    format_error(i18n.lookup("error.argSplit"));
                 }
                 else {
                     format_error("More-Argument must be the last argument.");

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "object/base.hpp"
-#include "program/vm_options.hpp"
+#include "program/util.hpp"
 
 class Error : public Object {
 public:

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lexer/lexer.hpp"
-#include "program/vm_options.hpp"
+#include "program/util.hpp"
 
 #include <functional>
 

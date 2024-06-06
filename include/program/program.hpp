@@ -47,7 +47,6 @@ public:
 	void Execute(std::string bin);
 	void Run(std::string src);
 	void REPL();
-	std::string GetInformation(std::string info);
 private:
 	void shift(long long& where, std::string what) {
 		for (size_t i = 0; i < what.length(); i++) {

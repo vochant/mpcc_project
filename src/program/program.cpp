@@ -62,31 +62,3 @@ void Program::REPL() {
 		evaluator.evaluate_program(std::dynamic_pointer_cast<ProgramNode>(prog), _inner.get());
 	}
 }
-
-const char _help[] =
-	"Usage:\n"
-	"mpcc [options]\n"
-	"\n"
-	"Options:\n"
-	"<source>       Run a source code.\n"
-	"-b <binary>    Run a MPCC Binary, but not a source code.\n"
-	"-r             Run REPL Mode\n"
-	"-c <in> <out>  Convert src->bin\n"
-	"-v             Version\n"
-	"-a             About\n"
-	"-h             Help\n";
-
-const char _about[] =
-	"MPCC Project 1.0\n"
-	"Copyright(C) 2019-2024 Minphtis Development.\n"
-	"Copyright(C) 2009-2024 Mirekintoc Void.\n"
-	"Under MIT License.\n";
-
-const char _version[] = "MPCC Project 1.0\n";
-
-std::string Program::GetInformation(std::string str) {
-	if (str == "help") return _help;
-	if (str == "about") return _about;
-	if (str == "version") return _version;
-	return "<lookup-failed>";
-}

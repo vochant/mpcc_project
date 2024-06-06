@@ -3,7 +3,7 @@
 #include "ast/base/node.hpp"
 #include "object/base.hpp"
 #include "object/environment.hpp"
-#include "program/vm_options.hpp"
+#include "program/util.hpp"
 
 class Class : public Object {
 public:

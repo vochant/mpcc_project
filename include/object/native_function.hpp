@@ -4,7 +4,7 @@
 #include "object/null.hpp"
 
 #include <functional>
-#include <program/vm_options.hpp>
+#include <program/util.hpp>
 
 class NativeFunction : public Object {
 public:
