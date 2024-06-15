@@ -2,12 +2,12 @@
 
 ## 翻译
 
-[English](README.md)  
-[中文](README-zh_CN.md)  
+[English](README.md) | 中文 
 
 ## 介绍
 
-**注意**：MPCC Project 当前仍未完成编写，您也许不能按照给定的方式编译和运行。
+> [!CAUTION]
+> MPCC Project 当前仍未完成编写，您也许不能按照给定的方式编译和运行。
 
 ### MPC
 

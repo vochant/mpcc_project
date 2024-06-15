@@ -2,12 +2,12 @@
 
 ## Translations
 
-[English](README.md)
-[中文](README-zh_CN.md)
+English | [中文](README-zh_CN.md)
 
 ## Introduction
 
-**Note**: The project is not released yet. Before the first release, you cannot compile or run it.
+> [!CAUTION]
+> The project is not released yet. Before the first release, you cannot compile or run it.
 
 ### MPC
 
