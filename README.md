@@ -87,11 +87,6 @@ mpcc -c <inputFileName> <outputFileName>
 
 To get additional information:
 
-```shell
-mpcc -v # Version
-mpcc -a # About
-```
-
 **Note:** You cannot merge two command-line parameters.
 
 ## Plugins
@@ -206,7 +201,6 @@ Users can also load the following built-in libraries according to their own need
 
 | Name | File | Features | System |
 | :--: | :--: | :--: | :--: |
-| cpython | include/registry/more/cpython.hpp | Provide the ability to run Python code with CPython, but require the corresponding include file. | All |
 | eval | include/registry/more/eval.hpp | Provide the ability to run code in strings | All |
 | win32-windowing | include/registry/win32w.hpp | Provide the ability to create window applications on Windows | Windows |
 
