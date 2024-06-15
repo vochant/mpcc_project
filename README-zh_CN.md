@@ -109,7 +109,7 @@ public:
        env->set("sum", std::make_shared<NativeFunction>(sum));
    }
 public:
-   static NativeFunction::resulttype sum(NativeFunction::arglist args) {
+   static NativeFunction::resulttype sum(NativeFunction::arglist args, Environment* env) {
        if (args.size() == 0) {
            return FormatError();
        }

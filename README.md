@@ -48,7 +48,7 @@ MPCC is currently compatible with common systems such as Windows, macOS, Linux, 
 
 The MPCC Project does not depend on any specific instruction set. Common architectures such as x86, arm, RISC-V, PowerPC, and Loongarch can all run it, as long as they meet the previous requirement.
 
-Due to functionalities like I18N and ASTDLIB relying on the Module class for parsing, which depends on the nlohmann_json library, if your system is incompatible with this library, try removing it from CMakeList.txt and change NO_MODULE to true. Note that this will degrade error messages to default mode, displaying internal names in an unreadable form, similar to [ERROR][ASTVM] :error.datatype :error.value.type. Failing to move the res directory when relocating the program will result in the same effect.
+Due to functionalities like I18N and ASTDLIB relying on the Module class for parsing, which depends on the `nlohmann_json` library, if your system is incompatible with this library, try removing it from `CMakeList.txt` and change `NO_MODULE` to `true`. Note that this will degrade error messages to default mode, displaying internal names in an unreadable form, similar to `[ERROR][ASTVM] :error.datatype :error.value.type`. Failing to move the `res` directory when relocating the program will result in the same effect.
 
 ### Building
 
@@ -118,7 +118,7 @@ public:
        env->set("sum", std::make_shared<NativeFunction>(sum));
    }
 public:
-   static NativeFunction::resulttype sum(NativeFunction::arglist args) {
+   static NativeFunction::resulttype sum(NativeFunction::arglist args, Environment* env) {
        if (args.size() == 0) {
            return FormatError();
        }
