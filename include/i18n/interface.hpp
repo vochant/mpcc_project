@@ -7,7 +7,7 @@ I18N i18n;
 
 namespace _I18N {
 	bool _isI18nSupported() {
-		#if defined(_WIN32) || defined(__linux__) || defined(__APPLE__)
+		#if (defined(_WIN32) || defined(__linux__) || defined(__APPLE__)) && !NO_MODULE
 		return true;
 		#else
 		return false;
@@ -76,6 +76,34 @@ namespace _I18N {
 		i18n->Register({"error.functionNoArgs", ":error.functionNoArgs"});
 		i18n->Register({"error.moreName", ":error.moreName"});
 		i18n->Register({"error.argSplit", ":error.argSplit"});
+		i18n->Register({"error.moreArgLast", ":error.moreArgLast"});
+		i18n->Register({"error.argNoName", ":error.argNoName"});
+		i18n->Register({"error.ternaryFormat", ":error.ternaryFormat"});
+		i18n->Register({"error.classNoName", ":error.classNoName"});
+		i18n->Register({"error.classInherit", ":error.classInherit"});
+		i18n->Register({"error.enumName", ":error.enumName"});
+		i18n->Register({"error.enumValue", ":error.enumValue"});
+		i18n->Register({"error.enumValueName", ":error.enumValueName"});
+		i18n->Register({"error.enumSplit", ":error.enumSplit"});
+		i18n->Register({"error.constructorArgs", ":error.constructorArgs"});
+		i18n->Register({"error.constructorMore", ":error.constructorMore"});
+		i18n->Register({"error.variableNoName", ":error.variableNoName"});
+		i18n->Register({"error.arraySplit", ":error.arraySplit"});
+		i18n->Register({"error.removeNothing", ":error.removeNothing"});
+		i18n->Register({"error.importPath", ":error.importPath"});
+		i18n->Register({"error.groupNoEnd", ":error.groupNoEnd"});
+		i18n->Register({"error.indexNoEnd", ":error.indexNoEnd"});
+		i18n->Register({"error.noOpPre", ":error.noOpPre"});
+		i18n->Register({"error.unknownPre", ":error.unknownPre"});
+		i18n->Register({"error.unknownIn", ":error.unknownIn"});
+		i18n->Register({"error.unhandledParse", ":error.unhandledParse"});
+		i18n->Register({"error.endIncorrectly", ":error.endIncorrectly"});
+		i18n->Register({"error.format", ":error.format [Information]"});
+		i18n->Register({"error.numberType", ":error.numberType"});
+		i18n->Register({"error.unknownInfix", ":error.unknownInfix"});
+		i18n->Register({"error.unknownPrefix", ":error.unknownPrefix"});
+		i18n->Register({"error.unknownAssign", ":error.unknownAssign"});
+		i18n->Register({"error.importError", ":error.importError"});
 	}
 }
 

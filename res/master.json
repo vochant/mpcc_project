@@ -2,13 +2,27 @@
 	"ident": "com.minphtis.mpcc",
 	"version": 1,
 	"features": [
-		"zh_CN.language"
+		"zh_CN.language",
+		"en_US.language"
+		"default.stdlib"
 	],
 	"repo": {
 		"zh_CN.language": [
 			{
 				"from": "foreign",
 				"path": "zh_CN.json@zh_CN.language"
+			}
+		],
+		"en_US.language": [
+			{
+				"from": "foreign",
+				"path": "en_US.json@en_US.language"
+			}
+		],
+		"mstd.stdlib": [
+			{
+				"from": "foregin",
+				"path": "standard.json@default.stdlib"
 			}
 		]
 	}

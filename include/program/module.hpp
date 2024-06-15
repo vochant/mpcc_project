@@ -10,7 +10,6 @@ using json = nlohmann::json;
 #include "system/current.hpp"
 #include "program/util.hpp"
 
-
 class Module {
 public:
 	std::string name, type;
@@ -23,19 +22,41 @@ public:
 		name = moduleName.substr(0, _pos);
 		type = moduleName.substr(_pos + 1);
 		feature = {};
-		return loadFile(modulePath, moduleName);
+		if (loadFile(modulePath, moduleName)) {
+			std::cout << "load:failed " << modulePath << " " << moduleName << "\n";
+			return true;
+		}
+		return false;
 	}
 	json& what() {
 		return feature;
 	}
 private:
+	void updateJson(json& origin, const json& updater) {
+		for (auto& i : updater.items()) {
+			if (origin.contains(i.key())) {
+				if (origin[i.key()].is_object() && i.value().is_object()) {
+					updateJson(origin[i.key()], i.value());
+					continue;
+				}
+			}
+			origin[i.key()] = i.value();
+		}
+	}
 	bool loadFile(std::string modulePath, std::string moduleName) {
 		std::ifstream fs(respath / modulePath);
 		if (!fs.good()) {
 			return true;
 		}
 		json _global;
-		fs >> _global;
+		try {
+			fs >> _global;
+		}
+		catch (std::exception& e) {
+			std::cout << e.what();
+			return true;
+		}
+		fs.close();
 		if (!_global.contains("ident") || !_global.contains("version")) {
 			return true;
 		}
@@ -99,7 +120,7 @@ private:
 			if (!_local.at("value").is_object()) {
 				return true;
 			}
-			feature.update(_local.at("value"));
+			updateJson(feature, _local.at("value"));
 			return false;
 		}
 		if (str == "include") {

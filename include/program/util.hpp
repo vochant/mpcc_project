@@ -5,7 +5,7 @@
 #define VERSION_NUMBER 0
 #define IS_DEBUG true
 #define CONSOLE_BUILD
-#define doImport true
+const bool doImport = true
 
 std::string _i18n_name = "zh_CN";
 

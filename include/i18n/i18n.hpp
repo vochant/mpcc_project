@@ -5,7 +5,7 @@
 #include <vector>
 #include <cstdlib>
 
-#include "program/module.hpp"
+#include "config.h"
 
 #ifdef CONSOLE_BUILD
 #ifdef _WIN32

@@ -53,6 +53,9 @@ public:
 		env->set("concat", std::make_shared<NativeFunction>(Concat));
 		env->set("slice", std::make_shared<NativeFunction>(Slice));
 		env->set("reverse", std::make_shared<NativeFunction>(Reverse));
+		env->set("digit", std::make_shared<NativeFunction>(ToDigit));
+		env->set("char", std::make_shared<NativeFunction>(ToChar));
+		env->set("join", std::make_shared<NativeFunction>(Join));
 
 	}
 public:
@@ -288,6 +291,61 @@ public:
 		if (args.size() == 3) return Flat({_Map.second, args[2]}, env);
 		else return Flat({_Map.second}, env);
 	}
+
+	static NativeFunction::resulttype ToDigit(NativeFunction::arglist args, Environment* env) {
+		if (args.size() != 1) {
+			return FormatError();
+		}
+		if (args[0]->type() != Object::Type::String) {
+			return FormatError();
+		}
+		auto str = std::dynamic_pointer_cast<String>(args[0]);
+		if (str->value.length() != 1) {
+			return DataError();
+		}
+		return OK(Integer((long long)str->value[0]));
+	}
+
+	static NativeFunction::resulttype ToChar(NativeFunction::arglist args, Environment* env) {
+		if (args.size() != 1) {
+			return FormatError();
+		}
+		if (args[0]->type != Object::Type::Integer) {
+			return FormatError();
+		}
+		auto itg = std::dynamic_pointer_cast<Integer>(args[0]);
+		return OK(String((char)itg->value));
+	}
+
+	static NativeFunction::resulttype Join(NativeFunction::arglist args, Environment* env) {
+		if (args.size() < 1 || args.size() > 2) {
+			return FormatError();
+		}
+		if (args[0]->type() != Object::Type::Array) {
+			return FormatError();
+		}
+		auto arr = std::dynamic_pointer_cast<Array>(args[0]);
+		std::string inner = "";
+		if (args.size() == 2) {
+			if (args[1]->type() != Object::Type::String) {
+				return FormatError();
+			}
+			inner = std::dynamic_pointer_cast<String>(args[1])->value;
+		}
+		std::stringstream ss;
+		bool _initial = true;
+		for (auto i : arr->elements) {
+			if (_initial) {
+				_initial = false;
+			}
+			else {
+				ss << inner;
+			}
+			ss << i->toString();
+		}
+		return ss.str();
+	}
+
 	/**
 	 * @brief Constuct parent class
 	 * 

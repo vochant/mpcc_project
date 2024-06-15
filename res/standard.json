@@ -1,0 +1,24 @@
+{
+	"ident": "com.minphtis.mpcc",
+	"version": 1,
+	"features": [
+		"mstd.stdlib",
+		"default.stdlib"
+	],
+	"repo": {
+		"mstd.stdlib": [
+			{
+				"type": "local",
+				"value": {
+					"include": "&mstd.mh"
+				}
+			}
+		],
+		"default.stdlib": [
+			{
+				"type": "include",
+				"path": "mstd.stdlib"
+			}
+		]
+	}
+}

@@ -9,6 +9,7 @@ set(EXEC_DESC "MPCC - A MPC Programming Language Toolchain")
 set(VERSION 1.0)
 
 set(COLORED_OUTPUTS true)
+set(NO_MODULE false)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY lib)

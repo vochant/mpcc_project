@@ -179,20 +179,20 @@ std::shared_ptr<Node> Parser::parse_function() {
                     format_error(i18n.lookup("error.argSplit"));
                 }
                 else {
-                    format_error("More-Argument must be the last argument.");
+                    format_error(i18n.lookup("error.moreArgLast"));
                 }
                 return make_error();
             }
             break;
         }
         if (_current->type != Token::Type::Identifier) {
-            format_error("Arguments must have a name.");
+            format_error(i18n.lookup("error.argNoName"));
             return make_error();
         }
         _p = _current->value;
         parse_token();
         if (_current->type != Token::Type::Comma && _current->type != Token::Type::RParan) {
-            format_error("Please use ',' to split arguments.");
+            format_error(i18n.lookup("argSplit"));
             return make_error();
         }
         _obj->args.push_back(_p);
@@ -211,7 +211,7 @@ std::shared_ptr<Node> Parser::parse_ternary(std::shared_ptr<Node> cond) {
     auto _node = std::make_shared<TernaryNode>(cond);
     _node->_if = parse_expr_level(OperatorPriority::Assign);
     if (_current->type != Token::Type::As) {
-        format_error("Ternary Expressions must be written like \"cond ? yes : no\".");
+        format_error(i18n.lookup("error.ternaryFormat"));
         return make_error();
     }
     parse_token();
@@ -226,7 +226,7 @@ std::shared_ptr<Node> Parser::parse_class_creation() {
     }
     parse_token();
     if (_current->type != Token::Type::Identifier) {
-        format_error("Classes must have a name.");
+        format_error(i18n.lookup("error.classNoName"));
         return make_error();
     }
     std::string _name = parse_identifier()->toString();
@@ -234,7 +234,7 @@ std::shared_ptr<Node> Parser::parse_class_creation() {
     if (_current->type == Token::Type::As) {
         parse_token();
         if (_current->type != Token::Type::Identifier) {
-            format_error("Classes must inherit something.");
+            format_error(i18n.lookup("error.classInherit"));
             return make_error();
         }
         _classNode->_ext = parse_identifier()->toString();
@@ -256,25 +256,25 @@ std::shared_ptr<Node> Parser::parse_enumerate_creation() {
     parse_token();
     std::string _name;
     if (_current->type != Token::Type::Identifier) {
-        format_error("Enumerates must have a name.");
+        format_error(i18n.lookup("error.enumName"));
         return make_error();
     }
     _name = parse_identifier()->toString();
     if (_current->type != Token::Type::LBrace) {
-        format_error("Enumerates must have a value list.");
+        format_error(i18n.lookup("error.enumValue"));
         return make_error();
     }
     auto _enumNode = std::make_shared<EnumerateNode>();
     while (!shouldEnd() && _current->type != Token::Type::RBrace) {
         parse_token();
         if (_current->type != Token::Type::Identifier) {
-            format_error("Enumerate values must have a name.");
+            format_error(i18n.lookup("error.enumValueName"));
             return make_error();
         }
         _enumNode->items.push_back(_current->value);
         parse_token();
         if (_current->type != Token::Type::Comma && _current->type != Token::Type::RBrace) {
-            format_error("You should use ',' to split enumerate values.");
+            format_error(i18n.lookup("error.enumSplit"));
             return make_error();
         }
     }
@@ -298,24 +298,24 @@ std::shared_ptr<Node> Parser::parse_function_creation() {
     parse_token();
     if (funcType == Token::Type::Constructor) {
         if (_current->type != Token::Type::LParan) {
-            format_error("Constructors must have an argument list.");
+            format_error(i18n.lookup("error.constructorArgs"));
             return make_error();
         }
         while (!shouldEnd() && _current->type != Token::Type::RParan) {
             parse_token();
             std::string _p;
             if (_current->type == Token::Type::More) {
-                format_error("Cannot use More-Argument in constructors.");
+                format_error(i18n.lookup("error.constructorMore"));
                 return make_error();
             }
             if (_current->type != Token::Type::Identifier) {
-                format_error("Arguments must have a name.");
+                format_error(i18n.lookup("error.argNoName"));
                 return make_error();
             }
             _p = _current->value;
             parse_token();
             if (_current->type != Token::Type::Comma && _current->type != Token::Type::RParan) {
-                format_error("You should use ',' to split arguments.");
+                format_error(i18n.lookup("error.argSplit"));
                 return make_error();
             }
             _obj->args.push_back(_p);
@@ -367,7 +367,7 @@ std::shared_ptr<Node> Parser::parse_creation() {
     while (true) {
         std::shared_ptr<Node> _obj = nullptr;
         if (_current->type != Token::Type::Identifier) {
-            format_error("Variables must have a name.");
+            format_error(i18n.lookup("error.variableNoName"));
             return make_error();
         }
         std::string _name = parse_identifier()->toString();
@@ -453,7 +453,7 @@ std::shared_ptr<Node> Parser::parse_array() {
         parse_token();
         _arr->elements.push_back(parse_expr());
         if (_current->type != Token::Type::Comma && _current->type != Token::Type::RBracket) {
-            format_error("You should use ',' to split items in an array.");
+            format_error(i18n.lookup("error.arraySplit"));
             return make_error();
         }
     }
@@ -504,7 +504,7 @@ std::shared_ptr<Node> Parser::parse_remove() {
     }
     parse_token();
     if (_current->type != Token::Type::Identifier) {
-        format_error("Remove statement must remove something.");
+        format_error(i18n.lookup("error.removeNothing"));
         return make_error();
     }
     auto _node = std::make_shared<RemoveNode>(parse_identifier()->toString());
@@ -545,7 +545,7 @@ std::shared_ptr<Node> Parser::parse_import() {
     auto _node = std::make_shared<ImportNode>();
     parse_token();
     if (_current->type != Token::Type::String) {
-        format_error("Import statements need a fixed path.");
+        format_error(i18n.lookup("error.importPath"));
         return make_error();
     }
     _node->item = String::unescape(_current->value);
@@ -563,7 +563,7 @@ void Parser::parse_import_now(std::shared_ptr<ScopeNode> defr) {
     }
     parse_token();
     if (_current->type != Token::Type::String) {
-        format_error("Import statement need a fixed path.");
+        format_error(i18n.lookup("error.importPath"));
         return;
     }
 	auto fileName = String::unescape(_current->value);
@@ -608,7 +608,7 @@ std::shared_ptr<Node> Parser::parse_group() {
     parse_token();
     auto _res =  parse_expr();
     if (_current->type != Token::Type::RParan) {
-        format_error("Groups must have an end.");
+        format_error(i18n.lookup("error.groupNoEnd"));
         return make_error();
     }
     parse_token();
@@ -627,14 +627,14 @@ std::shared_ptr<Node> Parser::parse_call(std::shared_ptr<Node> left) {
             parse_token();
             _node->more = parse_expr();
             if(_current->type != Token::Type::RParan) {
-                format_error("More-Argument must be the last argument.");
+                format_error(i18n.lookup("error.moreArgLast"));
                 return make_error();
             }
             break;
         }
         _node->args.push_back(parse_expr());
         if (_current->type != Token::Type::Comma && _current->type != Token::Type::RParan) {
-            format_error("You should use ',' to split arguments.");
+            format_error(i18n.lookup("error.argSplit"));
             return make_error();
         }
     }
@@ -650,7 +650,7 @@ std::shared_ptr<Node> Parser::parse_index(std::shared_ptr<Node> left) {
     parse_token();
     auto _node = std::make_shared<IndexNode>(left, parse_expr());
     if (_current->type != Token::Type::RBracket) {
-        format_error("Index expression must have an end.");
+        format_error(i18n.lookup("error.indexNoEnd"));
         return make_error();
     }
     parse_token();
@@ -667,7 +667,7 @@ std::shared_ptr<Node> Parser::parse_identifier() {
     if (_node->id == "operator" || _node->id == "prefix") {
         auto pri = getpri(_current->type);
         if (pri == OperatorPriority::Lowest) {
-            format_error("No operators or prefixes found.");
+            format_error(i18n.lookup("error.noOpPre"));
             return make_error();
         }
         _node->id += _current->value;
@@ -710,59 +710,58 @@ std::shared_ptr<Node> Parser::parse_in_decrement_after(std::shared_ptr<Node> lef
 
 void unknown_pre_expr_error() {
     err_begin();
-    std::cerr << "Unknown Pre-Expression.";
+    std::cerr << i18n.lookup("error.unknownPre");
     err_end();
 }
 
 void unknown_in_expr_error() {
     err_begin();
-    std::cerr << "Unknown In-Expression.";
+    std::cerr << i18n.lookup("error.unknownIn");
     err_end();
 }
 
 void unhandled_compiler_error() {
     err_begin();
-    std::cerr << "Unhandled error happened when parsing the program.\n";
-    std::cerr << "This may be a bug. Report it if you can.";
+    std::cerr << i18n.lookup("error.unhandledParse");
     err_end();
 }
 
 void end_not_correct_error() {
-    format_error("Something ended incorrectly.");
+    format_error(i18n.lookup("error.endIncorrectly"));
 } // Moved to format_error
 
 void format_error(std::string msg) {
     err_begin();
-    std::cerr << "Format Error: " + msg;
+    std::cerr << i18n.lookup("error.format", {{"[Information]", msg}});
     err_end();
 }
 
 void invalid_number_error() {
     err_begin();
-    std::cerr << "Invalid type of a number.";
+    std::cerr << i18n.lookup("error.numberType");
     err_end();
 }
 
 void unknown_infix_error() {
     err_begin();
-    std::cerr << "Used an unsupported token to be an infix.";
+    std::cerr << i18n.lookup("error.unknownInfix");
     err_end();
 }
 
 void unknown_prefix_error() {
     err_begin();
-    std::cerr << "Used an unsupported token to be a prefix.";
+    std::cerr << i18n.lookup("error.unknownPrefix");
     err_end();
 }
 
 void unknown_assign_error() {
     err_begin();
-    std::cerr << "Used an unsupported token when assign.";
+    std::cerr << i18n.lookup("error.unknownAssign");
     err_end();
 }
 
 void import_error() {
     err_begin();
-    std::cerr << "Cannot import a file - check it or its pre-compiled file is valid.";
+    std::cerr << i18n.lookup("error.importError");
     err_end();
 }

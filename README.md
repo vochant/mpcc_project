@@ -62,6 +62,8 @@ MPCC Project 当前支持绝大多数常见的操作系统，包括但不限于 
 
 MPCC Project 并不依赖于某种特定的指令集，常见的，例如 x86、arm、RISC-V、PowerPC、Loongarch 都可以运行，只要符合上一条。
 
+由于 I18N、ASTDLIB 等功能使用 `Module` 类进行解析依赖于 `nlohmann_json` 库，如果您的系统不兼容该库，请尝试在 `CMakeList.txt` 中删除该项，并将 `NO_MODULE` 改为 `true`。请注意，这将导致错误信息退化为缺省模式，即使用内部名称的不可读形式，类似于 `[ERROR][ASTVM] :error.datatype :error.value.type`。如果移动程序时没有一并移动 `res` 目录，则会产生同样的效果。
+
 ### 构建
 
 请确认您安装了 CMake 和一种您喜欢的构建工具。
@@ -113,14 +115,6 @@ mpcc -b <fileName>
 
 ```shell
 mpcc -c <inputFileName> <outputFileName>
-```
-
-要获取附加信息：
-
-```shell
-mpcc -v # Version
-mpcc -a # About
-mpcc -h # Help
 ```
 
 **注意：** 您不能同时使用多种参数！
@@ -238,3 +232,20 @@ MPC 提供以下运算：
 通常会在解析时完成导入操作，用户可以更改 `program/util.hpp` 中的 `doImport` 至 `false` 以在解析时不完成该步骤。请注意该更改仅改变解析逻辑而不改变运行逻辑。若在解析时完成，则抽象语法树不产生 `Import` 节点，否则产生 `Import` 节点。
 
 被导入的文件路径以字符串形式接在 `import` 关键字后，并且仅通过字符串比较来避免重复导入。
+
+### 国际化
+
+MPCC 支持多种语言，当前完成的有：
+
+- `<default>` 缺省语言，无法加载下述时自动加载，内嵌到代码
+- `zh_CN` 简体中文（中国）
+- `en_US` English (United States)
+- `ja_JP` 日本語（日本）
+
+注意：并不是所有语言的翻译都经过校验。若有不当，请予以反馈。
+
+在 `include/program/util.hpp` 中可以设置默认值，运行时使用 `-l <Language>` 参数可以临时设置。所有语言均为 `UTF-8` 格式，请注意在 Windows 平台下运行会更改当前命令行上下文的代码页，正常退出时复原，则可能会造成一定的影响。
+
+### 标准库
+
+`mstdlib` 是 MPCC Project 使用的默认标准库，在 `res/standard.json` 中可以增减标准库以及设置默认。
