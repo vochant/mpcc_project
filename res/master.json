@@ -3,7 +3,7 @@
 	"version": 1,
 	"features": [
 		"zh_CN.language",
-		"en_US.language"
+		"en_US.language",
 		"default.stdlib"
 	],
 	"repo": {
@@ -19,7 +19,7 @@
 				"path": "en_US.json@en_US.language"
 			}
 		],
-		"mstd.stdlib": [
+		"default.stdlib": [
 			{
 				"from": "foregin",
 				"path": "standard.json@default.stdlib"
