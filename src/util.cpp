@@ -3,7 +3,15 @@
 #include "parser_error.hpp"
 #include "compiler_error.hpp"
 
-ParserError::ParserError(std::string descr, Lexer* lexer)  {
+unsigned long long _cert;
+
+bool hasError;
+
+std::set<std::string> implist; // Imported files
+
+std::filesystem::path respath;
+
+ParserError::ParserError(std::string descr, Lexer* lexer) noexcept {
     if (lexer != nullptr) {
         desc = lexer->get_desc() + " " + descr;
     }
@@ -12,13 +20,13 @@ ParserError::ParserError(std::string descr, Lexer* lexer)  {
     }
 }
 
-CompilerError::CompilerError(std::string desc) : desc(desc) {}
+CompilerError::CompilerError(std::string desc) noexcept : desc(desc) {}
 
-const char* ParserError::what() const {
+const char* ParserError::what() const noexcept {
     return ("ParserError: " + desc).c_str();
 }
 
-const char* CompilerError::what() const {
+const char* CompilerError::what() const noexcept {
     return ("CompilerError: " + desc).c_str();
 }
 
@@ -149,8 +157,8 @@ std::string unescape(std::string in) {
             res += in[p];
             p++;
         }
-        return res;
     }
+    return res;
 }
 
 char ctohex(char v) {

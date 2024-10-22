@@ -10,13 +10,13 @@
 #include <filesystem>
 #include <string>
 
-unsigned long long _cert;
+extern unsigned long long _cert;
 
-bool hasError;
+extern bool hasError;
 
-std::set<std::string> implist; // Imported files
+extern std::set<std::string> implist; // Imported files
 
-std::filesystem::path respath;
+extern std::filesystem::path respath;
 
 std::string unescape(std::string in);
 std::string escape(std::string in);

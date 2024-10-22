@@ -3,15 +3,13 @@
 #include <string>
 #include <map>
 
-std::string applyLineForward;
-
 class Token {
 public:
     enum class Type {
         Integer, String, Extand, If, Else, Identifier,
         Let, For, While, End, Error, Scope, Float,
         LParan, RParan, LBrace, RBrace, LBracket, RBracket,
-        Comma, Semicolon, Return, End, Import,
+        Comma, Semicolon, Return, Import,
         Class, Constructor, Destructor, Plus, Minus, Asterisk,
         Slash, Modulus, BitwiseLeft, BitwiseRight, BitwiseAnd,
         BitwiseOr, BitwiseXor, BitwiseNot, LogicalNot, LogicalAnd,
@@ -26,6 +24,7 @@ public:
         New, Decorate, Final, Break, Continue, Arrow
     } type;
     std::string value, dit;
-    Token(const Type type, const std::string value) : type(type), value(value) {}
+    Token(const Type type, const std::string value);
+    Token(const std::string value, const Type type);
     static const std::map<Type, std::string> typeNames;
 };

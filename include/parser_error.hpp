@@ -3,7 +3,7 @@
 #include <exception>
 #include <string>
 
-#include "lexer.hpp"
+#include "lexer/lexer.hpp"
 
 class ParserError : public std::exception {
 private:

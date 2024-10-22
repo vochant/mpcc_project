@@ -3,8 +3,6 @@
 #include <exception>
 #include <string>
 
-#include "lexer.hpp"
-
 class CompilerError : public std::exception {
 private:
     std::string desc;

@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <sstream>
+#include <map>
 
 class FunctionNode : public Node {
 public:

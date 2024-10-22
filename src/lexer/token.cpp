@@ -1,7 +1,11 @@
 #ifndef __MPCC_SRC_TOKEN
 #define __MPCC_SRC_TOKEN
 
-#include "include/lexer/token.hpp"
+#include "lexer/token.hpp"
+
+Token::Token(const Type type, const std::string value) : type(type), value(value) {}
+
+Token::Token(const std::string value, const Type type) : type(type), value(value) {}
 
 const std::map<Token::Type, std::string> Token::typeNames = {
     {Token::Type::Class,				"class"},

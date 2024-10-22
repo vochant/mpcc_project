@@ -466,6 +466,7 @@ std::vector<std::shared_ptr<Asm>> NewNode::to_asm(ToAsmArgs _args) const {
     }
     res.push_back(std::make_shared<StringAsm>(Asm::Type::NEW, classname));
     res.push_back(std::make_shared<Asm>(Asm::Type::CLARG));
+    return res;
 }
 
 std::vector<std::shared_ptr<Asm>> NullNode::to_asm(ToAsmArgs args) const  {
@@ -517,7 +518,7 @@ std::vector<std::shared_ptr<Asm>> ScopeNode::to_asm(ToAsmArgs args) const {
 }
 
 std::vector<std::shared_ptr<Asm>> StringNode::to_asm(ToAsmArgs args) const {
-    return { std::make_shared<StringAsm>(Asm::Type::CSTR) };
+    return { std::make_shared<StringAsm>(Asm::Type::CSTR, value) };
 }
 
 std::vector<std::shared_ptr<Asm>> TernaryNode::to_asm(ToAsmArgs args) const {

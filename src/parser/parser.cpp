@@ -317,6 +317,9 @@ std::shared_ptr<Node> Parser::parse_for() {
         _node->_body = parse_statement();
         return _node;
     }
+    else {
+        throw ParserError("Unknown for type", &lexer);
+    }
 }
 
 std::shared_ptr<Node> Parser::parse_while() {
@@ -325,8 +328,7 @@ std::shared_ptr<Node> Parser::parse_while() {
     }
     bool isDoWhile = (_current->type == Token::Type::Dowhile);
     parse_token();
-    auto _node = std::make_shared<WhileNode>();
-    _node->isDoWhile = isDoWhile;
+    auto _node = std::make_shared<WhileNode>(isDoWhile);
     _node->_cond = parse_expr();
     _node->_body = parse_statement();
     return _node;
@@ -626,7 +628,8 @@ std::shared_ptr<Node> Parser::parse_creation() {
 
 std::shared_ptr<Node> Parser::parse_number() {
     std::string _val = _current->value;
-    if (_current->type == Token::Type::Integer) {
+    parse_token();
+    if (_prev->type == Token::Type::Integer) {
         if (_val.at(0) == '0' && _val.length() > 1) {
             if (_val.at(1) == 'x') {
                 if (_val.length() == 2) {
@@ -648,13 +651,12 @@ std::shared_ptr<Node> Parser::parse_number() {
             return std::make_shared<IntegerNode>(std::stoll(_val));
         }
     }
-    else if (_current->type == Token::Type::Float) {
+    else if (_prev->type == Token::Type::Float) {
         return std::make_shared<FloatNode>(std::stod(_val));
     }
     else {
         throw ParserError("Invalid number type", &lexer);
     }
-    parse_token();
 }
 
 std::shared_ptr<Node> Parser::parse_string() {

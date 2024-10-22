@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     Parser parser(src, "main.mpc");
     auto res = parser.parse_program();
     ToAsmArgs args;
-    size_t count;
+    size_t count = 0;
     args.isInRepeat = false;
     args.flagcount = &count;
     auto asmcode = res->to_asm(args);

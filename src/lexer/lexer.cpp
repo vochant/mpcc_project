@@ -55,6 +55,7 @@ std::string Lexer::read_identifier() {
             _at++;
         }
     }
+    return res;
 }
 
 std::pair<std::string, Token::Type> Lexer::read_number() {
@@ -278,7 +279,7 @@ std::shared_ptr<Token> Lexer::parseNext() {
         }
         _column++;
         _at++;
-        return std::make_shared<Token>("=", Token::Type::NotEqual);
+        return std::make_shared<Token>("=", Token::Type::Assign);
     case '+':
         if (_input.length() > _at + 1) {
             if (_input.at(_at + 1) == '=') {

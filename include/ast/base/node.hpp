@@ -18,7 +18,7 @@ public:
         Identifier, Class, Remove, CFor,
         Program, Import, Assign, Statement,
         Enumerate, Error, Index, TypeName,
-        InDecrement, Expr, Array, Function,
+        InDecrement, Expr, Array,
         Return, Ternary, Group, Integer, Float,
 		Boolean, String, Null, FunctionDef,
         ClassMember, New, Decorate, Constructor,
