@@ -1,105 +1,128 @@
 # MPCC Project
 
-## Translations
+## 翻译
 
-English | [中文](README-zh_CN.md)
+[English](README.md) | 中文 
 
-## Introduction
+## 介绍
 
 > [!CAUTION]
-> The project is not released yet. Before the first release, you cannot compile or run it.
+> MPCC Project 当前仍未完成编写，您也许不能按照给定的方式编译和运行。
 
 ### MPC
 
-MPC is a scripted, explanatory, strongly typed dynamic programming language that stores code logic in the from of AST. The code can be easily converted to a binary format to save space! It is object-oriented, supports classes, encapsulation, constructors, destructors, inheritance, polymorphism, etc.
-
-MPC means Mirekintoc's "Portable & Customizable" programming language. It has a very small source code, which does not take too much time to understand. It is easy to modify and has a convenient plug-in loading scheme. The following is a sample code:
+MPC 是一种脚本式、半解释性、强类型的编程语言，使用 MPASM 二进制存储代码逻辑、。MPC 是一款面向对象的编程语言，支持类、封装、构造函数、析构函数、继承、多态等功能。
 
 ```mpc
 class Integer {
-    private _value = 0;
-    print("An integer class created."); // library "io" required.
+    private value _value = 0;
     constructor(v) {
         _value = v;
+        print("An integer class created."); // library "io" required.
     }
-    public isok = function() {
+    public method isok = function() {
         return typestr(_value) == "integer"; // library "type-utils" required.
     }
     destructor {
         print("An integer calss destructed.");
     }
-    function valueOf() {
+    public method valueOf() {
         return _value;
     }
 }
 
-let a = Integer(114514);
+let a = new Integer(114514);
 ```
 
 ### MPCC Project
 
-MPCC Project is a cross-platform integration tool for MPC programming language based on C++.
+MPCC Project 是一款使用 C++ 编程语言的跨平台半解释性编程语言。MPC 表示 Mirekintoc PL Code。它的代码精简，不需要太长的时间用于理解，同时也易于修改、装载插件。
 
-## Building & Running
+## 构建 & 运行
 
-### Supporting Systems
+### 支持的系统
 
-MPCC is currently compatible with common systems such as Windows, macOS, Linux, etc., and relies on the Windows API or POSIX API to load external plug-ins. This type of plug-in does not depend on modifying the source code of MPCC, but can be loaded by the program from local dynamic libraries. This is not a necessary function, but a plugin that is loaded by default. You can remove it. Also, please note whether your program is dependent on it or other plugins that are not cross-platform. Theoretically, MPCC that do not contain plugins are compatible with any system (unless it doesn't even have CMake and a suitable C/C++ compiler! ).
+MPCC Project 当前支持绝大多数常见的操作系统，包括但不限于 Windows、macOS、Linux， 并且可以基于 Windows API 或 POSIX API 加载外置的插件。这种插件不需要更改 MPCC Project 的源代码即可运行，而是被 MPCC Project 从本地动态库读取而运行。这不是一个必须的功能，但通常会启用它，当然你也可以禁用它。另外，请注意您选中的插件是否跨平台。理论上没有安装插件的 MPCC Project 可以在任意支持 CMake 和 C++17 的操作系统上运行。
 
-The MPCC Project does not depend on any specific instruction set. Common architectures such as x86, arm, RISC-V, PowerPC, and Loongarch can all run it, as long as they meet the previous requirement.
+MPCC Project 并不依赖于某种特定的指令集，常见的，例如 x86、arm、RISC-V、PowerPC 都可以运行，只要符合上一条。
 
-Due to functionalities like I18N and ASTDLIB relying on the `Module` class for parsing, which depends on the `nlohmann_json` library, if your system is incompatible with this library, try removing it from `CMakeList.txt` and change `NO_MODULE` to `true`. Note that this will degrade error messages to default mode, displaying internal names in an unreadable form, similar to `[ERROR][ASTVM] :error.datatype :error.value.type`. Failing to move the `res` directory when relocating the program will result in the same effect.
+由于 coredef 等功能使用 `Module` 类进行解析依赖于 `nlohmann_json` 库，如果您的系统不兼容该库，请尝试在 `CMakeList.txt` 中删除该项，并将 `NO_MODULE` 改为 `true`。请注意，这将导致标准库不可外部更改。如果移动程序时没有一并移动 `res` 目录，则会产生同样的效果。
 
-### Building
+### 构建
 
-Before we get started, you need to install CMake and a compilation tool that you are familiar with it. Run the following commands:
+在开始前，您需要安装 CMake 和对应的编译套件，然后运行以下命令：
 
 ```shell
 cmake -B build -S . -D BUILD_TYPE=Release
 cmake --build build --config Release
 ```
 
-### Running
+### 运行
 
-To evaluate source code from a file:
-
-```shell
-mpcc <fileName>
-```
-
-To run REPL(Read-Evaluate-Print-Loop) mode:
+运行一个代码文件：
 
 ```shell
-mpcc -r
+mpcc e <fileName>
 ```
 
-To run a binary file (`.precf`):
+以 REPL (Read-Evaluate-Print Loop) 模式运行：
 
 ```shell
-mpcc -b <fileName>
+mpcc r
 ```
 
-To generate a binary file:
+运行一个二进制文件 (`*.mpe`)：
 
 ```shell
-mpcc -c <inputFileName> <outputFileName>
+mpcc x <fileName>
 ```
 
-To get additional information:
+创建一个二进制文件 (`*.mpe`)：
 
-**Note:** You cannot merge two command-line parameters.
+```shell
+mpcc c <inputFileName> <outputFileName>
+```
 
-## Plugins
+把代码转换为 TokenList (`.tokens.txt`)：
 
-To create a plugin, follow these steps:
+```shell
+mpcc s <inputFileName> <outputFileName>
+```
 
-### Folder
+把代码转换为 AST JSON (`.ast.json`)：
 
-Create a new file in the `include/registry` directory, such as `my_plugin.hpp`.
+```shell
+mpcc t <inputFileName> <outputFileName>
+```
 
-### Coding
+把代码文件转换为 MPASM (`.mps`)：
 
-Write the following content in the file. The example demonstrates the functionality of implementing an integer summation:
+```shell
+mpcc a <inputFileName> <outputFileName>
+```
+
+**注意**：您不能同时使用多种模式！
+
+### 模块
+
+1. **Token 解析器 (Lexer)** 用于划分源代码部件
+2. **语法解析器 (Parser)** 用于解析源代码为 AST
+3. **编译器 (Compiler)** 内置于 AST 节点中，用于输出 MPASM
+4. **连接器 (Linker)** 用于更改 `JMP` 系列语句的指向
+5. **虚拟机 (VM)** 用于运行 MPASM
+6. **转换器 (Convertor)** 用于将二进制/内存格式转换为人类可读形式。
+
+## 插件
+
+要创建一个内置插件，您需要：
+
+### 创建文件夹
+
+创建一个位于 `include/registry` 目录的文件，例如 `my_plugin.hpp`。
+
+### 编写代码
+
+写入下述内容。示例是对若干个整数求和，您也可以换成自己想要的。
 
 ```cpp
 #pragma once
@@ -129,19 +152,20 @@ public:
 };
 ```
 
-- `NativeFunction::resulttype` represents `std::pair<NativeFunctions::Result, std::shared_ptr<Object>>`.
-- `NativeFunction::arglist` represents `std::vector<std::shared_ptr<Object>>`.
+`NativeFunction::resulttype` 表示 `std::pair<NativeFunctions::Result, std::shared_ptr<Object>>`.
 
-Enumerate `NativeFunction::Result` includes 4 values: `OK`, `FORMAT_ERR`,  `DATA_ERR` and `UNHANDLED_ERR`.They respectively represent:
+`NativeFunction::arglist` 表示 `std::vector<std::shared_ptr<Object>>`.
 
-- `OK`: No error(s).
-- `FORMAT_ERR`: Called in the wrong format
-- `DATA_ERR`: Called with incorrect data (not data type).
-- `UNHANDLED_ERR`: An error occurred due to unknown reason.
+枚举 `NativeFunction::Result` 包含 4 个值： `OK`，`FORMAT_ERR`，`DATA_ERR` 和 `UNHANDLED_ERR`。它们分别表示：
 
-### Editing
+- `OK`：没有错误发生
+- `FORMAT_ERR`：以错误的格式调用
+- `DATA_ERR`：以错误的参数数据调用
+- `UNHANDLED_ERR`：未经处理的错误
 
-Modify `include/registry/base/selection.hpp`:
+### 修改文件
+
+修改 `include/registry/base/selection.hpp`:
 
 ```diff
 --- selection.hpp (old)
@@ -160,86 +184,86 @@ Modify `include/registry/base/selection.hpp`:
 +++ _target->loadLibrary(std::make_shared<MyPlugin>());
 ```
 
-### Rebuilding
+### 重新构建
 
-Rebuild the project.
+最后重新构建整个项目。
 
-## Features
+## 功能
 
-### Language
+### 语言
 
-MPC provides the following data types by default. Except for Class, Native Data and Instance, which have non fixed type strings, they all have fixed type strings.
+MPC 提供多种类型。除 NaitveData、Instance 和 Class 具有不确定的类型字段，其他类型（Integer、String、Float、Boolean、Function、NativeFunction、Null、Error）都有固定了类型字段。
 
-The `typestr` function provided in the `type-utils` library located in the file `include/registry/typeutils.hpp` can retrieve the type of a value. The type of a class is the same as the type of its instance.
+`type-utils` 库（`include/registry/typeutils.hpp`）提供的 `typestr` 函数可以获取一个值的类型。一个类和它的实例具有相同的编号（不是完整的类型字段）。
 
-Supported operations:
+支持运算：
 
-- Arithmetic: Addition, subtraction, multiplication, division, modulo, positive, negative
+- 算数运算：加、减、乘、除、取模、正、负
+- 位运算：按位与、按位或、按位取反、按位异或、左移、右移
+- 逻辑运算：与、或、非
+- 比较运算：等于、不等于、大于、小于、大于等于、小于等于
 
-- Bitwise: AND, OR, NOT, XOR, left shift, right shift
+### 支持库
 
-- Logic: AND, OR, NOT
-
-- Comparison: Equal to, not equal to, greater than, less than, greater than or equal to, less than or equal to
-
-### Libraries
-
-| Name | File | Features | System |
+| 名称 | 文件 | 功能 | 操作系统 |
 | :--: | :--: | :--: | :--: |
-| dynamic-load | include/registry/dynamic_load.hpp | Provide the ability to load external plugins | Windows/POSIX |
-| io | include/registry/io.hpp | Provide standard input and output | All |
-| constants | include/registry/constants.hpp | Provide information about the operating system and MPCC | All |
-| fileio | include/registry/fileio.hpp | Provide the ability to read and write from files | All |
-| type-utils | include/registry/type_utils.hpp | Provide functions such as type conversion and type string | All |
-| system | include/registry/system.hpp | Provide the ability to execute system commands | All |
-| math | include/registry/math.hpp | Provide simple mathematical functions | All |
-| algorithm | include/registry/algorithm.hpp | Provide common algorithms and methods | All |
-| base | include/registry/base.hpp | Provide some basic language features | All |
-| config | include/registry/config.hpp | Change evaluator config | All |
+| dynamic-load | include/registry/dynamic_load.hpp | 加载外置插件 | Windows/POSIX |
+| io | include/registry/io.hpp | 输入输出| 任意 |
+| constants | include/registry/constants.hpp | 常见的常量或判断函数 | 任意 |
+| fileio | include/registry/fileio.hpp | 文件输入输出 | 任意 |
+| type-utils | include/registry/type_utils.hpp | 类型转换和查询 | 任意 |
+| system | include/registry/system.hpp | 使用系统命令 | 任意 |
+| math | include/registry/math.hpp | 简单的数学功能 | 任意 |
+| algorithm | include/registry/algorithm.hpp | 常见算法和函数 | 任意 |
+| base | include/registry/base.hpp | 基本语言功能 | 任意 |
 
-Users can also load the following built-in libraries according to their own needs:
+用户可以自己加载以下自带的插件：
 
-| Name | File | Features | System |
+| 名称 | 文件 | 功能 | 操作系统 |
 | :--: | :--: | :--: | :--: |
-| eval | include/registry/more/eval.hpp | Provide the ability to run code in strings | All |
-| win32-windowing | include/registry/win32w.hpp | Provide the ability to create window applications on Windows | Windows |
+| eval | include/registry/more/eval.hpp | 运行字符串中的代码 | 任意 |
+| win32-windowing | include/registry/win32w.hpp | Win32 窗口编程 | Windows |
 
-### Multifile
+### 多文件
 
-The `import` keyword provided by MPC can import code from files. Please note that if there is a binary version of the file, MPCC will prioritize importing its binary version over its source code version. MPCC does not recognize file formats and will only attempt to add the `.precf` suffix at the end of the file name to find its binary version.
+`import` 关键字被用于导入文件或二进制中的代码。当代码版本和二进制版本同时存在，MPCC Project 会优先选用二进制版本。MPCC 不会判断文件类型，而仅仅会按照 `.precf` 后缀名来认定二进制文件。
 
-The import operation will be completed by default at the evaluation step. If you have built-in imported content when generating binary, you can also add the `-x` command-line parameter to accomplish this. Reminder again, you cannot concatenate command line parameters, which means you cannot use syntax like `mpcc -cx in.mpc out.precf`, but only `mpcc -c -x in.mpc out.precf`.
+通常会在解析时完成导入操作，用户可以更改 `program/util.hpp` 中的 `doImport` 至 `false` 以在解析时不完成该步骤。请注意该更改仅改变解析逻辑而不改变运行逻辑。若在解析时完成，则抽象语法树不产生 `Import` 节点，否则产生 `Import` 节点。
 
-The imported path can only be a path equivalent to the running directory or an absolute path, written as a string after the keyword `import`.
+被导入的文件路径以字符串形式接在 `import` 关键字后，并且仅通过字符串比较来避免重复导入。
 
-### Internationalization
+### 国际化
 
-MPCC supports a lot of languages. Completed languages include:
+MPCC 支持多种语言，当前完成的有：
 
-- `<default>`: Default language, which will be loaded unless the following cannot be loaded
-- `zh_CN`: 简体中文（中国）
-- `en_US`: English (United States)
-- `ja_JP`: 日本語（日本）
+- `<default>`：缺省语言，无法加载下述时自动加载，内嵌到代码
+- `zh_CN`：简体中文（中国）
+- `en_US`：English (United States)
+- `ja_JP`：日本語（日本）
 
-Maybe there are some mistakes in translations. Please give me feedback if you find problems.
+注意：并不是所有语言的翻译都经过校验。若有不当，请予以反馈。
 
-To set the default value, you could edit `include/program/util.hpp` or specify parameter `-l <Language>` to set temporarily. All languages are in UTF-8 format. Please note that running on the Windows platform may change the code page of the current command line context. Restoring it to normal upon regular exit may cause certain impacts.
+在 `include/program/util.hpp` 中可以设置默认值，运行时使用 `-l <Language>` 参数可以临时设置。所有语言均为 `UTF-8` 格式，请注意在 Windows 平台下运行会更改当前命令行上下文的代码页，正常退出时复原，则可能会造成一定的影响。
 
-## Development Progress
+### 标准库
 
-- [x] Inheritance & Polymorphism
-- [ ] break, continue, else-extra
-- [ ] const for function arguments
-- [ ] More Arguments Anywhere for calling & array
-- [ ] Object(Map)
-- [ ] Function Binding
-- [ ] Syndax Extra
-- [ ] Lazy Mode (negative width, lambda or native constructors, etc.)
+`mstdlib` 是 MPCC Project 使用的默认标准库，在 `res/standard.json` 中可以增减标准库以及设置默认。
 
-## Contributing
+## 开发进度
 
-Welcome to create issues and pull requests for the project. I am sooo happy to see it!
+- [x] 继承和多态
+- [ ] break, continue, else 功能扩展
+- [ ] 常量函数参数
+- [ ] 更强大的参数展开
+- [ ] Object (Map)
+- [ ] 函数绑定
+- [ ] 语法扩展
+- [ ] 弱语法检查模式
 
-## License
+## 贡献
 
-The project is licensed under MIT license. See also [LICENSE](LICENSE).
+欢迎为这个项目提交 PR 或 issue，我会非常高兴看到它！
+
+## 许可协议
+
+该项目在 MIT 协议下分发，另见 [LICENSE](LICENSE)。

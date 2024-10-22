@@ -17,8 +17,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY lib)
 
 set(RES_DIR res)
 
-configure_file(config.h.in config.h)
-
 set(CMAKE_CXX_FLAGS "-ftemplate-backtrace-limit=1")
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstandalone-debug")
@@ -31,15 +29,13 @@ find_package(nlohmann_json REQUIRED)
 
 # src
 set(LIBRARY_SOURCES
-    src/ast/base/node.cpp
+    src/ast/ast.cpp
     src/lexer/token.cpp
     src/lexer/lexer.cpp
     src/parser/parser.cpp
-    src/object/base.cpp
-    src/object/environment.cpp
-    src/object/instance.cpp
-    src/evaluator/evaluator.cpp
-    src/program/program.cpp
+    src/util.cpp
+    src/convertor/asm2plain.cpp
+    src/asm/asm.cpp
 )
 
 set(PROGRAM_SOURCES

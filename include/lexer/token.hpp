@@ -3,6 +3,8 @@
 #include <string>
 #include <map>
 
+std::string applyLineForward;
+
 class Token {
 public:
     enum class Type {
@@ -19,9 +21,11 @@ public:
         BitwiseXorAssign, Equal, NotEqual, Greater, Less, GreaterEqual,
         LessEqual, Lambda, Global, Var, Function,
         Public, Private, Dowhile, Const, Delete, Enumerate,
-        Null, Increment, Decrement, As, Ternary, More
+        Null, Increment, Decrement, As, Ternary, More, Func,
+        Method, Static, Value, ForceExtand, FunctionDef,
+        New, Decorate, Final, Break, Continue, Arrow
     } type;
-    std::string value;
+    std::string value, dit;
     Token(const Type type, const std::string value) : type(type), value(value) {}
     static const std::map<Type, std::string> typeNames;
 };

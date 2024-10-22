@@ -12,10 +12,10 @@
 	"contributes": {
 		"languages": [
 			{
-				"id": "com.minphtis.mpclf",
+				"id": "mpc",
 				"aliases": [
 					"MPC",
-					"com.minphtis.mpclf"
+					"mpc"
 				],
 				"extensions": [
 					".mpc",
@@ -26,9 +26,9 @@
 		],
 		"grammars": [
 			{
-				"language": "com.minphtis.mpclf",
+				"language": "mpc",
 				"scopeName": "source.mpc",
-				"path": "./syntaxes/com.minphtis.mpclf.tmLanguage.json"
+				"path": "./syntaxes/mpc.tmLanguage.json"
 			}
 		]
 	}

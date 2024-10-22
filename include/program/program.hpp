@@ -4,7 +4,6 @@
 #include "object/environment.hpp"
 #include "parser/parser.hpp"
 #include "registry/base/plugin.hpp"
-#include "evaluator/evaluator.hpp"
 
 class Program {
 public:

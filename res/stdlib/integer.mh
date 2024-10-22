@@ -432,7 +432,7 @@ class Integer {
 		__print__(toString());
 	}
 
-	let Digit = function(pos) {
+	public Digit = function(pos) {
 		typecheck(pos);
 		_num[length - 1 - pos];
 	}

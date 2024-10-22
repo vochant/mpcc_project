@@ -2,10 +2,10 @@
 	"ident": "com.minphtis.mpcc",
 	"version": 1,
 	"features": [
-		"zh_CN.language"
+		"ja_JP.language"
 	],
 	"repo": {
-		"zh_CN.language": [
+		"ja_JP.language": [
 			{
 				"from": "local",
 				"value": {

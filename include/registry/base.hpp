@@ -48,7 +48,7 @@ public:
 		env->set("flat", std::make_shared<NativeFunction>(Flat));
 		env->set("flatMap", std::make_shared<NativeFunction>(FlatMap));
 		env->set("len", std::make_shared<NativeFunction>(Length));
-		env->set("str", std::make_shared<NativeFunction>(Stringify));
+		env->set("tostr", std::make_shared<NativeFunction>(Stringify));
 		env->set("push", std::make_shared<NativeFunction>(Push));
 		env->set("concat", std::make_shared<NativeFunction>(Concat));
 		env->set("slice", std::make_shared<NativeFunction>(Slice));
@@ -56,7 +56,6 @@ public:
 		env->set("digit", std::make_shared<NativeFunction>(ToDigit));
 		env->set("char", std::make_shared<NativeFunction>(ToChar));
 		env->set("join", std::make_shared<NativeFunction>(Join));
-
 	}
 public:
 	static NativeFunction::resulttype Reverse(NativeFunction::arglist args, Environment* env) {

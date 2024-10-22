@@ -1,56 +1,50 @@
 #pragma once
 
-#include "registry/base/selection.hpp"
-#include "program/program.hpp"
+// The Next Generation of MPCC Project
+// Copyright(C) 2009-2024 Mirekintoc Void
+// MPCC Arkscene 1.0dev1
+
+// #include "program/program.hpp"
+#include <iostream>
+#include "parser/parser.hpp"
+#include "convertor/asm2plain.hpp"
 
 int main(int argc, char* argv[]) {
-	Program program;
-	PluginProvider pp(&program);
-	pp.attach();
-	if (argc == 1) {
-		std::cout << program.GetInformation("about");
-		std::cout << program.GetInformation("help");
-		return 0;
-	}
-	std::string argv1 = argv[1];
-	if (argv1 == "-b") {
-		if (argc != 3) {
-			std::cout << "Unknown usage.\n";
-			return 1;
-		}
-		program.Execute(argv[2]);
-		return 0;
-	}
-	if (argv1 == "-a") {
-		std::cout << program.GetInformation("about");
-		return 0;
-	}
-	if (argv1 == "-v") {
-		std::cout << program.GetInformation("version");
-		return 0;
-	}
-	if (argv1 == "-h") {
-		std::cout << program.GetInformation("help");
-		return 0;
-	}
-	if (argv1 == "-c") {
-		if (argc != 4) {
-			std::cout << "Unknown usage.";
-			return 1;
-		}
-		auto prog = program.GetContent(argv[2]);
-		std::fstream fs(argv[3], std::ios::out | std::ios::binary);
-		prog->storeInto(fs);
-		return 0;
-	}
-	if (argc != 2) {
-		std::cout << "Unknown usage.";
-		return 1;
-	}
-	if (argv1 == "-r") {
-		program.REPL();
-		return 0;
-	}
-	program.Execute(argv[1]);
+    std::ios::sync_with_stdio(false);
+    std::fstream fs("main.mpc", std::ios::in);
+    std::string src = "", tmp;
+    while (!fs.eof()) {
+        fs >> tmp;
+        src = src + "\n" + tmp;
+    }
+    Parser parser(src, "main.mpc");
+    auto res = parser.parse_program();
+    ToAsmArgs args;
+    size_t count;
+    args.isInRepeat = false;
+    args.flagcount = &count;
+    auto asmcode = res->to_asm(args);
+    for (auto i : asmcode) {
+        std::cout << asm2plain(i) << '\n';
+    }
+	// Program program;
+	// pp.attach();
+	// if (argc == 1) {
+	// 	std::cout << program.GetInformation("about");
+	// 	std::cout << program.GetInformation("help");
+	// 	return 0;
+	// }
+	// std::string argv1 = argv[1];
+	// if (argv1.length() == 1 && argv1 != "x") {
+
+    // }
+    // else if (argv1 == "x") {
+    //     if (argc < 3) {
+    //         std::cout << "Too less args\n";
+    //         std::cout << program.GetInformation("about");
+	// 	    std::cout << program.GetInformation("help");
+    //     }
+    // }
+	// program.Execute(argv1);
 	return 0;
 }

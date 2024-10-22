@@ -25,8 +25,17 @@ const std::map<Token::Type, std::string> Token::typeNames = {
     {Token::Type::Var,					"var"},
     {Token::Type::While,				"while"},
     {Token::Type::Null,					"null"},
-    {Token::Type::Function,				"function"},
+    {Token::Type::Func,	    			"func"},
+    {Token::Type::FunctionDef,          "function"},
+    {Token::Type::Static,               "static"},
+    {Token::Type::Method,               "method"},
+    {Token::Type::Final,                "final"},
+    {Token::Type::Value,                "value"},
+    {Token::Type::New,                  "new"},
+    {Token::Type::Break,                "break"},
+    {Token::Type::Continue,             "continue"},
 
+    {Token::Type::Arrow,                "arrow(\"=>\")"},
     {Token::Type::Assign,				"assign(\"=\")"},
     {Token::Type::Asterisk,				"asterisk(\"*\")"},
     {Token::Type::AsteriskAssign,		"asterisk_assign(\"*=\")"},
@@ -76,7 +85,8 @@ const std::map<Token::Type, std::string> Token::typeNames = {
     {Token::Type::Slash,				"slash(\"/\")"},
     {Token::Type::SlashAssign,			"slash_assign(\"/=\")"},
     {Token::Type::As,					"as(\":\")"},
-    {Token::Type::More,					"more(\"...\")"}
+    {Token::Type::More,					"more(\"...\")"},
+    {Token::Type::ForceExtand,          "force_extand(\"::\")"}
 };
 
 #endif
