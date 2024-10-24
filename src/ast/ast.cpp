@@ -213,6 +213,9 @@ std::vector<std::shared_ptr<Asm>> ClassMember::to_asm(ToAsmArgs args) const {
 std::vector<std::shared_ptr<Asm>> ConstructorNode::to_asm(ToAsmArgs _args) const {
     std::vector<std::shared_ptr<Asm>> res;
     res.push_back(std::make_shared<Asm>(Asm::Type::BFDC));
+    for (auto[k, v] : typechecks) {
+        res.push_back(std::make_shared<SIAsm>(Asm::Type::TREQ, k, v));
+    }
     for (auto i : args) {
         res.push_back(std::make_shared<StringAsm>(Asm::Type::RECV, i));
     }

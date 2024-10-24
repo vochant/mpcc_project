@@ -112,6 +112,8 @@ bool Parser::shouldEnd() {
     case Token::Type::End:
     case Token::Type::Semicolon:
     case Token::Type::RBrace:
+    case Token::Type::RBracket:
+    case Token::Type::RParan:
         return true;
     default:
         return false;
@@ -347,6 +349,7 @@ std::shared_ptr<Node> Parser::parse_function() {
     }
     while (!shouldEnd() && _current->type != Token::Type::RParan) {
         parse_token();
+        if (_current->type == Token::Type::RParan) break;
         std::string _p;
         if (_current->type == Token::Type::More) {
             parse_token();
@@ -496,6 +499,7 @@ std::shared_ptr<Node> Parser::parse_function_creation() {
         }
         while (!shouldEnd() && _current->type != Token::Type::RParan) {
             parse_token();
+            if (_current->type == Token::Type::RParan) break;
             std::string _p;
             if (_current->type == Token::Type::More) {
                 throw ParserError("Constructors cannot use argument expanding", &lexer);
@@ -505,6 +509,14 @@ std::shared_ptr<Node> Parser::parse_function_creation() {
             }
             _p = _current->value;
             parse_token();
+            if (_current->type == Token::Type::As) {
+                parse_token();
+                if (_current->type != Token::Type::Identifier) {
+                    throw ParserError("Typechecks should be identifiers");
+                }
+                _obj->typechecks.insert({_obj->args.size(), _current->value});
+                parse_token();
+            }
             if (_current->type != Token::Type::Comma && _current->type != Token::Type::RParan) {
                 throw ParserError("Arguments should be splited by comma and end with a right paran", &lexer);
             }
@@ -532,6 +544,7 @@ std::shared_ptr<Node> Parser::parse_function_creation() {
         }
         while (!shouldEnd() && _current->type != Token::Type::RParan) {
             parse_token();
+            if (_current->type == Token::Type::RParan) break;
             std::string _p;
             if (_current->type == Token::Type::More) {
                 parse_token();
@@ -540,6 +553,14 @@ std::shared_ptr<Node> Parser::parse_function_creation() {
                 }
                 _obj->moreName = _current->value;
                 parse_token();
+                if (_current->type == Token::Type::As) {
+                    parse_token();
+                    if (_current->type != Token::Type::Identifier) {
+                        throw ParserError("Typechecks should be identifiers");
+                    }
+                    _obj->typechecks.insert({_obj->args.size(), _current->value});
+                    parse_token();
+                }
                 if (_current->type != Token::Type::RParan) {
                     if (_current->type != Token::Type::Comma) {
                         throw ParserError("Arguments should be splited by comma");
@@ -682,6 +703,7 @@ std::shared_ptr<Node> Parser::parse_array() {
     auto _arr = std::make_shared<ArrayNode>();
     while (_current->type != Token::Type::RBracket) {
         parse_token();
+        if (_current->type == Token::Type::RBracket) break;
         _arr->elements.push_back(parse_expr());
         if (_current->type != Token::Type::Comma && _current->type != Token::Type::RBracket) {
             throw ParserError("Items of an array must be splited by comma", &lexer);
@@ -821,6 +843,7 @@ std::shared_ptr<Node> Parser::parse_call(std::shared_ptr<Node> left) {
     }
     while (_current->type != Token::Type::RParan) {
         parse_token();
+        if (_current->type == Token::Type::RParan) break;
         if (_current->type == Token::Type::More) {
             parse_token();
             _node->expands.push_back(_node->args.size());
@@ -879,6 +902,7 @@ std::shared_ptr<Node> Parser::parse_in_decrement_before() {
 
 std::shared_ptr<Node> Parser::parse_named_constant() {
     if (_current->type == Token::Type::Null) {
+        parse_token();
         return std::make_shared<NullNode>();
     }
     throw ParserError("Null expressions should have a null token", &lexer);
@@ -1039,5 +1063,7 @@ const std::map<Token::Type, Parser::OperatorPriority> Parser::priorityTable = {
     {Token::Type::LBracket,             OperatorPriority::Suffix},
     {Token::Type::LParan,               OperatorPriority::Suffix},
     {Token::Type::Extand,               OperatorPriority::Suffix},
-    {Token::Type::ForceExtand,          OperatorPriority::Suffix}
+    {Token::Type::ForceExtand,          OperatorPriority::Suffix},
+    {Token::Type::Increment,            OperatorPriority::Suffix},
+    {Token::Type::Decrement,            OperatorPriority::Suffix}
 };

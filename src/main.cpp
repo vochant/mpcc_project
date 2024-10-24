@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     std::fstream fs("main.mpc", std::ios::in);
     std::string src = "", tmp;
     while (!fs.eof()) {
-        fs >> tmp;
+        std::getline(fs, tmp);
         src = src + "\n" + tmp;
     }
     Parser parser(src, "main.mpc");

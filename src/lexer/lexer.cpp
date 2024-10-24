@@ -89,6 +89,8 @@ std::pair<std::string, Token::Type> Lexer::read_number() {
             res = "0";
         }
         else if (_input.at(_at + 1) != '.') {
+            _column++;
+            _at++;
             return std::make_pair("0", Token::Type::Integer);
         }
     }

@@ -72,8 +72,6 @@ std::string casm2plain(std::shared_ptr<Asm> ptr) {
         return "clarg";
     case Type::CLASS:
         return "class";
-    case Type::CLAT:
-        return "clat";
     case Type::CLD:
         return "cld";
     case Type::CLE:
@@ -176,8 +174,6 @@ std::string casm2plain(std::shared_ptr<Asm> ptr) {
         return "pcq";
     case Type::PNUL:
         return "pnul";
-    case Type::POP:
-        return "pop";
     case Type::POS:
         return "pos";
     case Type::PRIV:
@@ -190,10 +186,6 @@ std::string casm2plain(std::shared_ptr<Asm> ptr) {
         return "recv";
     case Type::RET:
         return "ret";
-    case Type::SBR:
-        return "sbr";
-    case Type::SGEH:
-        return "sgeh";
     case Type::SHL:
         return "shl";
     case Type::SHR:

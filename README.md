@@ -95,7 +95,7 @@ mpcc s <inputFileName> <outputFileName>
 mpcc t <inputFileName> <outputFileName>
 ```
 
-把代码文件转换为 MPASM (`.mps`)：
+把代码文件转换为 MPASM (`.mpasm` or `.mps`)：
 
 ```shell
 mpcc a <inputFileName> <outputFileName>
@@ -111,6 +111,8 @@ mpcc a <inputFileName> <outputFileName>
 4. **连接器 (Linker)** 用于更改 `JMP` 系列语句的指向
 5. **虚拟机 (VM)** 用于运行 MPASM
 6. **转换器 (Convertor)** 用于将二进制/内存格式转换为人类可读形式。
+
+二进制文件的 Magic 是 `MirekE09`
 
 ## 插件
 
