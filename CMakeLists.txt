@@ -29,6 +29,8 @@ set(LIBRARY_SOURCES
     src/util.cpp
     src/convertor/asm2plain.cpp
     src/asm/asm.cpp
+    src/compiler/compiler.cpp
+    src/linker/linker.cpp
 )
 
 set(PROGRAM_SOURCES src/main.cpp)

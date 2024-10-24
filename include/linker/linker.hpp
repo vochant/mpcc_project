@@ -6,7 +6,11 @@
 
 class Linker {
 public:
-    Linker();
-    std::pair<std::vector<std::shared_ptr<Asm>>, std::vector<size_t>> flagsdump(std::vector<std::shared_ptr<Asm>> raw, size_t flags);
-    std::vector<std::shared_ptr<Asm>> linkjmps(std::shared_ptr<std::shared_ptr<Asm>> raw, std::vector<size_t> dumps);
+    Linker(std::vector<std::shared_ptr<Asm>> inner, size_t count);
+    std::vector<std::shared_ptr<Asm>> link_program();
+private:
+    std::vector<std::shared_ptr<Asm>> inner;
+    size_t count;
+    std::pair<std::vector<std::shared_ptr<Asm>>, std::vector<size_t>> flagsdump(std::vector<std::shared_ptr<Asm>> raw, size_t flags) const;
+    std::vector<std::shared_ptr<Asm>> linkjmps(std::vector<std::shared_ptr<Asm>> raw, std::vector<size_t> dumps) const;
 };

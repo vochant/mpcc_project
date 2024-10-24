@@ -4,9 +4,10 @@
 // Copyright(C) 2009-2024 Mirekintoc Void
 // MPCC Arkscene 1.0dev1
 
-// #include "program/program.hpp"
 #include <iostream>
 #include "parser/parser.hpp"
+#include "compiler/compiler.hpp"
+#include "linker/linker.hpp"
 #include "convertor/asm2plain.hpp"
 
 int main(int argc, char* argv[]) {
@@ -19,32 +20,13 @@ int main(int argc, char* argv[]) {
     }
     Parser parser(src, "main.mpc");
     auto res = parser.parse_program();
-    ToAsmArgs args;
-    size_t count = 0;
-    args.isInRepeat = false;
-    args.flagcount = &count;
-    auto asmcode = res->to_asm(args);
-    for (auto i : asmcode) {
+    Compiler compiler(res);
+    size_t count;
+    auto asmcode = compiler.compile(count);
+    Linker linker(asmcode, count);
+    auto linked = linker.link_program();
+    for (auto i : linked) {
         std::cout << asm2plain(i) << '\n';
     }
-	// Program program;
-	// pp.attach();
-	// if (argc == 1) {
-	// 	std::cout << program.GetInformation("about");
-	// 	std::cout << program.GetInformation("help");
-	// 	return 0;
-	// }
-	// std::string argv1 = argv[1];
-	// if (argv1.length() == 1 && argv1 != "x") {
-
-    // }
-    // else if (argv1 == "x") {
-    //     if (argc < 3) {
-    //         std::cout << "Too less args\n";
-    //         std::cout << program.GetInformation("about");
-	// 	    std::cout << program.GetInformation("help");
-    //     }
-    // }
-	// program.Execute(argv1);
 	return 0;
 }
