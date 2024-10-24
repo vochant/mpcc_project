@@ -14,13 +14,13 @@
 MPC 是一种脚本式、半解释性、强类型的编程语言，使用 MPASM 二进制存储代码逻辑、。MPC 是一款面向对象的编程语言，支持类、封装、构造函数、析构函数、继承、多态等功能。
 
 ```mpc
-class Integer {
+class IntegerClass {
     private value _value = 0;
-    constructor(v) {
+    constructor(v : Integer) {
         _value = v;
         print("An integer class created."); // library "io" required.
     }
-    public method isok = function() {
+    public method isok() {
         return typestr(_value) == "integer"; // library "type-utils" required.
     }
     destructor {
@@ -31,7 +31,7 @@ class Integer {
     }
 }
 
-let a = new Integer(114514);
+let a = new IntegerClass(114514);
 ```
 
 ### MPCC Project
@@ -167,24 +167,7 @@ public:
 
 ### 修改文件
 
-修改 `include/registry/base/selection.hpp`:
-
-```diff
---- selection.hpp (old)
-+++ selection.hpp (new)
-@@ -3,6 +3,7 @@
-    // Include your plugin there
-    #include "registry/dynamic_load.hpp"
-    #include "registry/io.hpp"
-    #include "registry/constants.hpp"
-+++ #include "registry/my_plugin.hpp"
-@@ -16,19 +16,20 @@
-    // Load your plugin there.
-    _target->loadLibrary(std::make_shared<DLoadPlugin>());
-    _target->loadLibrary(std::make_shared<IOPlugin>());
-    _target->loadLibrary(std::make_shared<ConstantsPlugin>());
-+++ _target->loadLibrary(std::make_shared<MyPlugin>());
-```
+修改 `src/main.cpp`，添加对该插件的注册行为。
 
 ### 重新构建
 
@@ -194,7 +177,7 @@ public:
 
 ### 语言
 
-MPC 提供多种类型。除 NaitveData、Instance 和 Class 具有不确定的类型字段，其他类型（Integer、String、Float、Boolean、Function、NativeFunction、Null、Error）都有固定了类型字段。
+MPC 提供多种类型。除 Naitve 和 Instance 具有不确定的类型字段，其他类型（如 Integer、String、Float、Boolean、Executable、Null、Error）都有固定了类型字段。
 
 `type-utils` 库（`include/registry/typeutils.hpp`）提供的 `typestr` 函数可以获取一个值的类型。一个类和它的实例具有相同的编号（不是完整的类型字段）。
 
@@ -228,43 +211,19 @@ MPC 提供多种类型。除 NaitveData、Instance 和 Class 具有不确定的�
 
 ### 多文件
 
-`import` 关键字被用于导入文件或二进制中的代码。当代码版本和二进制版本同时存在，MPCC Project 会优先选用二进制版本。MPCC 不会判断文件类型，而仅仅会按照 `.precf` 后缀名来认定二进制文件。
-
-通常会在解析时完成导入操作，用户可以更改 `program/util.hpp` 中的 `doImport` 至 `false` 以在解析时不完成该步骤。请注意该更改仅改变解析逻辑而不改变运行逻辑。若在解析时完成，则抽象语法树不产生 `Import` 节点，否则产生 `Import` 节点。
+`import` 关键字被用于导入文件或二进制中的代码。
 
 被导入的文件路径以字符串形式接在 `import` 关键字后，并且仅通过字符串比较来避免重复导入。
-
-### 国际化
-
-MPCC 支持多种语言，当前完成的有：
-
-- `<default>`：缺省语言，无法加载下述时自动加载，内嵌到代码
-- `zh_CN`：简体中文（中国）
-- `en_US`：English (United States)
-- `ja_JP`：日本語（日本）
-
-注意：并不是所有语言的翻译都经过校验。若有不当，请予以反馈。
-
-在 `include/program/util.hpp` 中可以设置默认值，运行时使用 `-l <Language>` 参数可以临时设置。所有语言均为 `UTF-8` 格式，请注意在 Windows 平台下运行会更改当前命令行上下文的代码页，正常退出时复原，则可能会造成一定的影响。
 
 ### 标准库
 
 `mstdlib` 是 MPCC Project 使用的默认标准库，在 `res/standard.json` 中可以增减标准库以及设置默认。
 
-## 开发进度
-
-- [x] 继承和多态
-- [ ] break, continue, else 功能扩展
-- [ ] 常量函数参数
-- [ ] 更强大的参数展开
-- [ ] Object (Map)
-- [ ] 函数绑定
-- [ ] 语法扩展
-- [ ] 弱语法检查模式
-
 ## 贡献
 
 欢迎为这个项目提交 PR 或 issue，我会非常高兴看到它！
+
+感谢 `lighzy-interpreter` 提供的代码参考和 CMake 模板
 
 ## 许可协议
 
