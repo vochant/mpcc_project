@@ -10,7 +10,6 @@ public:
     enum ExecType {
         Function, // A pointer in code segment
         NativeFunction, // A C++ std::function object
-        FarFunction, // A sequence of assembly code
         Placeholder // A placeholder (like super)
     } etype;
     Executable(ExecType etype);

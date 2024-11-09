@@ -13,5 +13,4 @@ public:
     std::map<size_t, std::string> typechecks;
     size_t argcount;
     ConstructorNode();
-    std::vector<std::shared_ptr<Asm>> to_asm(ToAsmArgs args) const override;
 };

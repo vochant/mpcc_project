@@ -9,5 +9,4 @@ public:
     std::shared_ptr<Node> _var;
     std::shared_ptr<Node> _elem, _body;
     ForNode();
-    std::vector<std::shared_ptr<Asm>> to_asm(ToAsmArgs args) const override;
 };

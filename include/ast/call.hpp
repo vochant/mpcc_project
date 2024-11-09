@@ -13,5 +13,4 @@ public:
     std::vector<std::shared_ptr<Node>> args;
 	std::vector<int> expands;
     CallNode(std::shared_ptr<Node> to_run);
-    std::vector<std::shared_ptr<Asm>> to_asm(ToAsmArgs args) const override;
 };

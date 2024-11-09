@@ -1,7 +1,6 @@
 #pragma once
 
-#include "object/farfunction.hpp"
-#include "object/function.hpp"
+#include "object/executable.hpp"
 
 class MemberFunction : public Object {
 private:

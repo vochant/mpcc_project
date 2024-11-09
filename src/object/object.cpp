@@ -1,7 +1,6 @@
 #include "object/array.hpp"
 #include "object/boolean.hpp"
 #include "object/byte.hpp"
-#include "object/farfunction.hpp"
 #include "object/float.hpp"
 #include "object/float32.hpp"
 #include "object/function.hpp"
@@ -30,10 +29,9 @@ Array::Array() : Object(Type::Array) {}
 Boolean::Boolean(bool value) : Object(Type::Boolean), value(value) {}
 Byte::Byte(unsigned char value) : Object(Type::Byte), value(value) {}
 Executable::Executable(ExecType etype) : Object(Type::Executable), etype(etype) {}
-FarFunction::FarFunction(std::vector<std::shared_ptr<Asm>> code, std::shared_ptr<Environment> env) : Executable(ExecType::FarFunction), code(code), env(env) {}
 Float::Float(double value) : Object(Type::Float), value(value) {}
 Float32::Float32(float value) : Object(Type::Float32), value(value) {}
-Function::Function(size_t position, std::shared_ptr<Environment> env) : Executable(ExecType::Function), position(position), env(env) {}
+Function::Function(std::shared_ptr<Environment> env) : Executable(ExecType::Function), env(env) {}
 Integer::Integer(long long value) : Object(Type::Integer), value(value) {}
 Int8::Int8(char value) : Object(Type::Int8), value(value) {}
 Int16::Int16(short value) : Object(Type::Int16), value(value) {}

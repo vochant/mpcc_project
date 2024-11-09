@@ -15,5 +15,4 @@ public:
     bool isFinal;
 public:
     ClassMember(std::string name, std::shared_ptr<Node> inner);
-    std::vector<std::shared_ptr<Asm>> to_asm(ToAsmArgs args) const override;
 };

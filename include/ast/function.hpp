@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ast/base/node.hpp"
+#include "object/object.hpp"
 
 #include <vector>
 #include <sstream>
@@ -13,7 +14,6 @@ public:
     std::map<size_t, std::string> typechecks;
     std::string moreName;
     FunctionNode();
-    std::vector<std::shared_ptr<Asm>> to_asm(ToAsmArgs args) const override;
 public:
     bool hasMore() const {
         return moreName != "__null__";

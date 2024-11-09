@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "util.hpp"
-#include "asm/asm.hpp"
 
 void illegal_program_error();
 
@@ -25,5 +24,4 @@ public:
         Destructor, BreakContinue
     } type;
     Node(Type type);
-    virtual std::vector<std::shared_ptr<Asm>> to_asm(ToAsmArgs args) const = 0;
 };

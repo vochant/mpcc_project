@@ -6,7 +6,7 @@
 
 class Instance : public Object {
 public:
-    MpcClass* belong,* status;
+    MpcClass* belong, * status;
     std::map<std::string, std::shared_ptr<Object>> value_store;
     std::shared_ptr<Environment> innerBinder;
 public:

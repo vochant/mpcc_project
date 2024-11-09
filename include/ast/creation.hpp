@@ -14,5 +14,4 @@ public:
     std::vector<std::pair<std::string, std::shared_ptr<Node>>> creations;
     bool isGlobal, allowOverwrite, isConst;
     CreationNode(bool isGlobal, bool allowOverwrite, bool isConst);
-    std::vector<std::shared_ptr<Asm>> to_asm(ToAsmArgs args) const override;
 };
