@@ -44,9 +44,19 @@
 		},
 		{
 			"include": "#builtins"
-		}
+		},
+        {
+            "include": "#decorate"
+        },
+        {
+            "include": "#identifier"
+        }
 	],
 	"repository": {
+        "identifier": {
+			"match": "\\b[a-zA-Z_]\\w*\\b",
+			"name": "variable.name.com.minphtis.mpclf"
+		},
 		"builtins": {
 			"match": "\\b(?:(print|println|getline|getint|getfloat|getbool|getchar|getstring|termformat|fopen|fisok|fisfailed|fgetline|fgetint|fgetfloat|fgetbool|fgetstring|fgetchar|fprint|fprintln|fclose|load|is_linux|is_windows|is_apple|is_unix|is_android|posix_supported|is_debug|mpcc_version|typestr|super|dynamic_let|dynamic_remove|dynamic_access|evulate_up|nisolated|tostr|len|push|max|min|make_copy|range|oncecheck|map|flat|flat_map|deduplicate|join|take|digit|raw|byte|char|split|slice|pop)|(open_mode|Object|Map|Set))\\b",
 			"captures": {
@@ -58,8 +68,19 @@
 				}
 			}
 		},
+        "decorate": {
+            "match": "(@)([a-zA-Z_][a-zA-Z0-9_]*)\\b",
+            "captures": {
+				"1": {
+					"name": "keyword.control.decorate.mpc"
+				},
+				"2": {
+					"name": "support.function.$2.mpc"
+				}
+			}
+        },
 		"keywords": {
-			"match": "\\b(class\\b|enum\\b|let\\b|const\\b|public\\b|private\\b|global\\b|var\\b|top\\b|for\\b|while\\b|return\\b|if\\b|else\\b|dowhile\\b|delete\\b|import\\b|func\\b|function\\b|constructor\\b|destructor\\b|$\\b|__level__\\b|__indexes__\\b|__construct__\\b|(?:operator(?:\\+=|-=|\\*=|\\/=|%=|<<=|>>=|\\^=|&=|\\|=|\\+|-|\\*|\\/|%|>>|<<|\\|\\||\\||&&|&|\\^|\\[\\]|\\(\\)|>=|<=|==|!=|<|>|=))|(?:prefix(?:!|-|\\+|~)))",
+			"match": "\\b(new\\b|class\\b|enum\\b|let\\b|const\\b|public\\b|private\\b|global\\b|var\\b|top\\b|for\\b|while\\b|return\\b|if\\b|else\\b|dowhile\\b|delete\\b|import\\b|func\\b|function\\b|constructor\\b|value\\b|method\\b|static\\b|enum\\b|destructor\\b|$\\b|__level__\\b|__indexes__\\b|__construct__\\b|(?:operator(?:\\+=|-=|\\*=|\\/=|%=|<<=|>>=|\\^=|&=|\\|=|\\+|-|\\*|\\/|%|>>|<<|\\|\\||\\||&&|&|\\^|\\[\\]|\\(\\)|>=|<=|==|!=|<|>|=))|(?:prefix(?:!|-|\\+|~)))",
 			"name": "keyword.control.$1.mpc"
 		},
 		"strings": {
@@ -196,7 +217,13 @@
 				},
 				{
 					"include": "#builtins"
-				}
+				},
+                {
+                    "include": "#decorate"
+                },
+                {
+                    "include": "#identifier"
+                }
 			]
 		},
 		"fwk": {
@@ -245,7 +272,13 @@
 				},
 				{
 					"include": "#builtins"
-				}
+				},
+                {
+                    "include": "#decorate"
+                },
+                {
+                    "include": "#identifier"
+                }
 			]
 		},
 		"array": {
@@ -305,62 +338,68 @@
 				},
 				{
 					"include": "#builtins"
-				}
+				},
+                {
+                    "include": "#decorate"
+                },
+                {
+                    "include": "#identifier"
+                }
 			]
 		},
 		"operators": {
 			"match": "(\\.(?!\\d))|::|\\+|-|\\*|\\/(?!\\/|\\*)|%|\\||&|\\^|~|--|\\+\\+|&&|\\|\\||!|>>|<<|\\+=|-=|\\*=|\\/=|%=|&=|\\^=|<<=|>>=|\\|=|!=|<=|>=|==|<|>|=|\\?|:",
-			"name": "keyword.operator.mpc",
+			"name": "keyword.control.mpc",
 			"captures": {
 				"1": {
 					"patterns": [
 						{
 							"match": "(?:\\.|::)(?!\\d)",
-							"name": "keyword.operator.access.mpc"
+							"name": "keyword.control.access.mpc"
 						},
 						{
 							"match": "\\+|-|\\*|\\/|%",
-							"name": "keyword.operator.arithmetic.mpc"
+							"name": "keyword.control.arithmetic.mpc"
 						},
 						{
 							"match": "\\||&|\\^|~",
-							"name": "keyword.operator.bitwise.mpc"
+							"name": "keyword.control.bitwise.mpc"
 						},
 						{
 							"match": "--",
-							"name": "keyword.operator.decrement.mpc"
+							"name": "keyword.control.decrement.mpc"
 						},
 						{
 							"match": "\\+\\+",
-							"name": "keyword.operator.increment.mpc"
+							"name": "keyword.control.increment.mpc"
 						},
 						{
 							"match": "&&|\\|\\||!",
-							"name": "keyword.operator.logical.mpc"
+							"name": "keyword.control.logical.mpc"
 						},
 						{
 							"match": ">>|<<",
-							"name": "keyword.operator.bitwise.shift.mpc"
+							"name": "keyword.control.bitwise.shift.mpc"
 						},
 						{
 							"match": "\\+=|-=|\\*=|\\/=|%=",
-							"name": "keyword.operator.assignment.compound.mpc"
+							"name": "keyword.control.assignment.compound.mpc"
 						},
 						{
 							"match": "&=|\\^=|<<=|>>=|\\|=",
-							"name": "keyword.operator.assignment.compound.bitwise.mpc"
+							"name": "keyword.control.assignment.compound.bitwise.mpc"
 						},
 						{
 							"match": "!=|<=|>=|==|<|>",
-							"name": "keyword.operator.comparison.mpc"
+							"name": "keyword.control.comparison.mpc"
 						},
 						{
 							"match": "=",
-							"name": "keyword.operator.assignment.mpc"
+							"name": "keyword.control.assignment.mpc"
 						},
 						{
 							"match": "\\?|:",
-							"name": "keyword.operator.ternary.mpc"
+							"name": "keyword.control.ternary.mpc"
 						}
 					]
 				}

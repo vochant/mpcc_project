@@ -117,11 +117,12 @@ std::vector<std::shared_ptr<Asm>> BreakContinueNode::to_asm(ToAsmArgs args) cons
     if (!args.isInRepeat) {
         throw CompilerError("Cannot use break/continue out of a repeat (for/while/dowhile)");
     }
+    
     if (isContinue) {
-        return { std::make_shared<IntegerAsm>(Asm::Type::JMP, args.next_pt) };
+        return { std::make_shared<Asm>(Asm::Type::ERRI), std::make_shared<IntegerAsm>(Asm::Type::JMP, args.next_pt) };
     }
     else {
-        return { std::make_shared<IntegerAsm>(Asm::Type::JMP, args.end_pt) };
+        return { std::make_shared<Asm>(Asm::Type::ERRI), std::make_shared<IntegerAsm>(Asm::Type::JMP, args.end_pt) };
     }
 }
 
@@ -154,7 +155,7 @@ std::vector<std::shared_ptr<Asm>> CForNode::to_asm(ToAsmArgs args) const {
     _args.next_pt = _Next;
     _args.end_pt = _End;
     std::vector<std::shared_ptr<Asm>> res;
-    res.push_back(std::make_shared<Asm>(Asm::Type::BR));
+    res.push_back(std::make_shared<Asm>(Asm::Type::BRR));
     concatv(res, _init->to_asm(args));
     res.push_back(std::make_shared<IntegerAsm>(Asm::Type::FLAG, _Begin));
     concatv(res, _cond->to_asm(args));
@@ -296,18 +297,22 @@ std::vector<std::shared_ptr<Asm>> ForNode::to_asm(ToAsmArgs args) const {
     std::vector<std::shared_ptr<Asm>> res;
     concatv(res, _elem->to_asm(args));
     res.push_back(std::make_shared<Asm>(Asm::Type::A2I));
+    res.push_back(std::make_shared<StringAsm>(Asm::Type::LET, "__aindex__"));
     if (_var->type != Type::Identifier) {
         throw CompilerError("Common For Statement variable should be an identifer expression");
     }
     std::string _name = std::dynamic_pointer_cast<IdentifierNode>(_var)->id;
-    res.push_back(std::make_shared<Asm>(Asm::Type::BR));
+    res.push_back(std::make_shared<Asm>(Asm::Type::BRR));
     res.push_back(std::make_shared<IntegerAsm>(Asm::Type::FLAG, _Begin));
+    res.push_back(std::make_shared<StringAsm>(Asm::Type::PUSH, "__aindex__"));
     res.push_back(std::make_shared<Asm>(Asm::Type::IEND));
     res.push_back(std::make_shared<IntegerAsm>(Asm::Type::JT, _End));
+    res.push_back(std::make_shared<StringAsm>(Asm::Type::PUSH, "__aindex__"));
     res.push_back(std::make_shared<Asm>(Asm::Type::IGET));
     res.push_back(std::make_shared<StringAsm>(Asm::Type::LET, _name));
     concatv(res, _body->to_asm(_args));
     res.push_back(std::make_shared<IntegerAsm>(Asm::Type::FLAG, _Next));
+    res.push_back(std::make_shared<StringAsm>(Asm::Type::PUSH, "__aindex__"));
     res.push_back(std::make_shared<Asm>(Asm::Type::IINC));
     res.push_back(std::make_shared<IntegerAsm>(Asm::Type::JMP, _Begin));
     res.push_back(std::make_shared<IntegerAsm>(Asm::Type::FLAG, _End));
@@ -328,7 +333,13 @@ std::vector<std::shared_ptr<Asm>> FunctionNode::to_asm(ToAsmArgs _args) const {
     if (hasMore()) {
         res.push_back(std::make_shared<StringAsm>(Asm::Type::ERECV, moreName));
     }
-    concatv(res, inner->to_asm(_args));
+    if (inner->type != Type::Scope) {
+        throw CompilerError("Function inner must be scope");
+    }
+    auto _cast = std::dynamic_pointer_cast<ScopeNode>(inner);
+    for (auto i : _cast->statements) {
+        concatv(res, i->to_asm(_args));
+    }
     res.push_back(std::make_shared<Asm>(Asm::Type::NULLV));
     res.push_back(std::make_shared<Asm>(Asm::Type::SRVL));
     res.push_back(std::make_shared<Asm>(Asm::Type::RET));
@@ -548,6 +559,7 @@ std::vector<std::shared_ptr<Asm>> WhileNode::to_asm(ToAsmArgs args) const {
     _args.end_pt = _End;
     _args.next_pt = _Next;
     if (isDoWhile) {
+        res.push_back(std::make_shared<Asm>(Asm::Type::BRR));
         res.push_back(std::make_shared<IntegerAsm>(Asm::Type::FLAG, _Begin));
         concatv(res, _body->to_asm(_args));
         res.push_back(std::make_shared<IntegerAsm>(Asm::Type::FLAG, _Next));
@@ -555,9 +567,11 @@ std::vector<std::shared_ptr<Asm>> WhileNode::to_asm(ToAsmArgs args) const {
         res.push_back(std::make_shared<Asm>(Asm::Type::IF));
         res.push_back(std::make_shared<IntegerAsm>(Asm::Type::JT, _Begin));
         res.push_back(std::make_shared<IntegerAsm>(Asm::Type::FLAG, _End));
+        res.push_back(std::make_shared<Asm>(Asm::Type::ER));
         return res;
     }
     else {
+        res.push_back(std::make_shared<Asm>(Asm::Type::BRR));
         res.push_back(std::make_shared<IntegerAsm>(Asm::Type::FLAG, _Begin));
         concatv(res, _cond->to_asm(_args));
         res.push_back(std::make_shared<Asm>(Asm::Type::IF));
@@ -566,6 +580,7 @@ std::vector<std::shared_ptr<Asm>> WhileNode::to_asm(ToAsmArgs args) const {
         res.push_back(std::make_shared<IntegerAsm>(Asm::Type::FLAG, _Next));
         res.push_back(std::make_shared<IntegerAsm>(Asm::Type::JMP, _Begin));
         res.push_back(std::make_shared<IntegerAsm>(Asm::Type::FLAG, _End));
+        res.push_back(std::make_shared<Asm>(Asm::Type::ER));
         return res;
     }
 }

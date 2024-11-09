@@ -28,7 +28,7 @@ void Lexer::break_whitespace() {
 Lexer::Lexer(std::string _input, std::string _describe) : _input(_input), _describe(_describe), _at(0), _line(1), _column(0) {}
 
 std::string Lexer::get_desc() const {
-    return "at (" + std::to_string(_line) + ", " + std::to_string(_column) + ") of " + _describe;
+    return "at (" + std::to_string(_line - 1) + ", " + std::to_string(_column + 1) + ") of " + _describe;
 } 
 
 Token::Type Lexer::lookup(std::string str) {
@@ -114,16 +114,28 @@ std::string Lexer::read_string() {
     _column++;
     _at++;
     while (_input.at(_at) != ch) {
-        if (_input.at(_at) == '\\') {
-            res += '\\';
-            res += _input.at(_at + 1);
-            _column += 2;
-            _at += 2;
-            continue;
+        if (_input.at(_at) == '\n') {
+            throw ParserError("Strings cannot contain LF", this);
         }
-        res += _input.at(_at);
-        _column++;
-        _at++;
+        if (_input.at(_at) == '\\') {
+            if (_at == _input.length() - 1) throw ParserError("String without ending", this);
+            if (_input.at(_at + 1) == ch) {
+                res += '\\';
+                res += ch;
+                _column += 2;
+                _at += 2;
+                continue;
+            }
+        }
+        int w = getweight(&_input[_at]);
+        while (w--) {
+            res += _input.at(_at);
+            _column++;
+            _at++;
+            if (_at == _input.length()) {
+                throw ParserError("String without ending", this);
+            }
+        }
     }
     _column++;
     _at++;

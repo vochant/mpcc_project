@@ -1,5 +1,7 @@
 #pragma once
 
+#include "system/system.hpp"
+
 #ifdef _WIN32
 #include "system/windows_lib.hpp"
 #endif

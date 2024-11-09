@@ -4,6 +4,12 @@ project(mpcc LANGUAGES CXX VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if (WIN32)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=default")
+endif()
+
 set(EXEC_NAME mpcc)
 set(EXEC_DESC "MPCC - A MPC Programming Language Toolchain")
 set(VERSION 1.0)
@@ -35,7 +41,8 @@ set(LIBRARY_SOURCES
 
 set(PROGRAM_SOURCES src/main.cpp)
 
-add_library(mpcclib OBJECT ${LIBRARY_SOURCES})
+add_library(mpcclib SHARED ${LIBRARY_SOURCES})
+set_target_properties(mpcclib PROPERTIES OUTPUT_NAME "mpcc")
 target_include_directories(mpcclib PUBLIC
     include
     ${PROJECT_BINARY_DIR}

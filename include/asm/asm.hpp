@@ -3,6 +3,8 @@
 #include <fstream>
 #include <string>
 
+#include "object/object.hpp"
+
 struct ToAsmArgs {
     bool isInRepeat;
     size_t next_pt, end_pt;
@@ -12,6 +14,7 @@ struct ToAsmArgs {
 class Asm {
 public:
 	enum class Type : char {
+        // Basic - 2410
         A2I, ACCESS, ADC, ADD, ADEC, AINC,
 		ARG, ATTR, BAND, BDEC, BFD, BFDC,
         BFDD, BINC, BNOT, BOR, BR, BXOR,
@@ -28,7 +31,9 @@ public:
 		NEW, NOT, NULLV, PCQ, PNUL, POS,
         PRIV, PUB, PUSH, RECV, RET, SHL,
 		SHR, SUB, SRC, SRVL, SSCL, STATIC,
-        THROW, TRAP, TREQ, TRUEV, VALUE, VAR
+        THROW, TRAP, TREQ, TRUEV, VALUE, VAR,
+        // Bugfix A - 2410f1
+        BRR, ERRI
 	} type;
 public:
 	virtual void save(std::fstream& fs) const;
@@ -111,6 +116,8 @@ public:
 };
 
 class CustomAsm : public Asm {
+private:
+    // std::shared_ptr<Object> payload;
 public:
     CustomAsm(Type type);
 };

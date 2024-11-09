@@ -212,6 +212,16 @@ std::string casm2plain(std::shared_ptr<Asm> ptr) {
         return "value";
     case Type::VAR:
         return "var";
+    case Type::BRF:
+        return "brf";
+    case Type::BRR:
+        return "brr";
+    case Type::ERF:
+        return "erf";
+    case Type::ERRI:
+        return "erri";
+    case Type::ERRO:
+        return "erro";
     default:
         return "<unknown>";
     }

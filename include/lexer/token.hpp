@@ -17,7 +17,7 @@ public:
         AsteriskAssign, SlashAssign, ModulusAssign, BitwiseLeftAssign,
         BitwiseRightAssign, BitwiseAndAssign, BitwiseOrAssign,
         BitwiseXorAssign, Equal, NotEqual, Greater, Less, GreaterEqual,
-        LessEqual, Lambda, Global, Var, Function,
+        LessEqual, Lambda, Global, Var,
         Public, Private, Dowhile, Const, Delete, Enumerate,
         Null, Increment, Decrement, As, Ternary, More, Func,
         Method, Static, Value, ForceExtand, FunctionDef,

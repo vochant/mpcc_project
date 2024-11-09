@@ -18,15 +18,21 @@ int main(int argc, char* argv[]) {
         std::getline(fs, tmp);
         src = src + "\n" + tmp;
     }
-    Parser parser(src, "main.mpc");
-    auto res = parser.parse_program();
-    Compiler compiler(res);
-    size_t count;
-    auto asmcode = compiler.compile(count);
-    Linker linker(asmcode, count);
-    auto linked = linker.link_program();
-    for (auto i : linked) {
-        std::cout << asm2plain(i) << '\n';
+    try {
+        Parser parser(src, "main.mpc");
+        auto res = parser.parse_program();
+        Compiler compiler(res);
+        size_t count;
+        auto asmcode = compiler.compile(count);
+        Linker linker(asmcode, count);
+        auto linked = linker.link_program();
+        for (auto i : linked) {
+            std::cout << asm2plain(i) << '\n';
+        }
+    }
+    catch (const std::exception& e) {
+        std::cerr << e.what() << '\n';
+        return 1;
     }
 	return 0;
 }

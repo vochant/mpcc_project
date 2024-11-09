@@ -114,6 +114,7 @@ bool Parser::shouldEnd() {
     case Token::Type::RBrace:
     case Token::Type::RBracket:
     case Token::Type::RParan:
+    case Token::Type::As:
         return true;
     default:
         return false;
@@ -131,7 +132,7 @@ std::shared_ptr<Node> Parser::lookupPre(Token::Type type) {
     case Token::Type::Identifier:
         return parse_identifier();
     case Token::Type::Lambda:
-    case Token::Type::Function:
+    case Token::Type::Func:
         return parse_function();
     case Token::Type::LBracket:
         return parse_array();
@@ -337,7 +338,7 @@ std::shared_ptr<Node> Parser::parse_while() {
 }
 
 std::shared_ptr<Node> Parser::parse_function() {
-    if (_current->type != Token::Type::Function && _current->type != Token::Type::Lambda) {
+    if (_current->type != Token::Type::Func && _current->type != Token::Type::Lambda) {
         throw ParserError("A function expression should begin with a function token or a lambda token", &lexer);
     }
     auto _obj = std::make_shared<FunctionNode>();
@@ -1018,6 +1019,7 @@ std::shared_ptr<Node> Parser::parse_decorate() {
         throw ParserError("Decorate expressions should begin with a decorate token", &lexer);
     }
     auto _res = std::make_shared<DecorateNode>();
+    parse_token();
     _res->decorator = parse_expr();
     _res->inner = parse_expr();
     return _res;

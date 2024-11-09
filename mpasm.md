@@ -137,3 +137,6 @@ MPASM 为稍远的需求设计，包含部分 MPC 暂时未使用的特性。
 - `sscl <id>` 设置系统调用号
 - `throw` 使用栈顶元素抛出指定异常
 - `trap` 断点，暂停执行
+
+严重 - 待修复：break、continue、return 可能导致 br、er 失调
+解决方案：在 ToAsmArgs 中统计 scope 深度，运行前疯狂 er
