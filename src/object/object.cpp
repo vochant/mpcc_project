@@ -1,6 +1,8 @@
 #include "object/array.hpp"
 #include "object/boolean.hpp"
 #include "object/byte.hpp"
+#include "object/bytearray.hpp"
+#include "object/commonobject.hpp"
 #include "object/float.hpp"
 #include "object/function.hpp"
 #include "object/integer.hpp"
@@ -10,15 +12,14 @@
 #include "object/reference.hpp"
 #include "object/lowref.hpp"
 #include "object/conproxy.hpp"
+#include "object/abit.hpp"
+#include "object/file.hpp"
+#include "object/mark.hpp"
+#include "object/memberf.hpp"
 
 #include "util.hpp"
 
 #include <sstream>
-
-// 程序代码分布：
-// 代码段，以 ASM 序列存储在 VM.code 中，加载二进制得到的代码
-// 远代码段，以 ASM 序列存储在其他的位置，后期创造
-// 本地段，以本地二进制存储在其他位置，初始化生成或后期创造
 
 Object::Object(Type type) : type(type) {}
 Array::Array() : Object(Type::Array) {}
@@ -159,4 +160,184 @@ std::shared_ptr<Object> ConstructorProxy::call(std::vector<std::shared_ptr<Objec
         throw VMError("ConProxy.call", "Unable to find constructor with " + std::to_string(args.size()) + " args");
     }
     return cls->runConstruct(inst->innerBinder, args);
+}
+
+#include "vm/vm.hpp"
+
+std::shared_ptr<Array> Iterator::toArray() {
+    auto res = std::make_shared<Array>();
+    while (hasNext()) {
+        res->value.push_back(next());
+        go();
+    }
+    return res;
+}
+
+std::string Iterator::toString() {
+    return "[iterator]";
+}
+
+Iterator::Iterator() : Object(Object::Type::Iterator) {}
+
+bool ArrayBasedIterator::hasNext() {
+    return ptr != baseArr->value.size();
+}
+
+std::shared_ptr<Object> ArrayBasedIterator::next() {
+    if (hasNext()) return baseArr->value[ptr];
+    return gVM->VNull;
+}
+
+void ArrayBasedIterator::go() {
+    if (hasNext()) ptr++;
+}
+
+ArrayBasedIterator::ArrayBasedIterator(std::shared_ptr<Array> baseArr) : Iterator(), baseArr(baseArr), ptr(0) {}
+
+std::string ByteArray::toString() {
+    auto single = [](unsigned char value)->std::string {
+        auto toHex = [](unsigned char ch) {
+            return (ch < 10) ? (ch + '0') : (ch - 10 + 'A');
+        };
+        char str[3];
+        str[0] = toHex(value >> 4);
+        str[1] = toHex(value & 15);
+        str[2] = 0;
+        return str;
+    };
+    std::stringstream ss;
+    for (size_t i = 0; i < value.size(); i++) {
+        if (i == 0) ss << "[";
+        else ss << ", ";
+        ss << single(value[i]);
+    }
+    ss << "]";
+    return ss.str();
+}
+
+std::shared_ptr<Object> ByteArray::make_copy() {
+    auto cop = std::make_shared<ByteArray>();
+    cop->value.insert(cop->value.end(), value.begin(), value.end());
+    return cop;
+}
+
+ByteArray::ByteArray() : Object(Type::ByteArray) {}
+
+CommonObject::CommonObject(ObjectType otype) : Object(Type::CommonObject), objtype(otype) {}
+
+std::shared_ptr<Object> File::make_copy() {
+    return std::make_shared<File>(fs);
+}
+
+std::string File::toString() {
+    return "[file]";
+}
+
+File::File(std::string name, std::string mode) : Object(Type::File) {
+    int om = 0;
+    for (size_t i = 0; i < mode.length(); i++) {
+        if (mode[i] == 'r') {
+            om |= std::ios::in;
+        }
+        else if (mode[i] == 'w') {
+            om |= std::ios::out;
+        }
+        else if (mode[i] == 'a') {
+            om |= std::ios::app;
+        }
+        else if (mode[i] == 'A') {
+            om |= std::ios::ate;
+        }
+        else if (mode[i] == 'b') {
+            om |= std::ios::binary;
+        }
+        else if (mode[i] == 't') {
+            om |= std::ios::trunc;
+        }
+        else {
+            throw VMError("File:construct", "Unknown open mode: " + mode[i]);
+        }
+    }
+    fs = std::make_shared<std::fstream>(name, om);
+}
+
+File::File(std::shared_ptr<std::fstream> fs) : Object(Type::File), fs(fs) {}
+
+#include "env/common.hpp"
+#include "vm/vm.hpp"
+
+std::shared_ptr<Object> Function::call(std::vector<std::shared_ptr<Object>> cargs) {
+    for (auto& i : cargs) {
+        if (i->type == Object::Type::Reference || i->type == Object::Type::LowReference) {
+            i = i->make_copy();
+        }
+    }
+    for (auto&[k, v] : checks) {
+        if (gVM->getTypeString(cargs[k]) != v) {
+            if (cargs[k]->type == Object::Type::Instance && GCT.count(v)) {
+                auto id = GCT[v]->id;
+                if (std::dynamic_pointer_cast<Instance>(cargs[k])->belong->ids.count(id)) {
+                    continue;
+                }
+            }
+            throw VMError("Function:call", "Typecheck mismatch: " + v + " expected, but " + gVM->getTypeString(cargs[k]) + " got");
+        }
+    }
+    auto ienv = std::make_shared<CommonEnvironment>(env);
+    auto it = cargs.begin();
+    for (auto& v : args) {
+        if (it == cargs.end()) {
+            ienv->set(v, gVM->VNull);
+        }
+        else {
+            ienv->set(v, *it);
+            it++;
+        }
+    }
+    if (earg != "__null__") {
+        auto vec = std::make_shared<Array>();
+        while (it != cargs.end()) {
+            vec->value.push_back(*it);
+            it++;
+        }
+        ienv->set(earg, vec);
+    }
+    if (inner->type != Node::Type::Scope) {
+        throw VMError("Function:call", "Inner node must be a scope");
+    }
+    auto v = gVM->ExecuteScope(std::dynamic_pointer_cast<ScopeNode>(inner), ienv);
+    gVM->state = VirtualMachine::State::COMMON;
+    return v;
+}
+
+Mark::Mark(bool isEnum, std::string value) : Object(Type::Mark), isEnum(isEnum), value(value) {}
+
+std::shared_ptr<Object> Mark::make_copy() {
+    return std::make_shared<Mark>(isEnum, value);
+}
+
+std::string Mark::toString() {
+    return (isEnum ? "[enum " : "[class ") + value + "]";
+}
+
+std::shared_ptr<Executable> MemberFunction::apply(std::shared_ptr<Environment> env) {
+    auto copy = std::dynamic_pointer_cast<Executable>(exec->make_copy());
+    if (copy->etype == Executable::ExecType::Function) {
+        std::dynamic_pointer_cast<Function>(copy)->env = env;
+    }
+    return copy;
+}
+
+std::string MemberFunction::toString() {
+    return exec->toString();
+}
+
+std::shared_ptr<Object> MemberFunction::make_copy() {
+    return std::make_shared<MemberFunction>(exec);
+}
+
+MemberFunction::MemberFunction(std::shared_ptr<Executable> exec) : Object(Type::MemberFunc), exec(exec) {}
+
+std::shared_ptr<Object> NativeFunction::call(std::vector<std::shared_ptr<Object>> args) {
+    return func(args);
 }

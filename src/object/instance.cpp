@@ -7,7 +7,7 @@ std::string Instance::toString() {
         auto _f = std::dynamic_pointer_cast<Executable>(_toString);
         return _f->call({})->toString();
     }
-    return "[instance]";
+    return "[instance of " + belong->name + "]";
 }
 
 std::shared_ptr<Object> Instance::make_copy() {

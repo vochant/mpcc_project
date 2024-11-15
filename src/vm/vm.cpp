@@ -42,7 +42,13 @@ std::shared_ptr<Object> VirtualMachine::Execute(std::shared_ptr<ProgramNode> pro
     if (program->mainScope->type != Node::Type::Scope) {
         throw VMError("VM:Execute", "The main scope of the program must be a scope");
     }
-    ExecuteScope(As<ScopeNode>(program->mainScope), env);
+    auto v = ExecuteScope(As<ScopeNode>(program->mainScope), env);
+    if (v->type == Object::Type::Reference || v->type == Object::Type::LowReference) {
+        v = v->make_copy();
+    }
+    if (v->type == Object::Type::Integer) {
+        return v;
+    }
     return std::make_shared<Integer>(0);
 }
 
@@ -654,6 +660,7 @@ std::shared_ptr<Object> VirtualMachine::ExecuteScope(std::shared_ptr<ScopeNode> 
         if (state != State::COMMON) {
             return VNull;
         }
+        lastObject = v;
     }
     return VNull;
 }
@@ -758,7 +765,7 @@ bool VirtualMachine::isTrue(std::shared_ptr<Object> obj) {
         return As<Float>(obj)->value;
     }
     if (obj->type == Object::Type::File) {
-        return !(As<File>(obj)->fs.good());
+        return !(As<File>(obj)->fs->good());
     }
     if (obj->type == Object::Type::Instance) {
         auto f = As<Instance>(obj)->innerBinder->get("_cond");
@@ -924,9 +931,10 @@ std::shared_ptr<Object> VirtualMachine::CalculateFloat(std::string op, std::shar
 }
 
 std::shared_ptr<Object> VirtualMachine::CalculateArrStrExt(std::shared_ptr<Object> a, std::shared_ptr<Object> b) {
-    auto aa = As<Array>(a), ab = As<Array>(b);
-    aa->value.insert(aa->value.end(), ab->value.begin(), ab->value.end());
-    return aa;
+    auto aa = As<Array>(a), ab = As<Array>(b), ac = std::make_shared<Array>();
+    ac->value.insert(ac->value.end(), aa->value.begin(), aa->value.end());
+    ac->value.insert(ac->value.end(), ab->value.begin(), ab->value.end());
+    return ac;
 }
 
 std::shared_ptr<Object> VirtualMachine::CalculateRelationship(std::string op, std::shared_ptr<Object> a, std::shared_ptr<Object> b) {
@@ -980,7 +988,7 @@ std::shared_ptr<Object> VirtualMachine::CalculateGetter(std::shared_ptr<Object> 
             if (it == GCT.end()) {
                 return VNull;
             }
-            return it->second->getStatic(b);
+            return it->second->getStatic(b, getIdent(env));
         }
     }
     if (a->type == Object::Type::Instance) {
@@ -1022,4 +1030,30 @@ VirtualMachine::VirtualMachine(std::shared_ptr<Environment> outer) {
     True = std::make_shared<Boolean>(true);
     False = std::make_shared<Boolean>(false);
     VNull = std::make_shared<Null>();
+    lastObject = VNull;
+}
+
+std::string VirtualMachine::getTypeString(std::shared_ptr<Object> obj) {
+    if (obj->type == Object::Type::Reference || obj->type == Object::Type::LowReference) {
+        obj = obj->make_copy();
+    }
+    if (obj->type == Object::Type::Array) return "array";
+    else if (obj->type == Object::Type::Boolean) return "boolean";
+    else if (obj->type == Object::Type::Byte) return "byte";
+    else if (obj->type == Object::Type::ByteArray) return "ByteArray";
+    else if (obj->type == Object::Type::CommonObject) return "Object";
+    else if (obj->type == Object::Type::Executable) return "executable";
+    else if (obj->type == Object::Type::File) return "File";
+    else if (obj->type == Object::Type::Float) return "float";
+    else if (obj->type == Object::Type::Instance) return As<Instance>(obj)->belong->name;
+    else if (obj->type == Object::Type::Integer) return "int";
+    else if (obj->type == Object::Type::Iterator) return "iterator";
+    else if (obj->type == Object::Type::Map) return "Map";
+    else if (obj->type == Object::Type::Mark) return "BaseType";
+    else if (obj->type == Object::Type::Native) return "native";
+    else if (obj->type == Object::Type::Null) return "nulltype";
+    else if (obj->type == Object::Type::Segment) return "segment";
+    else if (obj->type == Object::Type::Set) return "set";
+    else if (obj->type == Object::Type::String) return "string";
+    else return "unknown";
 }

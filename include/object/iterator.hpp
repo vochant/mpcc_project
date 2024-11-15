@@ -10,4 +10,6 @@ public:
     virtual std::shared_ptr<Object> next() = 0;
     virtual void go() = 0;
     std::string toString() override;
+public:
+    Iterator();
 };

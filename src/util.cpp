@@ -4,6 +4,7 @@
 
 #include "parser_error.hpp"
 #include "compiler_error.hpp"
+#include "vm_error.hpp"
 
 unsigned long long _cert;
 
@@ -56,6 +57,8 @@ ParserError::ParserError(std::string descr, Lexer* lexer) noexcept {
 
 CompilerError::CompilerError(std::string desc) noexcept : desc(desc) {}
 
+VMError::VMError(std::string pos, std::string desc) noexcept : pos(pos), desc(desc) {}
+
 const char* ParserError::what() const noexcept {
     return ("ParserError: " + desc).c_str();
 }
@@ -64,6 +67,9 @@ const char* CompilerError::what() const noexcept {
     return ("CompilerError: " + desc).c_str();
 }
 
+const char* VMError::what() const noexcept {
+    return ("VMError: [" + pos + "] " + desc).c_str();
+}
 
 #include <iostream>
 

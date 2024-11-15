@@ -102,8 +102,10 @@ public:
     std::shared_ptr<Object> CalculateGetter(std::shared_ptr<Object> a, std::string b, std::shared_ptr<Environment> env, bool isForced);
     std::shared_ptr<Object> Array2Iterator(std::shared_ptr<Array> arr);
     long long getIdent(std::shared_ptr<Environment> env);
+    std::string getTypeString(std::shared_ptr<Object> obj);
 public:
     VirtualMachine(std::shared_ptr<Environment> outer);
+    std::shared_ptr<Object> lastObject;
 };
 
 extern VirtualMachine* gVM;

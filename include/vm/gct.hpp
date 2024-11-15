@@ -24,9 +24,12 @@ public:
 public:
     long long getAL(std::string str);
     bool Ism(std::string str);
+private:
+    std::shared_ptr<Object> getIStatic(std::string name);
+    void copyInstance(std::map<std::string, std::shared_ptr<Object>>& store);
 public:
     MpcClass();
-    std::shared_ptr<Object> getStatic(std::string name);
+    std::shared_ptr<Object> getStatic(std::string name, long long ident);
     std::shared_ptr<Object> makeInstance(std::vector<std::shared_ptr<Object>> args);
     std::shared_ptr<Object> runConstruct(std::shared_ptr<Environment> instr, std::vector<std::shared_ptr<Object>> args);
 };

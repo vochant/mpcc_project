@@ -55,9 +55,3 @@ target_include_directories(mpcclib PUBLIC
 
 add_executable(mpcc ${PROGRAM_SOURCES})
 target_link_libraries(mpcc PRIVATE mpcclib)
-
-# add_custom_command(
-#     TARGET ${MPCC_PROG}
-#     POST_BUILD
-#     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/${RES_DIR} ${CMAKE_CURRENT_BINARY_DIR}/${RES_DIR}
-# )
