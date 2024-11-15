@@ -1,0 +1,18 @@
+// MirekintocPL Code (MPC) Standard Library
+//
+// Copyright(C) 2019-2024 Minphtis Develop
+// Copyright(C) 2009-2024 Mirekintoc Void
+// Under MIT License
+//
+// This file is a part of the MPCC Project, is written
+// in MPC, contained a MPC Standard Library solution
+// for MPCC. If macro 'NO_MODULE' is set in the source
+// code of MPCC Project (C/C++ Part), or failed to find
+// module 'default.stdlib' when running, the version in
+// 'stdlib.cpp' will be used instead of this file. This
+// file is NOT a part of MPCC Development Kit or MPCC
+// Binary Runtime. Most parts of this file are reusable,
+// that means other solutions may can run this file (or
+// its modification). Deleting this file may will cause
+// some problems from missing features which are written
+// in this file.

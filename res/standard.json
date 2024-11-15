@@ -10,7 +10,7 @@
 			{
 				"type": "local",
 				"value": {
-					"include": "&mstd.mh"
+					"include": "mstd.mh"
 				}
 			}
 		],

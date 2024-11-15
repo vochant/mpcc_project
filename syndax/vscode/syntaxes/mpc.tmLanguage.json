@@ -1,0 +1,410 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "MPC",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#semicolon"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#stringssingle"
+		},
+		{
+			"include": "#number"
+		},
+		{
+			"match": "\\b(this|true|false|null)\\b",
+			"name": "constant.language.$1.mpc"
+		},
+		{
+			"include": "#array"
+		},
+		{
+			"include": "#fwk"
+		},
+		{
+			"include": "#operators"
+		},
+		{
+			"include": "#commentline"
+		},
+		{
+			"include": "#commentblock"
+		},
+		{
+			"include": "#commentrunas"
+		},
+		{
+			"include": "#comma"
+		},
+		{
+			"include": "#builtins"
+		},
+        {
+            "include": "#decorate"
+        },
+        {
+            "include": "#identifier"
+        }
+	],
+	"repository": {
+        "identifier": {
+			"match": "\\b[a-zA-Z_]\\w*\\b",
+			"name": "variable.name.com.minphtis.mpclf"
+		},
+		"builtins": {
+			"match": "\\b(?:(print|println|getline|getint|getfloat|getbool|getchar|getstring|termformat|fopen|fisok|fisfailed|fgetline|fgetint|fgetfloat|fgetbool|fgetstring|fgetchar|fprint|fprintln|fclose|load|is_linux|is_windows|is_apple|is_unix|is_android|posix_supported|is_debug|mpcc_version|typestr|super|dynamic_let|dynamic_remove|dynamic_access|evulate_up|nisolated|tostr|len|push|max|min|make_copy|range|oncecheck|map|flat|flat_map|deduplicate|join|take|digit|raw|byte|char|split|slice|pop)|(open_mode|Object|Map|Set))\\b",
+			"captures": {
+				"1": {
+					"name": "support.function.$1.mpc"
+				},
+				"2": {
+					"name": "support.class.$2.mpc"
+				}
+			}
+		},
+        "decorate": {
+            "match": "(@)([a-zA-Z_][a-zA-Z0-9_]*)\\b",
+            "captures": {
+				"1": {
+					"name": "keyword.control.decorate.mpc"
+				},
+				"2": {
+					"name": "support.function.$2.mpc"
+				}
+			}
+        },
+		"keywords": {
+			"match": "\\b(new\\b|class\\b|enum\\b|let\\b|const\\b|public\\b|private\\b|global\\b|var\\b|top\\b|for\\b|while\\b|return\\b|if\\b|else\\b|dowhile\\b|delete\\b|import\\b|func\\b|function\\b|constructor\\b|value\\b|method\\b|static\\b|enum\\b|destructor\\b|$\\b|__level__\\b|__indexes__\\b|__construct__\\b|(?:operator(?:\\+=|-=|\\*=|\\/=|%=|<<=|>>=|\\^=|&=|\\|=|\\+|-|\\*|\\/|%|>>|<<|\\|\\||\\||&&|&|\\^|\\[\\]|\\(\\)|>=|<=|==|!=|<|>|=))|(?:prefix(?:!|-|\\+|~)))",
+			"name": "keyword.control.$1.mpc"
+		},
+		"strings": {
+			"name": "string.quoted.double.mpc",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.mpc",
+					"match": "\\\\."
+				}
+			]
+		},
+		"stringssingle": {
+			"name": "string.quoted.single.mpc",
+			"begin": "'",
+			"end": "'",
+			"patterns": [
+				{
+					"name": "constant.character.escape.mpc",
+					"match": "\\\\."
+				}
+			]
+		},
+		"number": {
+			"match": "(0x[\\da-fA-F]+)|(0[0-7]+)|(0b[01]+)|(0|(?:[1-9]\\d*)|(?:\\d*\\.\\d+))",
+			"captures": {
+				"1": {
+					"name": "constant.numeric.hex.mpc"
+				},
+				"2": {
+					"name": "constant.numeric.oct.mpc"
+				},
+				"3": {
+					"name": "constant.numeric.bin.mpc"
+				},
+				"4": {
+					"name": "constant.numeric.dec.mpc"
+				}
+			}
+		},
+		"commentblock": {
+			"name": "comment.block.mpc",
+			"begin": "\\s*+(\\/\\*)",
+			"end": "\\*\\/",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.comment.begin.mpc"
+				}
+			},
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.comment.end.mpc"
+				}
+			}
+		},
+		"commentline": {
+			"name": "comment.line.double-slash.mpc",
+			"begin": "\\s*(\\/\\/)",
+			"end": "\\n",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.comment.mpc"
+				}
+			},
+			"endCaptures": {}
+		},
+		"invalid-comment-end": {
+			"match": "\\*\\/",
+			"name": "invalid.illegal.unexpected.punctuation.definition.comment.end.mpc"
+		},
+		"commentrunas": {
+			"name": "comment.line.number-sign",
+			"begin": "#!",
+			"end": "\\n",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.comment.mpc"
+				}
+			},
+			"endCaptures": {}
+		},
+		"semicolon": {
+			"match": ";",
+			"name": "punctuation.terminator.statement.mpc"
+		},
+		"comma": {
+			"match": ",",
+			"name": "punctuation.separator.delimiter.comma.mpc"
+		},
+		"local": {
+			"begin": "\\{",
+			"end": "\\}",
+			"patterns": [
+				{
+					"include": "#keywords"
+				},
+				{
+					"include": "#semicolon"
+				},
+				{
+					"include": "#strings"
+				},
+				{
+					"include": "#stringssingle"
+				},
+				{
+					"include": "#number"
+				},
+				{
+					"match": "\\b(this|true|false|null)\\b",
+					"name": "constant.language.$1.mpc"
+				},
+				{
+					"include": "#array"
+				},
+				{
+					"include": "#fwk"
+				},
+				{
+					"include": "#operators"
+				},
+				{
+					"include": "#commentline"
+				},
+				{
+					"include": "#commentblock"
+				},
+				{
+					"include": "#commentrunas"
+				},
+				{
+					"include": "#comma"
+				},
+				{
+					"include": "#builtins"
+				},
+                {
+                    "include": "#decorate"
+                },
+                {
+                    "include": "#identifier"
+                }
+			]
+		},
+		"fwk": {
+			"begin": "\\(",
+			"end": "\\)",
+			"patterns": [
+				{
+					"include": "#keywords"
+				},
+				{
+					"include": "#semicolon"
+				},
+				{
+					"include": "#strings"
+				},
+				{
+					"include": "#stringssingle"
+				},
+				{
+					"include": "#number"
+				},
+				{
+					"match": "\\b(this|true|false|null)\\b",
+					"name": "constant.language.$1.mpc"
+				},
+				{
+					"include": "#array"
+				},
+				{
+					"include": "#fwk"
+				},
+				{
+					"include": "#operators"
+				},
+				{
+					"include": "#commentline"
+				},
+				{
+					"include": "#commentblock"
+				},
+				{
+					"include": "#commentrunas"
+				},
+				{
+					"include": "#comma"
+				},
+				{
+					"include": "#builtins"
+				},
+                {
+                    "include": "#decorate"
+                },
+                {
+                    "include": "#identifier"
+                }
+			]
+		},
+		"array": {
+			"begin": "\\[",
+			"end": "\\]",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.begin.bracket.square.array.type.mpc"
+				}
+			},
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.end.bracket.square.array.type.mpc"
+				}
+			},
+			"name": "meta.bracket.square.array.mpc",
+			"patterns": [
+				{
+					"include": "#keywords"
+				},
+				{
+					"include": "#semicolon"
+				},
+				{
+					"include": "#strings"
+				},
+				{
+					"include": "#stringssingle"
+				},
+				{
+					"include": "#number"
+				},
+				{
+					"match": "\\b(this|true|false|null)\\b",
+					"name": "constant.language.$1.mpc"
+				},
+				{
+					"include": "#array"
+				},
+				{
+					"include": "#fwk"
+				},
+				{
+					"include": "#operators"
+				},
+				{
+					"include": "#commentline"
+				},
+				{
+					"include": "#commentblock"
+				},
+				{
+					"include": "#commentrunas"
+				},
+				{
+					"include": "#comma"
+				},
+				{
+					"include": "#builtins"
+				},
+                {
+                    "include": "#decorate"
+                },
+                {
+                    "include": "#identifier"
+                }
+			]
+		},
+		"operators": {
+			"match": "(\\.(?!\\d))|::|\\+|-|\\*|\\/(?!\\/|\\*)|%|\\||&|\\^|~|--|\\+\\+|&&|\\|\\||!|>>|<<|\\+=|-=|\\*=|\\/=|%=|&=|\\^=|<<=|>>=|\\|=|!=|<=|>=|==|<|>|=|\\?|:",
+			"name": "keyword.control.mpc",
+			"captures": {
+				"1": {
+					"patterns": [
+						{
+							"match": "(?:\\.|::)(?!\\d)",
+							"name": "keyword.control.access.mpc"
+						},
+						{
+							"match": "\\+|-|\\*|\\/|%",
+							"name": "keyword.control.arithmetic.mpc"
+						},
+						{
+							"match": "\\||&|\\^|~",
+							"name": "keyword.control.bitwise.mpc"
+						},
+						{
+							"match": "--",
+							"name": "keyword.control.decrement.mpc"
+						},
+						{
+							"match": "\\+\\+",
+							"name": "keyword.control.increment.mpc"
+						},
+						{
+							"match": "&&|\\|\\||!",
+							"name": "keyword.control.logical.mpc"
+						},
+						{
+							"match": ">>|<<",
+							"name": "keyword.control.bitwise.shift.mpc"
+						},
+						{
+							"match": "\\+=|-=|\\*=|\\/=|%=",
+							"name": "keyword.control.assignment.compound.mpc"
+						},
+						{
+							"match": "&=|\\^=|<<=|>>=|\\|=",
+							"name": "keyword.control.assignment.compound.bitwise.mpc"
+						},
+						{
+							"match": "!=|<=|>=|==|<|>",
+							"name": "keyword.control.comparison.mpc"
+						},
+						{
+							"match": "=",
+							"name": "keyword.control.assignment.mpc"
+						},
+						{
+							"match": "\\?|:",
+							"name": "keyword.control.ternary.mpc"
+						}
+					]
+				}
+			}
+		}
+	},
+	"scopeName": "source.mpc"
+}

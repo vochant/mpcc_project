@@ -8,7 +8,7 @@ using json = nlohmann::json;
 #include <algorithm>
 
 #include "system/current.hpp"
-#include "program/util.hpp"
+#include "util.hpp"
 
 class Module {
 public:
@@ -144,7 +144,7 @@ private:
 			if (pos == path.npos) {
 				return true;
 			}
-			return loadFile(path.substr(0, pos), path.substr(path.substr(pos + 1)));
+			return loadFile(path.substr(0, pos), path.substr(pos + 1));
 		}
 		return true;
 	}

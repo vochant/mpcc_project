@@ -1,14 +1,14 @@
 #pragma once
 
 #include "lexer/lexer.hpp"
-#include "program/util.hpp"
+#include "util.hpp"
+
+#include "parser_error.hpp"
 
 #include <functional>
 
 void reserved_err(std::string _res) {
-    err_begin();
-    std::cerr << "Cannot use reserved word \"" << _res << "\" to be an identifier.";
-    err_end();
+    throw ParserError("Cannot use reserved identifier '" + _res + "'");
 }
 
 void Lexer::break_whitespace() {
@@ -25,13 +25,37 @@ void Lexer::break_whitespace() {
     }
 }
 
+Lexer::Lexer(std::string _input, std::string _describe) : _input(_input), _describe(_describe), _at(0), _line(1), _column(0) {}
+
+std::string Lexer::get_desc() const {
+    return "at (" + std::to_string(_line - 1) + ", " + std::to_string(_column + 1) + ") of " + _describe;
+} 
+
+Token::Type Lexer::lookup(std::string str) {
+    Token::Type result = Token::Type::Identifier;
+    for (auto it = Token::typeNames.begin(); it != Token::typeNames.end(); it++) {
+        if (it->second == str) {
+            result = it->first;
+        }
+    }
+    return result;
+}
+
+bool is_unicode(unsigned char ch) {
+    return ch > 127;
+}
+
 std::string Lexer::read_identifier() {
     std::string res = "";
-    while (isalnum(_input.at(_at)) || _input.at(_at) == '_') {
-        res += _input.at(_at);
-        _column++;
-        _at++;
+    while (isalnum(_input.at(_at)) || _input.at(_at) == '_' || _input.at(_at) == '#' || is_unicode(_input.at(_at))) {
+        int w = getweight(&_input[_at]);
+        _column += w;
+        while (w--) {
+            res += _input.at(_at);
+            _at++;
+        }
     }
+    return res;
 }
 
 std::pair<std::string, Token::Type> Lexer::read_number() {
@@ -65,6 +89,8 @@ std::pair<std::string, Token::Type> Lexer::read_number() {
             res = "0";
         }
         else if (_input.at(_at + 1) != '.') {
+            _column++;
+            _at++;
             return std::make_pair("0", Token::Type::Integer);
         }
     }
@@ -82,24 +108,38 @@ std::pair<std::string, Token::Type> Lexer::read_number() {
 }
 
 std::string Lexer::read_string() {
-    std::string res = "\"";
+    char ch = _input.at(_at);
+    std::string res = "";
+    res += ch;
     _column++;
     _at++;
-    while (_input.at(_at) != '"') {
-        if (_input.at(_at) == '\\') {
-            res += '\\';
-            res += _input.at(_at + 1);
-            _column += 2;
-            _at += 2;
-            continue;
+    while (_input.at(_at) != ch) {
+        if (_input.at(_at) == '\n') {
+            throw ParserError("Strings cannot contain LF", this);
         }
-        res += _input.at(_at);
-        _column++;
-        _at++;
+        if (_input.at(_at) == '\\') {
+            if (_at == _input.length() - 1) throw ParserError("String without ending", this);
+            if (_input.at(_at + 1) == ch) {
+                res += '\\';
+                res += ch;
+                _column += 2;
+                _at += 2;
+                continue;
+            }
+        }
+        int w = getweight(&_input[_at]);
+        while (w--) {
+            res += _input.at(_at);
+            _column++;
+            _at++;
+            if (_at == _input.length()) {
+                throw ParserError("String without ending", this);
+            }
+        }
     }
     _column++;
     _at++;
-    return res + '"';
+    return res + ch;
 }
 
 std::shared_ptr<Token> Lexer::parseNext() {
@@ -150,12 +190,21 @@ std::shared_ptr<Token> Lexer::parseNext() {
     }
     // Try non-identifier tokens.
     switch (_input.at(_at)) {
+    case '@':
+        _column++;
+        _at++;
+        return std::make_shared<Token>("@", Token::Type::Decorate);
     case '~':
         _column++;
         _at++;
         return std::make_shared<Token>("~", Token::Type::BitwiseNot);
     case '!':
         if (_input.length() > _at + 1 && _input.at(_at + 1) == '=') {
+            if (_input.length() > _at + 2 && _input.at(_at + 2) == '=') {
+                _column += 3;
+                _at += 3;
+                return std::make_shared<Token>("!==", Token::Type::NotFullEqual);
+            }
             _column += 2;
             _at += 2;
             return std::make_shared<Token>("!=", Token::Type::NotEqual);
@@ -207,6 +256,11 @@ std::shared_ptr<Token> Lexer::parseNext() {
             _at += 2;
             return std::make_shared<Token>("*=", Token::Type::AsteriskAssign);
         }
+        if (_input.length() > _at + 1 && _input.at(_at + 1) == '*') {
+            _column += 2;
+            _at += 2;
+            return std::make_shared<Token>("**", Token::Type::Pow);
+        }
         _column++;
         _at++;
         return std::make_shared<Token>("*", Token::Type::Asterisk);
@@ -235,14 +289,26 @@ std::shared_ptr<Token> Lexer::parseNext() {
         _at++;
         return std::make_shared<Token>("-", Token::Type::Minus);
     case '=':
-        if (_input.length() > _at + 1 && _input.at(_at + 1) == '=') {
-            _column += 2;
-            _at += 2;
-            return std::make_shared<Token>("==", Token::Type::Equal);
+        if (_input.length() > _at + 1) {
+            if (_input.at(_at + 1) == '=') {
+                if (_input.length() > _at + 2 && _input.at(_at + 2) == '=') {
+                    _column += 3;
+                    _at += 3;
+                    return std::make_shared<Token>("===", Token::Type::FullEqual);
+                }
+                _column += 2;
+                _at += 2;
+                return std::make_shared<Token>("==", Token::Type::Equal);
+            }
+            if (_input.at(_at + 1) == '>') {
+                _column += 2;
+                _at += 2;
+                return std::make_shared<Token>("=>", Token::Type::Arrow);
+            }
         }
         _column++;
         _at++;
-        return std::make_shared<Token>("=", Token::Type::NotEqual);
+        return std::make_shared<Token>("=", Token::Type::Assign);
     case '+':
         if (_input.length() > _at + 1) {
             if (_input.at(_at + 1) == '=') {
@@ -350,7 +416,7 @@ std::shared_ptr<Token> Lexer::parseNext() {
                 _at += 2;
                 return std::make_shared<Token>(">>", Token::Type::BitwiseRight);
             }
-            if (_input.at(_at + 1) == '=') {
+            if (_input.length() > _at + 1 && _input.at(_at + 1) == '=') {
                 _column += 2;
                 _at += 2;
                 return std::make_shared<Token>(">=", Token::Type::GreaterEqual);
@@ -360,6 +426,11 @@ std::shared_ptr<Token> Lexer::parseNext() {
         _at++;
         return std::make_shared<Token>(">", Token::Type::Greater);
     case ':':
+        if (_input.length() > _at + 1 && _input.at(_at + 1) == ':') {
+            _column += 2;
+            _at += 2;
+            return std::make_shared<Token>("::", Token::Type::ForceExtand);
+        }
         _column++;
         _at++;
         return std::make_shared<Token>(":", Token::Type::As);
@@ -372,25 +443,28 @@ std::shared_ptr<Token> Lexer::parseNext() {
         auto _result = read_number();
         return std::make_shared<Token>(_result.first, _result.second);
     }
-    if (_input.at(_at) == '"') {
+    if (_input.at(_at) == '"' || _input.at(_at) == '\'') {
         return std::make_shared<Token>(read_string(), Token::Type::String);
     }
     std::string id = read_identifier();
     if (reserved.count(id) > 0) {
-        reserved_err(id);
-        return std::make_shared<Token>(id, Token::Type::Error);
+        throw ParserError("Cannot use reserved identifier '" + id + "'", this);
     }
     return std::make_shared<Token>(id, lookup(id));
 }
 
 std::set<std::string> Lexer::reserved = {
-    "__level__",
+    "__index__",
     "__builtin__",
     "__null__",
-	"__indexes__",
-	"__construct__",
 	"__reserved__",
 	"__system__",
 	"__external__",
-	"__test__"
+	"__test__",
+    "__seteflags__",
+    "__eflags__",
+    "__mpcc__",
+    "__mpc__",
+    "__kernel__",
+    "__undefined__"
 };

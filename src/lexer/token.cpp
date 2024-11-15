@@ -1,7 +1,11 @@
 #ifndef __MPCC_SRC_TOKEN
 #define __MPCC_SRC_TOKEN
 
-#include "include/lexer/token.hpp"
+#include "lexer/token.hpp"
+
+Token::Token(const Type type, const std::string value) : type(type), value(value) {}
+
+Token::Token(const std::string value, const Type type) : type(type), value(value) {}
 
 const std::map<Token::Type, std::string> Token::typeNames = {
     {Token::Type::Class,				"class"},
@@ -19,14 +23,24 @@ const std::map<Token::Type, std::string> Token::typeNames = {
     {Token::Type::Import,				"import"},
     {Token::Type::Let,					"let"},
     {Token::Type::Private,				"private"},
+    {Token::Type::Protected,            "protected"},
     {Token::Type::Public,				"public"},
     {Token::Type::Return,				"return"},
     {Token::Type::True,					"true"},
     {Token::Type::Var,					"var"},
     {Token::Type::While,				"while"},
     {Token::Type::Null,					"null"},
-    {Token::Type::Function,				"function"},
+    {Token::Type::Func,	    			"func"},
+    {Token::Type::FunctionDef,          "function"},
+    {Token::Type::Static,               "static"},
+    {Token::Type::Method,               "method"},
+    {Token::Type::Final,                "final"},
+    {Token::Type::Value,                "value"},
+    {Token::Type::New,                  "new"},
+    {Token::Type::Break,                "break"},
+    {Token::Type::Continue,             "continue"},
 
+    {Token::Type::Arrow,                "arrow(\"=>\")"},
     {Token::Type::Assign,				"assign(\"=\")"},
     {Token::Type::Asterisk,				"asterisk(\"*\")"},
     {Token::Type::AsteriskAssign,		"asterisk_assign(\"*=\")"},
@@ -76,7 +90,11 @@ const std::map<Token::Type, std::string> Token::typeNames = {
     {Token::Type::Slash,				"slash(\"/\")"},
     {Token::Type::SlashAssign,			"slash_assign(\"/=\")"},
     {Token::Type::As,					"as(\":\")"},
-    {Token::Type::More,					"more(\"...\")"}
+    {Token::Type::More,					"more(\"...\")"},
+    {Token::Type::ForceExtand,          "force_extand(\"::\")"},
+    {Token::Type::Pow,                  "pow(\"**\")"},
+    {Token::Type::FullEqual,            "full_equal(\"===\")"},
+    {Token::Type::NotFullEqual,         "not_full_equal(\"!==\")"}
 };
 
 #endif

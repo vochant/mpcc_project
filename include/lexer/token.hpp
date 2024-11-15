@@ -9,7 +9,7 @@ public:
         Integer, String, Extand, If, Else, Identifier,
         Let, For, While, End, Error, Scope, Float,
         LParan, RParan, LBrace, RBrace, LBracket, RBracket,
-        Comma, Semicolon, Return, End, Import,
+        Comma, Semicolon, Return, Import, NotFullEqual,
         Class, Constructor, Destructor, Plus, Minus, Asterisk,
         Slash, Modulus, BitwiseLeft, BitwiseRight, BitwiseAnd,
         BitwiseOr, BitwiseXor, BitwiseNot, LogicalNot, LogicalAnd,
@@ -17,11 +17,14 @@ public:
         AsteriskAssign, SlashAssign, ModulusAssign, BitwiseLeftAssign,
         BitwiseRightAssign, BitwiseAndAssign, BitwiseOrAssign,
         BitwiseXorAssign, Equal, NotEqual, Greater, Less, GreaterEqual,
-        LessEqual, Lambda, Global, Var, Function,
+        LessEqual, Lambda, Global, Var, Pow, FullEqual,
         Public, Private, Dowhile, Const, Delete, Enumerate,
-        Null, Increment, Decrement, As, Ternary, More
+        Null, Increment, Decrement, As, Ternary, More, Func,
+        Method, Static, Value, ForceExtand, FunctionDef,
+        New, Decorate, Final, Break, Continue, Arrow, Protected
     } type;
-    std::string value;
-    Token(const Type type, const std::string value) : type(type), value(value) {}
+    std::string value, dit;
+    Token(const Type type, const std::string value);
+    Token(const std::string value, const Type type);
     static const std::map<Type, std::string> typeNames;
 };
