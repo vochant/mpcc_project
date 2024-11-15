@@ -9,10 +9,12 @@
 
 // Translated from cpputil/integer (C) Mirekintoc Void.
 
-class Integer {
-	private _num = [], length = 0, flag = false;
+// Designed for MPCC Arkscene 2.x
 
-	private _init_from_int = function(x) {
+class Integer {
+	private value _num = [], length = 0, flag = false;
+
+	private method _init_from_int(x) {
 		if (flag = (x < 0)) x = -x;
 		length = 0;
 		while (x) {
@@ -22,25 +24,24 @@ class Integer {
 		}
 	}
 
-	private _check = function() {
+	private method _check() {
 		while (length && _num[length - 1] == 0) {
 			length--;
 		}
 		if (length == 0) flag = false;
 	}
 
-	public Sign = function() { flag }
+	public method sign() { return flag }
 
-	public Length = function() { length }
+	public method len() { return length }
 
-	public operator> = function(x) {
-		cltcheck(x);
+	public method operator>(x : Integer) {
 		if (!flag && x.flag) return true;
 		if (flag && !x.flag) return false;
 		if (flag) {
 			if (length < x.length) return true;
 			if (length > x.length) return false;
-			for i(range(length - 1, 0)) {
+			for i(length - 1...0) {
 				if (_num[i] > x._num(i)) return false;
 				if (_num[i] < x._num(i)) return true;
 			}
@@ -48,7 +49,7 @@ class Integer {
 		else {
 			if (length > x.length) return true;
 			if (length < x.length) return false;
-			for i(range(length - 1, 0)) {
+			for i(length - 1...0) {
 				if (_num[i] > x._num(i)) return true;
 				if (_num[i] < x._num(i)) return false;
 			}
@@ -56,14 +57,13 @@ class Integer {
 		return false;
 	}
 
-	public operator>= = function(x) {
-		cltcheck(x);
+	public method operator>=(x : Integer) {
 		if (!flag && x.flag) return true;
 		if (flag && !x.flag) return false;
 		if (flag) {
 			if (length < x.length) return true;
 			if (length > x.length) return false;
-			for i(range(length - 1, 0)) {
+			for i(length - 1...0) {
 				if (_num[i] > x._num(i)) return false;
 				if (_num[i] < x._num(i)) return true;
 			}
@@ -71,7 +71,7 @@ class Integer {
 		else {
 			if (length > x.length) return true;
 			if (length < x.length) return false;
-			for i(range(length - 1, 0)) {
+			for i(length - 1...0) {
 				if (_num[i] > x._num(i)) return true;
 				if (_num[i] < x._num(i)) return false;
 			}
@@ -79,14 +79,13 @@ class Integer {
 		return true;
 	}
 
-	public operator< = function(x) {
-		cltcheck(x);
+	public method operator<(x : Integer) {
 		if (!flag && x.flag) return false;
 		if (flag && !x.flag) return true;
 		if (!flag) {
 			if (length < x.length) return true;
 			if (length > x.length) return false;
-			for i(range(length - 1, 0)) {
+			for i(length - 1...0) {
 				if (_num[i] > x._num(i)) return false;
 				if (_num[i] < x._num(i)) return true;
 			}
@@ -94,7 +93,7 @@ class Integer {
 		else {
 			if (length > x.length) return true;
 			if (length < x.length) return false;
-			for i(range(length - 1, 0)) {
+			for i(length - 1...0) {
 				if (_num[i] > x._num(i)) return true;
 				if (_num[i] < x._num(i)) return false;
 			}
@@ -102,14 +101,13 @@ class Integer {
 		return false;
 	}
 
-	public operator<= = function(x) {
-		cltcheck(x);
+	public method operator<=(x : Integer) {
 		if (!flag && x.flag) return false;
 		if (flag && !x.flag) return true;
 		if (!flag) {
 			if (length < x.length) return true;
 			if (length > x.length) return false;
-			for i(range(length - 1, 0)) {
+			for i(length - 1...0) {
 				if (_num[i] > x._num(i)) return false;
 				if (_num[i] < x._num(i)) return true;
 			}
@@ -117,7 +115,7 @@ class Integer {
 		else {
 			if (length > x.length) return true;
 			if (length < x.length) return false;
-			for i(range(length - 1, 0)) {
+			for i(length - 1...0) {
 				if (_num[i] > x._num(i)) return true;
 				if (_num[i] < x._num(i)) return false;
 			}
@@ -125,24 +123,22 @@ class Integer {
 		return true;
 	}
 
-	public operator== = function(x) {
-		cltcheck(x);
+	public method operator==(x : Integer) {
 		if (flag != x.flag) return false;
 		if (length != x.length) return false;
 		return _num == x._num;
 	}
 
-	public operator!= = function(x) {
-		cltcheck(x);
+	public method operator!=(x : Integer) {
 		if (flag != x.flag) return true;
 		if (length != x.length) return true;
 		return _num != x._num;
 	}
 
-	public abs = function(...args) {
+	public method abs(...args) {
 		if (args.length > 1) return error();
 		if (args.length) {
-			cltcheck(args[0]);
+			assert(typestr(args[0]) == 'int');
 			if (args[0].flag) args[0] = -args[0];
 			return args[0];
 		}
@@ -151,14 +147,13 @@ class Integer {
 		return copy;
 	}
 
-	private _positive_sum = function(x) {
-		cltcheck(x);
+	private method _positive_sum(x : Integer) {
 		let _length = max(length, x.length);
 		let result = Integer();
 		result.flag = flag;
 		result.length = _length;
 		let _up = false, tmp;
-		for i(range(0, _length - 1)) {
+		for i(0..._length - 1) {
 			tmp = _up ? 1 : 0;
 			if (i < length) tmp += _num[i];
 			if (i < x.length) tmp += x._num[i];
@@ -172,25 +167,24 @@ class Integer {
 		return result;
 	}
 
-	public prefix- = function() {
+	public method prefix-() {
 		let result = this;
 		if (result != 0) result.flag = !result.flag;
 		return result;
 	}
 
-	public operator- = function(x) {
-		cltcheck(x);
+	public method operator-(x : Integer) {
 		if (flag != x.flag) {
 			return _positive_sum(-x);
 		}
-		if (Abs() < x.Abs()) {
+		if (abs() < x.abs()) {
 			return -(x - this);
 		}
 		let result = Integer();
 		result.flag = x.flag;
 		result.length = length;
 		let ne = false, tmp;
-		for i(range(0, length - 1)) {
+		for i(0...length - 1) {
 			tmp = _num[i] + 10 - (ne ? 1 : 0);
 			if (i < x.length) tmp -= x._num[i];
 			if (!(ne = (tmp < 10))) {
@@ -202,8 +196,7 @@ class Integer {
 		return result;
 	}
 
-	public operator+ = function(x) {
-		cltcheck(x);
+	public method operator+(x : Integer) {
 		let _length = max(length, x.length);
 		let result = Integer();
 		if (flag == x.flag) {
@@ -214,14 +207,13 @@ class Integer {
 		}
 	}
 
-	public operator* = function(x) {
-		cltcheck(x);
+	public method operator*(x : Integer) {
 		let result = Integer();
 		result.flag = flag ^ x.flag;
 		result.length = length + x.length;
-		for i(range(0, result.length - 1)) result._num.push(0);
-		for i(range(0, length - 1)) {
-			for j(range(0, x.length - 1)) {
+		for i(0...result.length - 1) result._num.push(0);
+		for i(0...length - 1) {
+			for j(0...x.length - 1) {
 				result._num[i + j] += _num[i] * x._num[j];
 				k = i + j;
 				while (result._num[k] >= 10) {
@@ -235,9 +227,7 @@ class Integer {
 		return result;
 	}
 
-	public slice = function(begin, last) {
-		typecheck(begin, "integer");
-		typecheck(end, "integer");
+	public method slice(begin : int, last : int) {
 		let result = Integer(), i = 0;
 		result.flag = false;
 		while (i < last && begin + i < length) {
@@ -248,45 +238,40 @@ class Integer {
 		return result;
 	}
 
-	public operator+=(x) {
-		cltcheck(x);
-		return this = (this + x);
+	public method operator+=(x : Integer) {
+		return copy(this, (this + x));
 	}
 
-	public operator-=(x) {
-		cltcheck(x);
-		return this = (this - x);
+	public method operator-=(x : Integer) {
+		return copy(this, (this - x));
 	}
 
-	public operator*=(x) {
-		cltcheck(x);
-		return this = (this * x);
+	public method operator*=(x : Integer) {
+		return copy(this, (this * x));
 	}
 
-	public science = function(x) {
-		typecheck(x, "integer");
+	public method science(x : int) {
 		let result = Integer();
 		result.flag = false;
 		result.length = x + 1;
-		for i(range(0, x - 1)) {
+		for i(0...x - 1) {
 			result._num.push(0);
 		}
 		result._num.push(1);
 		return result;
 	}
 
-	public operator/ = function(_x) {
-		cltcheck(x);
-		let x = _x.Abs();
+	public method operator/(_x : Integer) {
+		let x = _x.abs();
 		if (this < x) return 0;
-		let result = Integer(), base = Integer(), tmp = Abs();
+		let result = Integer(), base = Integer(), tmp = abs();
 		result.flag = flag ^ _x.flag;
 		result.length = length - x.length + 1;
-		for i(range(0, result.length - 1)) {
+		for i(0...result.length - 1) {
 			result._num.push(0);
 		}
-		for i(range(0, result.length - 1)) {
-			base = tmp.Slice(result.length - i - 1, x.length + 1);
+		for i(0...result.length - 1) {
+			base = tmp.slice(result.length - i - 1, x.length + 1);
 			let res = 9;
 			while (res >= 0 && x * res > base) {
 				res--;
@@ -297,14 +282,13 @@ class Integer {
 		result._check();
 	}
 
-	public operator% = function(_x) {
-		cltcheck(x);
-		let x = _x.Abs();
-		if (Abs() < x) return Sign() ? -Abs() : Abs();
-		let base = Integer(), tmp = Abs();
+	public method operator%(_x : Integer) {
+		let x = _x.abs();
+		if (abs() < x) return sign() ? -abs() : abs();
+		let base = Integer(), tmp = abs();
 		let last = length - x.length + 1;
-		for i(range(0, last)) {
-			base = tmp.Slice(last - i - 1, x.length + 1);
+		for i(0...last) {
+			base = tmp.slice(last - i - 1, x.length + 1);
 			let res = 9;
 			while (res >= 0 && x * res > base) {
 				res--;
@@ -312,23 +296,21 @@ class Integer {
 			tmp -= x * science(last - i - 1) * res;
 		}
 		tmp._check();
-		if (Sign() ^ _x.Sign()) return -tmp;
+		if (sign() ^ _x.sign()) return -tmp;
 		else return tmp;
 	}
 
-	public operator/= = function(x) {
-		cltcheck(x);
-		return this = (this / x);
+	public method operator/=(x : Integer) {
+		return copy(this, (this / x));
 	}
 
-	public operator%= = function(x) {
-		cltcheck(x);
-		return this = (this / x);
+	public method operator%=(x : Integer) {
+		return copy(this, (this % x));
 	}
 
-	public pow = function(...args) {
+	public method pow(...args) {
 		if (args.len() == 1) {
-			typecheck(args[0], "integer");
+			assert(typestr(args[0]) == 'int');
 			let result = Integer(1), base = this, sup = args[0];
 			while (sup >= 1) {
 				if (sup & 1) {
@@ -340,8 +322,8 @@ class Integer {
 			return result;
 		}
 		else if (args.len() == 2) {
-			cltcheck(args[0]);
-			typecheck(args[1], "integer");
+			assert(typestr(args[0]) == 'Integer');
+			assert(typestr(args[1]) == 'int');
 			let result = Integer(1), base = args[0], sup = args[1];
 			while (sup >= 1) {
 				if (sup & 1) {
@@ -355,8 +337,7 @@ class Integer {
 		else return error();
 	}
 
-	private _read_charset = function(c) {
-		typecheck(c, "string");
+	private _read_charset = function(c : string) {
 		if (c.len() != 1) return error();
 		if ('0' <= c && c <= '9') return ch ^ 48;
 		if ('a' <= c && c <= 'f') return (ch ^ 96) + 9;
@@ -387,13 +368,13 @@ class Integer {
 				ptr++;
 			}
 		}
-		for i(range(sl - 1, ptr)) {
+		for i(sl - 1...ptr) {
 			bit = _read_charset(x[i]);
 			if (bit >= base) {
 				length = 0;
 				return error();
 			}
-			this += _mul * bit;
+			copy(this, this + _mul * bit);
 			_mul *=base;
 		}
 		flag = _f;
@@ -404,36 +385,31 @@ class Integer {
 	}
 
 	constructor(v) {
-		if (typestr(v) == "integer") {
+		if (typestr(v) == 'int') {
 			_init_from_int(v);
 		}
-		if (typestr(v) == "string") {
+		if (typestr(v) == 'string') {
 			_init_from_string(v);
 		}
-		if (cltype(v)) {
-			this = v;
+		if (typestr(v) == 'Integer') {
+			copy(this, v);
 		}
 	}
 
 	public toString = function() {
 		if (length == 0) return "0";
 		let result = flag ? "-" : "";
-		for i(range(length - 1, 0)) {
+		for i(length - 1...0) {
 			result += _num[i].str();
 		}
 		return result;
 	}
 
-	private _PRINT_ = function() {
-		__print__(toString());
+	public print = function() {
+		system.print(toString());
 	}
 
-	public Print = function() {
-		__print__(toString());
-	}
-
-	public Digit = function(pos) {
-		typecheck(pos);
+	public digit = function(pos : int) {
 		_num[length - 1 - pos];
 	}
 }

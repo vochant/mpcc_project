@@ -2,11 +2,13 @@
 
 #include "object/object.hpp"
 
-class Int8 : public Object {
+#include <vector>
+
+class ByteArray : public Object {
 public:
-    char value;
+    std::vector<unsigned char> value;
 public:
-    Int8(char value);
+    ByteArray();
     std::shared_ptr<Object> make_copy() override;
     std::string toString() override;
 };

@@ -29,14 +29,16 @@ set(RES_DIR res)
 # src
 set(LIBRARY_SOURCES
     src/ast/ast.cpp
+    src/env/environment.cpp
     src/lexer/token.cpp
     src/lexer/lexer.cpp
     src/parser/parser.cpp
     src/util.cpp
-    src/convertor/asm2plain.cpp
-    src/asm/asm.cpp
-    src/compiler/compiler.cpp
-    src/linker/linker.cpp
+    src/object/instance.cpp
+    src/object/object.cpp
+    src/program/program.cpp
+    src/system/system.cpp
+    src/vm/vm.cpp
 )
 
 set(PROGRAM_SOURCES src/main.cpp)

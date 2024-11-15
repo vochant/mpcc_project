@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ast/base/node.hpp"
-
+ 
 class InDecrementNode : public Node {
 public:
     bool isDecrement, isAfter;

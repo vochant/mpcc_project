@@ -200,6 +200,11 @@ std::shared_ptr<Token> Lexer::parseNext() {
         return std::make_shared<Token>("~", Token::Type::BitwiseNot);
     case '!':
         if (_input.length() > _at + 1 && _input.at(_at + 1) == '=') {
+            if (_input.length() > _at + 2 && _input.at(_at + 2) == '=') {
+                _column += 3;
+                _at += 3;
+                return std::make_shared<Token>("!==", Token::Type::NotFullEqual);
+            }
             _column += 2;
             _at += 2;
             return std::make_shared<Token>("!=", Token::Type::NotEqual);
@@ -251,6 +256,11 @@ std::shared_ptr<Token> Lexer::parseNext() {
             _at += 2;
             return std::make_shared<Token>("*=", Token::Type::AsteriskAssign);
         }
+        if (_input.length() > _at + 1 && _input.at(_at + 1) == '*') {
+            _column += 2;
+            _at += 2;
+            return std::make_shared<Token>("**", Token::Type::Pow);
+        }
         _column++;
         _at++;
         return std::make_shared<Token>("*", Token::Type::Asterisk);
@@ -281,6 +291,11 @@ std::shared_ptr<Token> Lexer::parseNext() {
     case '=':
         if (_input.length() > _at + 1) {
             if (_input.at(_at + 1) == '=') {
+                if (_input.length() > _at + 2 && _input.at(_at + 2) == '=') {
+                    _column += 3;
+                    _at += 3;
+                    return std::make_shared<Token>("===", Token::Type::FullEqual);
+                }
                 _column += 2;
                 _at += 2;
                 return std::make_shared<Token>("==", Token::Type::Equal);

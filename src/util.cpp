@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "util.hpp"
 
 #include "parser_error.hpp"
@@ -10,6 +12,38 @@ bool hasError;
 std::set<std::string> implist; // Imported files
 
 std::filesystem::path respath;
+
+const unsigned long long NumA = 99991, NumB = 100003;
+
+unsigned long long _FastPow(unsigned long long base, size_t sup) {
+    unsigned long long res = 1;
+    while (sup) {
+        if (sup & 1) res *= base;
+        base *= base;
+        sup >>= 1;
+    }
+    return res;
+}
+
+unsigned long long GetHash(const std::string str, const unsigned long long num) {
+    unsigned long long res = 0;
+    for (size_t i = 0; i < str.length(); i++) {
+        res = (res * num) + str[i];
+    }
+    return res;
+}
+
+unsigned long long ConcatHash(const unsigned long long a, const unsigned long long b, const unsigned long long num, const size_t lenA) {
+    return _FastPow(num, lenA) * a + b;
+}
+
+StringHash genHash(const std::string str) {
+    return {GetHash(str, NumA), GetHash(str, NumB)};
+}
+
+StringHash concatHash(const StringHash a, const StringHash b, const size_t lenL) {
+    return {ConcatHash(a.first, b.first, NumA, lenL), ConcatHash(a.second, b.second, NumB, lenL)};
+}
 
 ParserError::ParserError(std::string descr, Lexer* lexer) noexcept {
     if (lexer != nullptr) {

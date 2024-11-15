@@ -7,8 +7,8 @@
 class Parser {
 private:
     enum class OperatorPriority {
-        Lowest, Assign, LogicalOr, LogicalAnd, BitwiseOr, BitwiseXor, BitwiseAnd,
-        Equals, LessGreater, BitwiseMovement, Sum, Product, Single, Suffix
+        Lowest, Range, Assign, LogicalOr, LogicalAnd, BitwiseOr, BitwiseXor, BitwiseAnd,
+        Equals, LessGreater, BitwiseMovement, Sum, Product, Pow, Single, Suffix
     };
     std::shared_ptr<Token> _current, _prev;
     Lexer lexer;

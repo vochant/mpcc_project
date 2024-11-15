@@ -5,11 +5,11 @@
 class ClassMember : public Node{
 public:
     enum AccessControl : char {
-        PUBLIC, PRIVATE
+        PUBLIC, PROTECTED, PRIVATE
     } ac;
     enum Type : char {
         METHOD, STATIC, VALUE
-    } type;
+    } ctype;
     std::string name;
     std::shared_ptr<Node> inner;
     bool isFinal;

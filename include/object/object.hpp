@@ -9,11 +9,7 @@ public:
         Boolean, // [true, false]
         Null, // null
         Byte, // Single byte (uchar)
-        Int8, // BYTE Integer (char)
-        Int16, // WORD Integer
-        Int32, // DWORD Integer
         Integer, // QWORD Integer (long long)
-        Float32, // Float32 (float)
         Float, // Float64 (double)
         String, // UTF-8 String
         Array, // Array (using std::vector)
@@ -30,6 +26,8 @@ public:
         Reference, // Remote Reference
         LowReference, // Reference with C-style pointer (like "this")
         MemberFunc, // member function, can apply
+        Iterator, // universal iterator
+        Mark // mark a class or enumerate
     } type;
 public:
     Object(Type type);

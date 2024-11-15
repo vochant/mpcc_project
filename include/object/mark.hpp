@@ -2,11 +2,12 @@
 
 #include "object/object.hpp"
 
-class Int16 : public Object {
+class Mark : public Object {
 public:
-    short value;
+    bool isEnum;
+    std::string value;
 public:
-    Int16(short value);
+    Mark(bool isEnum, std::string value);
     std::shared_ptr<Object> make_copy() override;
     std::string toString() override;
 };

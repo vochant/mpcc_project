@@ -6,7 +6,7 @@
 
 class ForNode : public Node {
 public:
-    std::shared_ptr<Node> _var;
+    std::string _var;
     std::shared_ptr<Node> _elem, _body;
     ForNode();
 };

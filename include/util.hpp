@@ -10,6 +10,8 @@
 #include <filesystem>
 #include <string>
 
+typedef std::pair<unsigned long long, unsigned long long> StringHash;
+
 extern unsigned long long _cert;
 
 extern bool hasError;
@@ -45,3 +47,6 @@ namespace BinaryIn {
     
     std::string read_string(std::istream& is);
 }
+
+StringHash genHash(const std::string str);
+StringHash concatHash(const StringHash x, const StringHash y, const size_t lenL);

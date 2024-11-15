@@ -23,6 +23,7 @@ const std::map<Token::Type, std::string> Token::typeNames = {
     {Token::Type::Import,				"import"},
     {Token::Type::Let,					"let"},
     {Token::Type::Private,				"private"},
+    {Token::Type::Protected,            "protected"},
     {Token::Type::Public,				"public"},
     {Token::Type::Return,				"return"},
     {Token::Type::True,					"true"},
@@ -90,7 +91,10 @@ const std::map<Token::Type, std::string> Token::typeNames = {
     {Token::Type::SlashAssign,			"slash_assign(\"/=\")"},
     {Token::Type::As,					"as(\":\")"},
     {Token::Type::More,					"more(\"...\")"},
-    {Token::Type::ForceExtand,          "force_extand(\"::\")"}
+    {Token::Type::ForceExtand,          "force_extand(\"::\")"},
+    {Token::Type::Pow,                  "pow(\"**\")"},
+    {Token::Type::FullEqual,            "full_equal(\"===\")"},
+    {Token::Type::NotFullEqual,         "not_full_equal(\"!==\")"}
 };
 
 #endif

@@ -2,12 +2,8 @@
 #include "object/boolean.hpp"
 #include "object/byte.hpp"
 #include "object/float.hpp"
-#include "object/float32.hpp"
 #include "object/function.hpp"
 #include "object/integer.hpp"
-#include "object/int8.hpp"
-#include "object/int16.hpp"
-#include "object/int32.hpp"
 #include "object/nativefunction.hpp"
 #include "object/null.hpp"
 #include "object/string.hpp"
@@ -30,15 +26,12 @@ Boolean::Boolean(bool value) : Object(Type::Boolean), value(value) {}
 Byte::Byte(unsigned char value) : Object(Type::Byte), value(value) {}
 Executable::Executable(ExecType etype) : Object(Type::Executable), etype(etype) {}
 Float::Float(double value) : Object(Type::Float), value(value) {}
-Float32::Float32(float value) : Object(Type::Float32), value(value) {}
-Function::Function(std::shared_ptr<Environment> env) : Executable(ExecType::Function), env(env) {}
+Function::Function(std::shared_ptr<Node> inner, std::shared_ptr<Environment> env) : Executable(ExecType::Function), inner(inner), env(env) {}
 Integer::Integer(long long value) : Object(Type::Integer), value(value) {}
-Int8::Int8(char value) : Object(Type::Int8), value(value) {}
-Int16::Int16(short value) : Object(Type::Int16), value(value) {}
-Int32::Int32(int value) : Object(Type::Int32), value(value) {}
 NativeFunction::NativeFunction(NFunc func) : Executable(ExecType::NativeFunction), func(func) {}
 Null::Null() : Object(Type::Null) {}
-String::String(std::string value) : Object(Type::String) {}
+String::String(std::string value) : Object(Type::String), value(value), hash(genHash(value)) {}
+String::String(std::string value, StringHash hash) : Object(Type::String), value(value), hash(hash) {}
 Reference::Reference(std::shared_ptr<Object>* ptr) : Object(Type::Reference), ptr(ptr) {}
 LowReference::LowReference(Object* ptr) : Object(Type::LowReference), ptr(ptr) {}
 ConstructorProxy::ConstructorProxy(MpcClass* cls, Instance* inst) : Executable(ExecType::Placeholder), cls(cls), inst(inst) {}
@@ -59,36 +52,16 @@ std::shared_ptr<Object> Byte::make_copy() {
     return std::make_shared<Byte>(value);
 }
 
-std::shared_ptr<Object> FarFunction::make_copy() {
-    return std::make_shared<FarFunction>(code, env);
-}
-
 std::shared_ptr<Object> Float::make_copy() {
     return std::make_shared<Float>(value);
 }
 
-std::shared_ptr<Object> Float32::make_copy() {
-    return std::make_shared<Float32>(value);
-}
-
 std::shared_ptr<Object> Function::make_copy() {
-    return std::make_shared<Function>(position, env);
+    return std::make_shared<Function>(inner, env);
 }
 
 std::shared_ptr<Object> Integer::make_copy() {
     return std::make_shared<Integer>(value);
-}
-
-std::shared_ptr<Object> Int8::make_copy() {
-    return std::make_shared<Int8>(value);
-}
-
-std::shared_ptr<Object> Int16::make_copy() {
-    return std::make_shared<Int16>(value);
-}
-
-std::shared_ptr<Object> Int32::make_copy() {
-    return std::make_shared<Int32>(value);
 }
 
 std::shared_ptr<Object> NativeFunction::make_copy() {
@@ -96,7 +69,7 @@ std::shared_ptr<Object> NativeFunction::make_copy() {
 }
 
 std::shared_ptr<Object> String::make_copy() {
-    return std::make_shared<String>(value);
+    return std::make_shared<String>(value, hash);
 }
 
 std::shared_ptr<Object> Reference::make_copy() {
@@ -144,32 +117,11 @@ std::string Byte::toString() {
     return str;
 }
 
-std::string FarFunction::toString() {
-    return "func[far asm]";
-}
-
 std::string Float::toString() {
     return std::to_string(value);
 }
-
-std::string Float32::toString() {
-    return std::to_string(value);
-}
-
 std::string Function::toString() {
-    return "func[local asm]";
-}
-
-std::string Int8::toString() {
-    return std::to_string(short(value));
-}
-
-std::string Int16::toString() {
-    return std::to_string(value);
-}
-
-std::string Int32::toString() {
-    return std::to_string(value);
+    return "func[ast]";
 }
 
 std::string Integer::toString() {
@@ -202,9 +154,9 @@ std::string ConstructorProxy::toString() {
 
 #include "vm_error.hpp"
 
-std::shared_ptr<Object> ConstructorProxy::call(std::vector<std::shared_ptr<Object>> args, VirtualMachine* vm) {
+std::shared_ptr<Object> ConstructorProxy::call(std::vector<std::shared_ptr<Object>> args) {
     if (!cls->constructors.count(args.size())) {
         throw VMError("ConProxy.call", "Unable to find constructor with " + std::to_string(args.size()) + " args");
     }
-    return cls->runConstruct(args, vm);
+    return cls->runConstruct(inst->innerBinder, args);
 }

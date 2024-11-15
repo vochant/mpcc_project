@@ -1,12 +1,13 @@
 #pragma once
 
 #include "object/object.hpp"
+#include <fstream>
 
-class Int32 : public Object {
+class File : public Object {
 public:
-    int value;
+    std::fstream fs;
 public:
-    Int32(int value);
+    File(std::string name, std::string mode);
     std::shared_ptr<Object> make_copy() override;
     std::string toString() override;
 };

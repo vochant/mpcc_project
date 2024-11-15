@@ -56,7 +56,7 @@ bool Parser::pricmp(OperatorPriority a, OperatorPriority b) {
     if (a < b) {
         return true;
     }
-    return a == OperatorPriority::Assign;
+    return a == OperatorPriority::Assign || a == OperatorPriority::Pow;
 }
 
 std::shared_ptr<Node> Parser::lookupIn(Token::Type type, std::shared_ptr<Node> left) {
@@ -92,6 +92,10 @@ std::shared_ptr<Node> Parser::lookupIn(Token::Type type, std::shared_ptr<Node> l
     case Token::Type::Greater:
     case Token::Type::GreaterEqual:
     case Token::Type::Extand:
+    case Token::Type::Pow:
+    case Token::Type::FullEqual:
+    case Token::Type::NotFullEqual:
+    case Token::Type::More:
         return parse_infix(left);
     case Token::Type::LParan:
         return parse_call(left);
@@ -103,7 +107,7 @@ std::shared_ptr<Node> Parser::lookupIn(Token::Type type, std::shared_ptr<Node> l
     case Token::Type::Ternary:
         return parse_ternary(left);
     default:
-        throw ParserError("Unknown infix operator", &lexer);
+        return nullptr;
     }
 }
 
@@ -188,8 +192,6 @@ std::shared_ptr<Node> Parser::parse_statement() {
         return parse_function_creation();
     case Token::Type::Class:
         return parse_class_creation();
-    case Token::Type::New:
-        return parse_class_new();
     case Token::Type::Const:
     case Token::Type::Let:
     case Token::Type::Var:
@@ -262,10 +264,9 @@ std::shared_ptr<Node> Parser::parse_expr_level(OperatorPriority pri) {
         return _node;
     }
     while (!shouldEnd() && pricmp(pri, getpri(_current->type))) {
-        _node = lookupIn(_current->type, _node);
-        if (_node->type == Node::Type::Error) {
-            return _node;
-        }
+        auto tmp = lookupIn(_current->type, _node);
+        if (tmp == nullptr) return _node;
+        _node = tmp;
     }
     if (_current->type == Token::Type::Semicolon) {
         parse_token();
@@ -295,7 +296,11 @@ std::shared_ptr<Node> Parser::parse_for() {
     parse_token();
     if (_current->type == Token::Type::Identifier) {
         auto _node = std::make_shared<ForNode>();
-        _node->_var = parse_identifier();
+        if (_current->type != Token::Type::Identifier) {
+            throw ParserError("An identifier expression should include an identifier token", &lexer);
+        }
+        _node->_var = _current->value;
+        parse_token();
         if (_current->type != Token::Type::LParan) {
             throw ParserError("For format error", &lexer);
         }
@@ -312,7 +317,7 @@ std::shared_ptr<Node> Parser::parse_for() {
         parse_token();
         auto _node = std::make_shared<CForNode>();
         _node->_init = parse_statement();
-        _node->_cond = parse_statement();
+        _node->_cond = parse_expr();
         _node->_next = parse_statement();
         if (_current->type != Token::Type::RParan) {
             throw ParserError("For format error", &lexer);
@@ -726,10 +731,15 @@ std::shared_ptr<Node> Parser::parse_return() {
         }
         return node;
     }
+    bool isr;
+    if (isr = (_current->type == Token::Type::BitwiseAnd)) {
+        parse_token();
+    }
     auto node = std::make_shared<ReturnNode>(parse_expr());
     if (_current->type == Token::Type::Semicolon) {
         parse_token();
     }
+    node->isReference = isr;
     return node;
 }
 
@@ -927,6 +937,9 @@ std::shared_ptr<Node> Parser::parse_class_statement() {
     if (_current->type == Token::Type::Public) {
         ac = ClassMember::PUBLIC;
     }
+    else if (_current->type == Token::Type::Protected) {
+        ac = ClassMember::PROTECTED;
+    }
     else if (_current->type == Token::Type::Private) {
         ac = ClassMember::PRIVATE;
     }
@@ -948,7 +961,7 @@ std::shared_ptr<Node> Parser::parse_class_statement() {
         }
         auto cm = std::make_shared<ClassMember>(name, value);
         cm->ac = ac;
-        cm->type = ClassMember::VALUE;
+        cm->ctype = ClassMember::VALUE;
         cm->isFinal = false;
         if (_current->type == Token::Type::Semicolon) {
             parse_token();
@@ -969,7 +982,7 @@ std::shared_ptr<Node> Parser::parse_class_statement() {
         std::shared_ptr<Node> value = parse_expr();
         auto cm = std::make_shared<ClassMember>(name, value);
         cm->ac = ac;
-        cm->type = ClassMember::STATIC;
+        cm->ctype = ClassMember::STATIC;
         cm->isFinal = false;
         if (_current->type == Token::Type::Semicolon) {
             parse_token();
@@ -986,7 +999,7 @@ std::shared_ptr<Node> Parser::parse_class_statement() {
     auto inner = std::dynamic_pointer_cast<CreationNode>(parse_function_creation());
     auto cm = std::make_shared<ClassMember>(inner->creations[0].first, inner->creations[0].second);
     cm->ac = ac;
-    cm->type = ClassMember::METHOD;
+    cm->ctype = ClassMember::METHOD;
     cm->isFinal = isFinal;
     return cm;
 }
@@ -1047,6 +1060,8 @@ const std::map<Token::Type, Parser::OperatorPriority> Parser::priorityTable = {
     
     {Token::Type::Equal,                OperatorPriority::Equals},
     {Token::Type::NotEqual,             OperatorPriority::Equals},
+    {Token::Type::FullEqual,            OperatorPriority::Equals},
+    {Token::Type::NotFullEqual,         OperatorPriority::Equals},
     {Token::Type::Greater,              OperatorPriority::LessGreater},
     {Token::Type::GreaterEqual,         OperatorPriority::LessGreater},
     {Token::Type::Less,                 OperatorPriority::LessGreater},
@@ -1059,6 +1074,7 @@ const std::map<Token::Type, Parser::OperatorPriority> Parser::priorityTable = {
     {Token::Type::Asterisk,             OperatorPriority::Product},
     {Token::Type::Modulus,              OperatorPriority::Product},
     {Token::Type::Slash,                OperatorPriority::Product},
+    {Token::Type::Pow,                  OperatorPriority::Pow},
 
     {Token::Type::LogicalNot,           OperatorPriority::Single},
     {Token::Type::BitwiseNot,           OperatorPriority::Single},
@@ -1067,5 +1083,6 @@ const std::map<Token::Type, Parser::OperatorPriority> Parser::priorityTable = {
     {Token::Type::Extand,               OperatorPriority::Suffix},
     {Token::Type::ForceExtand,          OperatorPriority::Suffix},
     {Token::Type::Increment,            OperatorPriority::Suffix},
-    {Token::Type::Decrement,            OperatorPriority::Suffix}
+    {Token::Type::Decrement,            OperatorPriority::Suffix},
+    {Token::Type::More,                 OperatorPriority::Range}
 };

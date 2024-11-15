@@ -11,7 +11,7 @@
 
 ### MPC
 
-MPC 是一种脚本式、半解释性、强类型的编程语言，使用 MPASM 二进制存储代码逻辑、。MPC 是一款面向对象的编程语言，支持类、封装、构造函数、析构函数、继承、多态等功能。
+MPC 是一种脚本式、解释性、强类型的编程语言。MPC 是一款面向对象的编程语言，支持类、封装、构造函数、析构函数、继承、多态等功能。
 
 ```mpc
 class IntegerClass {
@@ -95,24 +95,16 @@ mpcc s <inputFileName> <outputFileName>
 mpcc t <inputFileName> <outputFileName>
 ```
 
-把代码文件转换为 MPASM (`.mpasm` or `.mps`)：
-
-```shell
-mpcc a <inputFileName> <outputFileName>
-```
-
 **注意**：您不能同时使用多种模式！
 
 ### 模块
 
 1. **Token 解析器 (Lexer)** 用于划分源代码部件
 2. **语法解析器 (Parser)** 用于解析源代码为 AST
-3. **编译器 (Compiler)** 内置于 AST 节点中，用于输出 MPASM
-4. **连接器 (Linker)** 用于更改 `JMP` 系列语句的指向
-5. **虚拟机 (VM)** 用于运行 MPASM
+5. **虚拟机 (VM)** 用于运行 AST
 6. **转换器 (Convertor)** 用于将二进制/内存格式转换为人类可读形式。
 
-二进制文件的 Magic 是 `MirekE09`
+二进制 AST 保存文件的 Magic 是 `MirekE09`
 
 ## 插件
 
