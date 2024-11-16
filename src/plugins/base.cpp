@@ -9,6 +9,10 @@
 #include "vm/vm.hpp"
 #include <cstdlib>
 #include "util.hpp"
+#include "vm/gct.hpp"
+#include "object/instance.hpp"
+#include "object/nativeobject.hpp"
+#include "object/reference.hpp"
 
 Plugins::Base::Base() {}
 
@@ -260,6 +264,174 @@ std::shared_ptr<Object> System_Exec(Args args) {
     return std::make_shared<Integer>(retval);
 }
 
+std::shared_ptr<Object> Typestr(Args args) {
+    if (args.size() != 1) {
+        throw VMError("(Base)Typestr", "Incorrect Format");
+    }
+    return std::make_shared<String>(gVM->getTypeString(args[0]));
+}
+
+std::shared_ptr<Object> Assert(Args args) {
+    if (args.size() != 1) {
+        throw VMError("(Base)Assert", "Incorrect Format");
+    }
+    bool a = gVM->isTrue(args[0]);
+    if (!a) {
+        throw VMError("(Base)Assert", "Assertion Failed");
+    }
+    return gVM->VNull;
+}
+
+std::shared_ptr<Object> BelongTo(Args args) {
+    if (args.size() != 2 || args[1]->type != Object::Type::String) {
+        throw VMError("(Base)Typestr", "Incorrect Format");
+    }
+    auto t = gVM->getTypeString(args[0]), et = args[1]->toString();
+    if (t != et) {
+        if (args[0]->type == Object::Type::Instance || GCT.count(et)) {
+            auto id = GCT[et]->id;
+            if (std::dynamic_pointer_cast<Instance>(args[0])->belong->ids.count(id)) {
+                return gVM->True;
+            }
+        }
+        return gVM->False;
+    }
+    return gVM->True;
+}
+
+std::shared_ptr<Object> Max(Args args) {
+    if (!args.size()) {
+        return gVM->VNull;
+    }
+    if (args.size() == 1) return args[1];
+    auto v = gVM->isTrue(gVM->CalculateInfix(">", args[1], args[0], gVM->inner)) ? args[1] : args[0];
+    for (size_t i = 2; i < args.size(); i++) {
+        if (gVM->isTrue(gVM->CalculateInfix(">", args[i], v, gVM->inner))) {
+            v = args[i];
+        }
+    }
+    return v;
+}
+
+std::shared_ptr<Object> Min(Args args) {
+    if (!args.size()) {
+        return gVM->VNull;
+    }
+    if (args.size() == 1) return args[1];
+    auto v = gVM->isTrue(gVM->CalculateInfix("<", args[1], args[0], gVM->inner)) ? args[1] : args[0];
+    for (size_t i = 2; i < args.size(); i++) {
+        if (gVM->isTrue(gVM->CalculateInfix("<", args[i], v, gVM->inner))) {
+            v = args[i];
+        }
+    }
+    return v;
+}
+
+std::shared_ptr<Object> String_Digit(Args args) {
+    plain(args);
+    if (args.size() != 1 || args[0]->type != Object::Type::String) {
+        throw VMError("(Base)String_Digit", "Incorrect Format");
+    }
+    auto str = std::dynamic_pointer_cast<String>(args[0])->value;
+    if (str.length() == 1) {
+        return std::make_shared<Integer>(str[0]);
+    }
+    else {
+        auto res = std::make_shared<Array>();
+        res->value.reserve(str.length());
+        for (size_t i = 0; i < str.length(); i++) {
+            res->value.push_back(std::make_shared<Integer>(str[i]));
+        }
+        return res;
+    }
+}
+
+std::shared_ptr<Object> String_Char(Args args) {
+    plain(args);
+    if (args.size() != 1) {
+        throw VMError("(Base)String_Char", "Incorrect Format");
+    }
+    if (args[0]->type == Object::Type::Integer) {
+        return std::make_shared<String>((char)(std::dynamic_pointer_cast<Integer>(args[0])->value));
+    }
+    if (args[0]->type != Object::Type::Iterator) {
+        args[0] = std::dynamic_pointer_cast<Iterator>(args[0])->toArray();
+    }
+    if (args[0]->type != Object::Type::Array) {
+        throw VMError("(Base)String_Char", "Incorrect Format");
+    }
+    auto& arr = std::dynamic_pointer_cast<Array>(args[0])->value;
+    std::stringstream ss;
+    for (auto& e : arr) {
+        if (e->type != Object::Type::Integer) {
+            throw VMError("(Base)String_Char", "Incorrect Format");
+        }
+        ss << (char)(std::dynamic_pointer_cast<Integer>(e)->value);
+    }
+    return std::make_shared<String>(ss.str());
+}
+
+std::shared_ptr<Object> To_String(Args args) {
+    if (args.size() != 1) {
+        throw VMError("(Base)To_String", "Incorrect Format");
+    }
+    return std::make_shared<String>(args[0]->toString());
+}
+
+std::shared_ptr<Object> ArrStr_Length(Args args) {
+    if (args.size() != 1) {
+        throw VMError("(Base)ArrStr_Length", "Incorrect Format");
+    }
+    plain(args);
+    if (args[0]->type == Object::Type::String) {
+        return std::make_shared<Integer>(std::dynamic_pointer_cast<String>(args[0])->value.length());
+    }
+    if (args[0]->type == Object::Type::Iterator) {
+        args[0] = std::dynamic_pointer_cast<Iterator>(args[0])->toArray();
+    }
+    if (args[0]->type == Object::Type::Array) {
+        return std::make_shared<Integer>(std::dynamic_pointer_cast<Array>(args[0])->value.size());
+    }
+    throw VMError("(Base)ArrStr_Length", "Incorrect Format");
+}
+
+std::shared_ptr<Object> Array_Push(Args args) {
+    if (args.size() < 2 || args[0]->type != Object::Type::Reference) {
+        throw VMError("(Base)Array_Push", "Incorrect Format");
+    }
+    args[0] = *(std::dynamic_pointer_cast<Reference>(args[0])->ptr);
+    plain(args);
+    if (args[0]->type != Object::Type::Array) {
+        throw VMError("(Base)Array_Push", "Incorrect Format");
+    }
+    auto& arr = std::dynamic_pointer_cast<Array>(args[0])->value;
+    for (size_t i = 1; i < args.size(); i++) {
+        arr.push_back(args[i]);
+    }
+    return gVM->VNull;
+}
+
+std::shared_ptr<Object> Array_Pop(Args args) {
+    if (args.size() == 1) {
+        args.push_back(std::make_shared<Integer>(1));
+    }
+    if (args.size() != 2 || args[0]->type != Object::Type::Reference) {
+        throw VMError("(Base)Array_Pop", "Incorrect Format");
+    }
+    args[0] = *(std::dynamic_pointer_cast<Reference>(args[0])->ptr);
+    plain(args);
+    if (args[0]->type != Object::Type::Array || args[1]->type != Object::Type::Integer) {
+        throw VMError("(Base)Array_Pop", "Incorrect Format");
+    }
+    if (std::dynamic_pointer_cast<Integer>(args[1])->value < 0) {
+        throw VMError("(Base)Array_Pop", "Incorrect Format");
+    }
+    auto p_count = std::min<size_t>(std::dynamic_pointer_cast<Integer>(args[1])->value, std::dynamic_pointer_cast<Array>(args[0])->value.size());
+    auto& arr = std::dynamic_pointer_cast<Array>(args[0])->value;
+    while (p_count--) arr.pop_back();
+    return gVM->VNull;
+}
+
 void Plugins::Base::enable() {
     regist("join", Array_Join);
     regist("map", Array_Map);
@@ -267,9 +439,26 @@ void Plugins::Base::enable() {
     regist("foreach", Array_Foreach);
     regist("find", Array_Find);
     regist("findAt", Array_FindAt);
+    regist("push", Array_Push);
+    regist("pop", Array_Pop);
     regist("reverse", ArrStr_Reverse);
+    regist("len", ArrStr_Length);
     regist("split", String_Split);
     regist("escape", String_Escape);
     regist("unescape", String_Unescape);
+    regist("digit", String_Digit);
+    regist("char", String_Char);
     regist("system", System_Exec);
+    regist("typestr", Typestr);
+    regist("assert", Assert);
+    regist("belongTo", BelongTo);
+    regist("max", Max);
+    regist("min", Min);
+    regist("toString", To_String);
+
+    auto _MPCC = std::make_shared<NativeObject>();
+    _MPCC->set("version", std::make_shared<String>("2.2"));
+    _MPCC->set("arch", std::make_shared<String>("Arkscene"));
+    _MPCC->set("major_version", std::make_shared<Integer>(2));
+    regist("MPCC", _MPCC);
 }

@@ -182,12 +182,12 @@ MPC 提供多种类型。除 Naitve 和 Instance 具有不确定的类型字段�
 
 ### 支持库
 
-| 类名 | 文件 | 功能 | 操作系统 |
+| 类名 | 文件 | 功能 | 环境要求 |
 | :--: | :--: | :--: | :--: |
-| DynamicLoad | src/plugins/dynamic_load.cpp | 加载外置插件 | Windows/POSIX |
+| DynamicLoad | src/plugins/dynamic_load.cpp | 加载外置插件 | Win32API/POSIX |
 | IO | src/plugins/io.cpp | 输入输出| 任意 |
 | FileIO | src/plugins/fileio.cpp | 文件输入输出 | 任意 |
-| Math | src/plugins/math.hpp | 简单的数学功能 | 任意 |
+| Math | src/plugins/math.cpp | 简单的数学功能 | 任意 |
 | Base | src/plugins/base.cpp | 基本语言功能 | 任意 |
 
 ### 多文件

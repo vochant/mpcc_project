@@ -58,7 +58,7 @@
 			"name": "variable.name.com.minphtis.mpclf"
 		},
 		"builtins": {
-			"match": "\\b(?:(print|println|getline|getint|getfloat|getbool|getchar|getstring|termformat|fopen|fisok|fisfailed|fgetline|fgetint|fgetfloat|fgetbool|fgetstring|fgetchar|fprint|fprintln|fclose|load|is_linux|is_windows|is_apple|is_unix|is_android|posix_supported|is_debug|mpcc_version|typestr|super|dynamic_let|dynamic_remove|dynamic_access|evulate_up|nisolated|tostr|len|push|max|min|make_copy|range|oncecheck|map|flat|flat_map|deduplicate|join|take|digit|raw|byte|char|split|slice|pop)|(open_mode|Object|Map|Set))\\b",
+			"match": "\\b(?:(print|println|getline|getint|getfloat|getchar|input|fopen|fisok|fgetline|fgetint|fgetfloat|finput|fgetchar|fprint|fprintln|fclose|load|typestr|super|toString|len|push|pop|max|min|range|map|flat|flatMap|deduplicate|join|digit|asBytes|asString|char|split|slice)|(Object|Map|Set))\\b",
 			"captures": {
 				"1": {
 					"name": "support.function.$1.mpc"

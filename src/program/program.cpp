@@ -21,13 +21,14 @@ int Program::ExecuteOuter(std::shared_ptr<ProgramNode> _program) {
 }
 
 void Program::REPL() {
-	std::cout << "MPCC Project 2.2\nRunning REPL Mode.\nType ':exit' to exit\n\n";
+	std::cout << "MPCC Project 2.2 Arkscene\nRunning REPL Mode.\nType ':exit' to exit\n\n";
 	while (true) {
         try {
             long long _shift = 0;
             std::string src = "";
             std::cout << ">> ";
             std::cin >> src;
+            if (src == ":exit") break;
             Parser parser(src, "[stdin]", []()->std::string {
                 std::string tmp;
                 std::cout << ".. ";
