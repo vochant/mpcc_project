@@ -39,6 +39,7 @@ set(LIBRARY_SOURCES
     src/program/program.cpp
     src/system/system.cpp
     src/vm/vm.cpp
+    src/plugins/plugin.cpp
 )
 
 set(PROGRAM_SOURCES src/main.cpp)

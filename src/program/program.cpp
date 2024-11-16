@@ -23,18 +23,28 @@ void Program::ExecuteOuter(std::shared_ptr<ProgramNode> _program) {
 void Program::REPL() {
 	std::cout << "MPCC Project 2.2\nRunning REPL Mode.\nType ':exit' to exit\n\n";
 	while (true) {
-		long long _shift = 0;
-		std::string src = "";
-		std::cout << "> ";
-		std::cin >> src;
-		Parser parser(src);
-		auto prog = parser.parse_program();
-		gVM->Execute(std::dynamic_pointer_cast<ProgramNode>(prog), gVM->inner);
-        if (gVM->lastObject->type == Object::Type::String) {
-            std::cout << escape(gVM->lastObject->toString()) << '\n';
+        try {
+            long long _shift = 0;
+            std::string src = "";
+            std::cout << ">> ";
+            std::cin >> src;
+            Parser parser(src, "[stdin]", []()->std::string {
+                std::string tmp;
+                std::cout << ".. ";
+                std::cin >> tmp;
+                return tmp;
+            });
+            auto prog = parser.parse_program();
+            gVM->Execute(std::dynamic_pointer_cast<ProgramNode>(prog), gVM->inner);
+            if (gVM->lastObject->type == Object::Type::String) {
+                std::cout << escape(gVM->lastObject->toString()) << '\n';
+            }
+            else {
+                std::cout << gVM->lastObject->toString() << '\n';
+            }
         }
-        else {
-            std::cout << gVM->lastObject->toString() << '\n';
+        catch (const std::exception& e) {
+            std::cerr << e.what() << "\n";
         }
 	}
 }

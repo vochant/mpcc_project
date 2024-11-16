@@ -2,7 +2,7 @@
 #include "object/boolean.hpp"
 #include "object/byte.hpp"
 #include "object/bytearray.hpp"
-#include "object/commonobject.hpp"
+#include "object/nativeobject.hpp"
 #include "object/float.hpp"
 #include "object/function.hpp"
 #include "object/integer.hpp"
@@ -340,4 +340,31 @@ MemberFunction::MemberFunction(std::shared_ptr<Executable> exec) : Object(Type::
 
 std::shared_ptr<Object> NativeFunction::call(std::vector<std::shared_ptr<Object>> args) {
     return func(args);
+}
+
+NativeObject::NativeObject() : CommonObject(ObjectType::NATIVE) {}
+
+void NativeObject::set(std::string name, std::shared_ptr<Object> obj) {
+    if (entries.count(name)) entries[name] = obj;
+    else entries.insert({name, obj});
+}
+
+std::shared_ptr<Object> NativeObject::get(std::string name) {
+    auto it = entries.find(name);
+    if (it == entries.end()) {
+        return gVM->VNull;
+    }
+    return it->second;
+}
+
+std::string NativeObject::toString() {
+    return "[object native]";
+}
+
+std::shared_ptr<Object> NativeObject::make_copy() {
+    auto copy = std::make_shared<NativeObject>();
+    for (auto&[k, v] : entries) {
+        copy->entries.insert({k, v->make_copy()});
+    }
+    return copy;
 }

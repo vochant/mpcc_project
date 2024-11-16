@@ -40,12 +40,24 @@
 
 constexpr bool doImport = true;
 
+std::string noNext() {
+    throw ParserError("Read end-of-file, but not ended");
+}
+
 void Parser::parse_token() {
     _prev = _current;
     _current = lexer.parseNext();
+    if (_current->type == Token::Type::LParan || _current->type == Token::Type::LBrace || _current->type == Token::Type::LBracket) stacking++;
+    if (_current->type == Token::Type::RParan || _current->type == Token::Type::RBrace || _current->type == Token::Type::RBracket) stacking--;
+    if (_current->type == Token::Type::End && stacking) {
+        lexer = Lexer(getNext(), source);
+        parse_token(); 
+    }
 }
 
-Parser::Parser(const std::string code, const std::string src) : lexer(code, src) {
+Parser::Parser(const std::string code, const std::string src, std::function<std::string()> getMext) : lexer(code, src), getNext(getNext) {
+    stacking = 0;
+    source = src;
     parse_token();
 }
 

@@ -4,6 +4,10 @@
 #include "ast/scope.hpp"
 #include "lexer/lexer.hpp"
 
+#include <functional>
+
+std::string noNext();
+
 class Parser {
 private:
     enum class OperatorPriority {
@@ -12,9 +16,12 @@ private:
     };
     std::shared_ptr<Token> _current, _prev;
     Lexer lexer;
+    std::function<std::string()> getNext;
+    int stacking;
+    std::string source;
     void parse_token();
 public:
-    Parser(const std::string code, const std::string src = "[stdin]");
+    Parser(const std::string code, const std::string src = "[stdin]", std::function<std::string()> getMext = noNext);
     std::shared_ptr<Node> parse_program();
 private:
     std::shared_ptr<Node> parse_decorate();

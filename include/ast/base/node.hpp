@@ -7,8 +7,6 @@
 
 #include "util.hpp"
 
-void illegal_program_error();
-
 class Node {
 public:
     enum class Type {
