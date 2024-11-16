@@ -5,6 +5,7 @@
 #include "object/string.hpp"
 #include "object/float.hpp"
 #include "object/nativeobject.hpp"
+#include "vm/vm.hpp"
 
 Plugins::IO::IO() {}
 
@@ -51,6 +52,20 @@ std::shared_ptr<Object> Get_Char(Args args) {
     char tmp;
     std::cin.get(tmp);
     return std::make_shared<String>(tmp);
+}
+
+std::shared_ptr<Object> Print(Args args) {
+    if(args.size() == 0)
+    {
+        throw VMError("(IO)Print" , "Incorrect Format");
+    }
+    bool isFirst = true;
+    for (auto& e : args) {
+        if (isFirst) isFirst = false;
+        else std::cout << ' ';
+        std::cout << e->toString();
+    }
+    return gVM->VNull;
 }
 
 std::shared_ptr<Object> FastIO_Get_Int(Args args) {
@@ -111,6 +126,7 @@ void Plugins::IO::enable() {
     regist("getfloat" , Get_Float);
     regist("getline" , Get_Line);
     regist("getchar" , Get_Char);
+    regist("print" , Print);
     auto FastIO = std::make_shared<NativeObject>();
     FastIO->set("getint", std::make_shared<NativeFunction>(FastIO_Get_Int));
     FastIO->set("getfloat" , std::make_shared<NativeFunction>(FastIO_Get_Float));
