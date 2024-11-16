@@ -5,6 +5,7 @@
 #include "object/string.hpp"
 #include "object/executable.hpp"
 #include "object/array.hpp"
+#include "object/integer.hpp"
 #include "vm/vm.hpp"
 
 Plugins::Base::Base() {}
@@ -106,6 +107,74 @@ std::shared_ptr<Object> Array_Foreach(Args args) {
     return gVM->VNull;
 }
 
+std::shared_ptr<Object> Array_Find(Args args) {
+    plain(args);
+    if (args.size() != 2 || args[1]->type != Object::Type::Executable) {
+        throw VMError("(Base)Array_Find", "Incorrect Format");
+    }
+    if (args[0]->type == Object::Type::Iterator) {
+        args[0] = std::dynamic_pointer_cast<Iterator>(args[0])->toArray();
+    }
+    if (args[0]->type != Object::Type::Array) {
+        throw VMError("(Base)Array_Find", "Incorrect Format");
+    }
+    auto arr = std::dynamic_pointer_cast<Array>(args[0]);
+    auto exec = std::dynamic_pointer_cast<Executable>(args[1]);
+    long long counter = 0;
+    for (auto& e : arr->value) {
+        if (gVM->isTrue(exec->call({e, std::make_shared<Integer>(counter)}))) return e;
+        counter++;
+    }
+    return gVM->VNull;
+}
+
+std::shared_ptr<Object> Array_FindAt(Args args) {
+    plain(args);
+    if (args.size() != 2 || args[1]->type != Object::Type::Executable) {
+        throw VMError("(Base)Array_FindAt", "Incorrect Format");
+    }
+    if (args[0]->type == Object::Type::Iterator) {
+        args[0] = std::dynamic_pointer_cast<Iterator>(args[0])->toArray();
+    }
+    if (args[0]->type != Object::Type::Array) {
+        throw VMError("(Base)Array_FindAt", "Incorrect Format");
+    }
+    auto arr = std::dynamic_pointer_cast<Array>(args[0]);
+    auto exec = std::dynamic_pointer_cast<Executable>(args[1]);
+    long long counter = 0;
+    for (auto& e : arr->value) {
+        if (gVM->isTrue(exec->call({e, std::make_shared<Integer>(counter)}))) return std::make_shared<Integer>(counter);
+        counter++;
+    }
+    return gVM->VNull;
+}
+
+std::shared_ptr<Object> ArrStr_Reverse(Args args) {
+    plain(args);
+    if (args.size() != 1) {
+        throw VMError("(Base)ArrStr_Reverse", "Incorrect Format");
+    }
+    if (args[0]->type == Object::Type::Iterator) {
+        args[0] = std::dynamic_pointer_cast<Iterator>(args[0])->toArray();
+    }
+    if (args[0]->type == Object::Type::Array) {
+        auto arr = std::dynamic_pointer_cast<Array>(args[0]);
+        auto res = std::make_shared<Array>();
+        res->value.reserve(arr->value.size());
+        for (auto it = arr->value.rbegin(); it != arr->value.rend(); it++) {
+            res->value.push_back(*it);
+        }
+        return res;
+    }
+    else if (args[0]->type == Object::Type::String) {
+        auto str = std::dynamic_pointer_cast<String>(args[0])->value;
+        std::stringstream ss;
+        for (size_t i = str.length() - 1; i >= 0; i--) ss << str.at(i);
+        return std::make_shared<String>(ss.str());
+    }
+    throw VMError("(Base)ArrStr_Reverse", "Incorrect Format");
+}
+
 std::shared_ptr<Object> String_Split(Args args) {
     plain(args);
     if (args.size() < 1 || args.size() > 2 || args[0]->type != Object::Type::String) {
@@ -161,5 +230,8 @@ void Plugins::Base::enable() {
     regist("map", Array_Map);
     regist("flatMap", Array_FlatMap);
     regist("foreach", Array_Foreach);
+    regist("find", Array_Find);
+    regist("findAt", Array_FindAt);
+    regist("reverse", ArrStr_Reverse);
     regist("split", String_Split);
 }

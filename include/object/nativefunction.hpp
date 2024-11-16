@@ -4,6 +4,8 @@
 
 #include <functional>
 
+extern Environment* NF_Environment;
+
 typedef std::vector<std::shared_ptr<Object>> Args;
 typedef std::function<std::shared_ptr<Object>(Args)> NFunc;
 
