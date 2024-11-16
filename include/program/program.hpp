@@ -13,8 +13,8 @@ public:
     ~Program();
 public:
     void loadLibrary(std::shared_ptr<Plugin> _plg);
-    void Execute(std::shared_ptr<ProgramNode> _program);
-    void ExecuteCode(std::string src, std::string from = "[stdin]");
-	void ExecuteOuter(std::shared_ptr<ProgramNode> _program);
+    int Execute(std::shared_ptr<ProgramNode> _program);
+    int ExecuteCode(std::string src, std::string from = "[stdin]");
+	int ExecuteOuter(std::shared_ptr<ProgramNode> _program);
 	void REPL();
 };

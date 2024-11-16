@@ -3,6 +3,8 @@
 #include "env/environment.hpp"
 #include "object/nativefunction.hpp"
 
+void plain(Args& args);
+
 class Plugin {
 private:
     std::shared_ptr<Environment> _env;

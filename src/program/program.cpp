@@ -6,18 +6,18 @@ void Program::loadLibrary(std::shared_ptr<Plugin> _plg) {
     _plg->attach(_outer);
 }
 
-void Program::Execute(std::shared_ptr<ProgramNode> _program) {
-	gVM->Execute(_program, gVM->inner);
+int Program::Execute(std::shared_ptr<ProgramNode> _program) {
+	return gVM->Execute(_program, gVM->inner);
 }
 
-void Program::ExecuteCode(std::string src, std::string from) {
+int Program::ExecuteCode(std::string src, std::string from) {
     Parser parser(src, from);
     auto prog = parser.parse_program();
-    gVM->Execute(std::dynamic_pointer_cast<ProgramNode>(prog), gVM->inner);
+    return gVM->Execute(std::dynamic_pointer_cast<ProgramNode>(prog), gVM->inner);
 }
 
-void Program::ExecuteOuter(std::shared_ptr<ProgramNode> _program) {
-	gVM->Execute(_program, gVM->outer);
+int Program::ExecuteOuter(std::shared_ptr<ProgramNode> _program) {
+	return gVM->Execute(_program, gVM->outer);
 }
 
 void Program::REPL() {

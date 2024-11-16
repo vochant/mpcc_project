@@ -49,7 +49,7 @@ public:
         COMMON, BREAK, CONTINUE, RETURN
     } state;
 public:
-    std::shared_ptr<Object> Execute(std::shared_ptr<ProgramNode> program, std::shared_ptr<Environment> env);
+    int Execute(std::shared_ptr<ProgramNode> program, std::shared_ptr<Environment> env);
 
     std::shared_ptr<Object> ExecuteArray(std::shared_ptr<ArrayNode> arr, std::shared_ptr<Environment> env);
     std::shared_ptr<Object> ExecuteAssign(std::shared_ptr<AssignNode> assign, std::shared_ptr<Environment> env);

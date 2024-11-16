@@ -38,7 +38,7 @@ std::shared_ptr<_Tp> As(std::shared_ptr<Object> obj) {
     return std::dynamic_pointer_cast<_Tp>(obj);
 }
 
-std::shared_ptr<Object> VirtualMachine::Execute(std::shared_ptr<ProgramNode> program, std::shared_ptr<Environment> env) {
+int VirtualMachine::Execute(std::shared_ptr<ProgramNode> program, std::shared_ptr<Environment> env) {
     if (program->mainScope->type != Node::Type::Scope) {
         throw VMError("VM:Execute", "The main scope of the program must be a scope");
     }
@@ -47,9 +47,9 @@ std::shared_ptr<Object> VirtualMachine::Execute(std::shared_ptr<ProgramNode> pro
         v = v->make_copy();
     }
     if (v->type == Object::Type::Integer) {
-        return v;
+        return As<Integer>(v)->value;
     }
-    return std::make_shared<Integer>(0);
+    return 0;
 }
 
 std::shared_ptr<Object> VirtualMachine::ExecuteArray(std::shared_ptr<ArrayNode> arr, std::shared_ptr<Environment> env) {
