@@ -20,6 +20,7 @@ extern std::set<std::string> implist; // Imported files
 
 extern std::filesystem::path respath;
 
+unsigned long long _FastPow(unsigned long long base, size_t sup);
 std::string unescape(std::string in);
 std::string escape(std::string in);
 int getweight(const char* const str);
