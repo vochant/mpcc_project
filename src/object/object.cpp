@@ -166,9 +166,10 @@ std::shared_ptr<Object> ConstructorProxy::call(std::vector<std::shared_ptr<Objec
 
 std::shared_ptr<Array> Iterator::toArray() {
     auto res = std::make_shared<Array>();
-    while (hasNext()) {
-        res->value.push_back(next());
-        go();
+    auto copy = std::dynamic_pointer_cast<Iterator>(make_copy());
+    while (copy->hasNext()) {
+        res->value.push_back(copy->next());
+        copy->go();
     }
     return res;
 }
@@ -325,6 +326,9 @@ std::shared_ptr<Executable> MemberFunction::apply(std::shared_ptr<Environment> e
     if (copy->etype == Executable::ExecType::Function) {
         std::dynamic_pointer_cast<Function>(copy)->env = env;
     }
+    else if (copy->etype == Executable::ExecType::NativeFunction) {
+        NF_Environment = env.get();
+    }
     return copy;
 }
 
@@ -368,3 +372,5 @@ std::shared_ptr<Object> NativeObject::make_copy() {
     }
     return copy;
 }
+
+ Environment* NF_Environment;

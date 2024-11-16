@@ -947,11 +947,27 @@ std::shared_ptr<Object> VirtualMachine::CalculateRelationship(std::string op, st
     if (op == "===") {
         if (a->type == Object::Type::Null) return True;
         if (a->type == Object::Type::String) return (As<String>(a)->hash) == (As<String>(b)->hash) ? True : False;
+        if (a->type == Object::Type::Array) {
+            auto ac = As<Array>(a), bc = As<Array>(b);
+            if (ac->value.size() != bc->value.size()) return False;
+            for (auto ait = ac->value.begin(), bit = bc->value.begin(); ait != ac->value.end(); ait++, bit++) {
+                if (!isTrue(CalculateRelationship("===", *ait, *bit))) return False;
+            }
+            return True;
+        }
         return False;
     }
     if (op == "!==") {
         if (a->type == Object::Type::Null) return False;
         if (a->type == Object::Type::String) return (As<String>(a)->hash) == (As<String>(b)->hash) ? False : True;
+        if (a->type == Object::Type::Array) {
+            auto ac = As<Array>(a), bc = As<Array>(b);
+            if (ac->value.size() != bc->value.size()) return True;
+            for (auto ait = ac->value.begin(), bit = bc->value.begin(); ait != ac->value.end(); ait++, bit++) {
+                if (!isTrue(CalculateRelationship("===", *ait, *bit))) return True;
+            }
+            return False;
+        }
         return True;
     }
     if (a->type == Object::Type::String && b->type == Object::Type::String) {
