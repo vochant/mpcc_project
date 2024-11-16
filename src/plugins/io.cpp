@@ -120,6 +120,32 @@ std::shared_ptr<Object> FastIO_Get_Float(Args args) {
     return std::make_shared<Integer>(f * (tmp / s));
 }
 
+void Write_Int_only(long long x)
+{
+    if(x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if(x > 9) {
+        Write_Int_only(x / 10);
+    }
+    putchar(x % 10 + '0');
+} 
+
+std::shared_ptr<Object> IO_Print_Int(Args args) {
+    if(args.size() != 1 || args[0]->type != Object::Type::Integer)
+    {
+        throw VMError("(IO)FastIO:Print_Int" , "Incorrect Format");
+    }
+    bool isFirst = true;
+    for (auto& e : args) {
+        if (isFirst) isFirst = false;
+        else std::cout << ' ';
+        Write_Int_only(std::dynamic_pointer_cast<Integer>(args[0])->value);
+    }
+    return gVM->VNull;
+}
+
 void Plugins::IO::enable() {
     regist("getint" , Get_Int);
     regist("input" , Get_String);
