@@ -132,7 +132,7 @@ void Write_Int_only(long long x)
     putchar(x % 10 + '0');
 } 
 
-std::shared_ptr<Object> IO_Print_Int(Args args) {
+std::shared_ptr<Object> FastIO_Print_Int(Args args) {
     if(args.size() != 1 || args[0]->type != Object::Type::Integer)
     {
         throw VMError("(IO)FastIO:Print_Int" , "Incorrect Format");
@@ -156,5 +156,6 @@ void Plugins::IO::enable() {
     auto FastIO = std::make_shared<NativeObject>();
     FastIO->set("getint", std::make_shared<NativeFunction>(FastIO_Get_Int));
     FastIO->set("getfloat" , std::make_shared<NativeFunction>(FastIO_Get_Float));
+    FastIO->set("printint" , std::make_shared<NativeFunction>(FastIO_Print_Int));
     regist("FastIO", FastIO);
 }
