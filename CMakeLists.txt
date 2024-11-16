@@ -39,7 +39,11 @@ set(LIBRARY_SOURCES
     src/program/program.cpp
     src/system/system.cpp
     src/vm/vm.cpp
+    src/vm/gct.cpp
     src/plugins/plugin.cpp
+    src/plugins/base.cpp
+    src/plugins/dynamic_load.cpp
+    src/plugins/io.cpp
 )
 
 set(PROGRAM_SOURCES src/main.cpp)

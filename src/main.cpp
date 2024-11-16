@@ -17,6 +17,7 @@ std::shared_ptr<Plugin> makePlugin() {
 int main(int argc, char* argv[]) {
     Program program;
     program.loadLibrary(makePlugin<Plugins::Base>());
+    program.loadLibrary(makePlugin<Plugins::DynamicLoad>());
     program.loadLibrary(makePlugin<Plugins::IO>());
     program.loadLibrary(makePlugin<Plugins::FileIO>());
     program.loadLibrary(makePlugin<Plugins::Math>());

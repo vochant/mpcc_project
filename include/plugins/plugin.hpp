@@ -19,28 +19,35 @@ public:
 };
 
 namespace Plugins {
-    class IO : private Plugin {
+    class IO : public Plugin {
     protected:
         void enable() override;
     public:
         IO();
     };
 
-    class FileIO : private Plugin {
+    class DynamicLoad : public Plugin {
+    protected:
+        void enable() override;
+    public:
+        DynamicLoad();
+    };
+
+    class FileIO : public Plugin {
     protected:
         void enable() override;
     public:
         FileIO();
     };
 
-    class Math : private Plugin {
+    class Math : public Plugin {
     protected:
         void enable() override;
     public:
         Math();
     };
 
-    class Base : private Plugin {
+    class Base : public Plugin {
     protected:
         void enable() override;
     public:
