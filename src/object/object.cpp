@@ -234,7 +234,12 @@ std::string File::toString() {
     return "[file]";
 }
 
-File::File(std::string name, std::string mode) : Object(Type::File) {
+void File::close() {
+    fs->close();
+    isClosed = true;
+}
+
+File::File(std::string name, std::string mode) : Object(Type::File), isClosed(false) {
     int om = 0;
     for (size_t i = 0; i < mode.length(); i++) {
         if (mode[i] == 'r') {
@@ -262,7 +267,7 @@ File::File(std::string name, std::string mode) : Object(Type::File) {
     fs = std::make_shared<std::fstream>(name, om);
 }
 
-File::File(std::shared_ptr<std::fstream> fs) : Object(Type::File), fs(fs) {}
+File::File(std::shared_ptr<std::fstream> fs) : Object(Type::File), fs(fs), isClosed(false) {}
 
 #include "env/common.hpp"
 #include "vm/vm.hpp"

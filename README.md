@@ -110,56 +110,57 @@ mpcc t <inputFileName> <outputFileName>
 
 要创建一个内置插件，您需要：
 
-### 创建文件夹
+### 创建类和代码文件
 
-创建一个位于 `include/registry` 目录的文件，例如 `my_plugin.hpp`。
+在 `include/plugins/plugin.hpp` 中的命名空间 `Plugins` 添加如下类，若名称为 `MyPlugin`：
+
+```cpp
+class MyPlugin : public Plugin {
+protected:
+    void enable();
+public:
+    MyPlugin();
+}
+```
+
+创建一个位于 `src/plugins` 目录的文件，例如 `my_plugin.cpp`。
 
 ### 编写代码
 
 写入下述内容。示例是对若干个整数求和，您也可以换成自己想要的。
 
 ```cpp
-#pragma once
+#include "plugins/plugin.hpp"
+#include "vm_error.hpp"
+#include "object/integer.hpp"
 
-#include "registry/base.hpp"
+Plugins::MyPlugin::MyPlugin() {}
 
-class MyPlugin : public Plugin {
-public:
-   MyPlugin() : Plugin() {}
-   void attach(std::shared_ptr<Environment> env) const override {
-       env->set("sum", std::make_shared<NativeFunction>(sum));
-   }
-public:
-   static NativeFunction::resulttype sum(NativeFunction::arglist args, Environment* env) {
-       if (args.size() == 0) {
-           return FormatError();
-       }
-       long long _sum = 0;
-       for (auto i : args) {
-           if (i->type != Object::Type::Integer) {
-               return FormatError();
-           }
-           _sum += std::dynamic_pointer_cast<Integer>(i)->value;
-       }
-       return std::make_pair(NativeFunction::Result::OK,std::make_shared<Integer>(_sum));
-   }
-};
+std::shared_ptr<Object> Integer_Sum(Args args) {
+    plain(args);
+    if (args.size() == 0) {
+        throw VMError("(MyPlugin)Integer_Sum", "Incorrect Format");
+    }
+    long long _sum = 0;
+    for (auto& i : args) {
+        if (i->type != Object::Type::Integer) {
+            throw VMError("(MyPlugin)Integer_Sum", "Incompatible Argument Type");
+        }
+        _sum += std::dynamic_pointer_cast<Integer>(i)->value;
+    }
+    return std::make_shared<Integer>(_sum);
+}
+
+void Plugins::MyPlugin::enable() {
+    regist("sum", Integer_Sum);
+}
 ```
 
-`NativeFunction::resulttype` 表示 `std::pair<NativeFunctions::Result, std::shared_ptr<Object>>`.
-
-`NativeFunction::arglist` 表示 `std::vector<std::shared_ptr<Object>>`.
-
-枚举 `NativeFunction::Result` 包含 4 个值： `OK`，`FORMAT_ERR`，`DATA_ERR` 和 `UNHANDLED_ERR`。它们分别表示：
-
-- `OK`：没有错误发生
-- `FORMAT_ERR`：以错误的格式调用
-- `DATA_ERR`：以错误的参数数据调用
-- `UNHANDLED_ERR`：未经处理的错误
+其中，`plain` 函数可以将 `args` 中所有的引用转换为非引用。`regist` 可以注册两种类型：`std::shared_ptr<Object>` 或 `NFunc`，其中 `NFunc` 表示一个符合以上格式的函数。另外，`Args` 是 `std::vector<std::shared_ptr<Object>>` 的简写。通常地，插件报错应当抛出 `VMError`。
 
 ### 修改文件
 
-修改 `src/main.cpp`，添加对该插件的注册行为。
+修改 `src/main.cpp`，添加对该插件的注册行为，即 `Program.loadLibrary(makePlugin<Plugins::MyPlugin>())`。
 
 ### 重新构建
 
@@ -167,39 +168,27 @@ public:
 
 ## 功能
 
-### 语言
+### 语言功能
 
-MPC 提供多种类型。除 Naitve 和 Instance 具有不确定的类型字段，其他类型（如 Integer、String、Float、Boolean、Executable、Null、Error）都有固定了类型字段。
-
-`type-utils` 库（`include/registry/typeutils.hpp`）提供的 `typestr` 函数可以获取一个值的类型。一个类和它的实例具有相同的编号（不是完整的类型字段）。
+MPC 提供多种类型。除 Naitve 和 Instance 具有不确定的类型字段，其他类型（如 Integer、String、Float、Boolean、Executable、Null）都有固定的类型字段。
 
 支持运算：
 
-- 算数运算：加、减、乘、除、取模、正、负
+- 算数运算：加、减、乘、除、取模、正、负、幂
 - 位运算：按位与、按位或、按位取反、按位异或、左移、右移
 - 逻辑运算：与、或、非
-- 比较运算：等于、不等于、大于、小于、大于等于、小于等于
+- 比较运算：等于、不等于、大于、小于、大于等于、小于等于、严格等于、严格不等于
+- 其他运算：取下标、构造范围、装饰、调用、自增、自减、赋值、运算赋值、三目运算符
 
 ### 支持库
 
-| 名称 | 文件 | 功能 | 操作系统 |
+| 类名 | 文件 | 功能 | 操作系统 |
 | :--: | :--: | :--: | :--: |
-| dynamic-load | include/registry/dynamic_load.hpp | 加载外置插件 | Windows/POSIX |
-| io | include/registry/io.hpp | 输入输出| 任意 |
-| constants | include/registry/constants.hpp | 常见的常量或判断函数 | 任意 |
-| fileio | include/registry/fileio.hpp | 文件输入输出 | 任意 |
-| type-utils | include/registry/type_utils.hpp | 类型转换和查询 | 任意 |
-| system | include/registry/system.hpp | 使用系统命令 | 任意 |
-| math | include/registry/math.hpp | 简单的数学功能 | 任意 |
-| algorithm | include/registry/algorithm.hpp | 常见算法和函数 | 任意 |
-| base | include/registry/base.hpp | 基本语言功能 | 任意 |
-
-用户可以自己加载以下自带的插件：
-
-| 名称 | 文件 | 功能 | 操作系统 |
-| :--: | :--: | :--: | :--: |
-| eval | include/registry/more/eval.hpp | 运行字符串中的代码 | 任意 |
-| win32-windowing | include/registry/win32w.hpp | Win32 窗口编程 | Windows |
+| DynamicLoad | src/plugins/dynamic_load.cpp | 加载外置插件 | Windows/POSIX |
+| IO | src/plugins/io.cpp | 输入输出| 任意 |
+| FileIO | src/plugins/fileio.cpp | 文件输入输出 | 任意 |
+| Math | src/plugins/math.hpp | 简单的数学功能 | 任意 |
+| Base | src/plugins/base.cpp | 基本语言功能 | 任意 |
 
 ### 多文件
 

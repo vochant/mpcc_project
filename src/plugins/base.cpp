@@ -7,6 +7,8 @@
 #include "object/array.hpp"
 #include "object/integer.hpp"
 #include "vm/vm.hpp"
+#include <cstdlib>
+#include "util.hpp"
 
 Plugins::Base::Base() {}
 
@@ -225,6 +227,39 @@ std::shared_ptr<Object> String_Split(Args args) {
     }
 }
 
+std::shared_ptr<Object> String_Escape(Args args) {
+    plain(args);
+    if (args.size() != 1 || args[0]->type != Object::Type::String) {
+        throw VMError("(Base)String_Escape", "Incorrect Format");
+    }
+    std::string common_esc = escape(args[0]->toString());
+    return std::make_shared<String>(common_esc.substr(1, common_esc.length() - 2));
+}
+
+std::shared_ptr<Object> String_Unescape(Args args) {
+    plain(args);
+    if (args.size() != 1 || args[0]->type != Object::Type::String) {
+        throw VMError("(Base)String_Unscape", "Incorrect Format");
+    }
+    std::string common_unesc = escape("'" + args[0]->toString() + "'");
+    return std::make_shared<String>(common_unesc);
+}
+
+std::shared_ptr<Object> System_Exec(Args args) {
+    if (!args.size()) {
+        throw VMError("(Base)System_Exec", "Too few arguments");
+    }
+    std::stringstream ss;
+    bool isFirst = true;
+    for (auto& e : args) {
+        if (isFirst) isFirst = false;
+        else ss << ' ';
+        ss << e->toString();
+    }
+    int retval = system(ss.str().c_str());
+    return std::make_shared<Integer>(retval);
+}
+
 void Plugins::Base::enable() {
     regist("join", Array_Join);
     regist("map", Array_Map);
@@ -234,4 +269,7 @@ void Plugins::Base::enable() {
     regist("findAt", Array_FindAt);
     regist("reverse", ArrStr_Reverse);
     regist("split", String_Split);
+    regist("escape", String_Escape);
+    regist("unescape", String_Unescape);
+    regist("system", System_Exec);
 }

@@ -143,7 +143,6 @@ unsigned char read_hex(char in) {
 
 std::string unescape(std::string in) {
     std::string res = "";
-    char ch = in[0];
     size_t p = 1;
     while (p < in.length() - 1) {
         if (in[p] == '\\') {
