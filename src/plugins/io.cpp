@@ -6,6 +6,7 @@
 #include "object/float.hpp"
 #include "object/nativeobject.hpp"
 #include "vm/vm.hpp"
+#include "util.hpp"
 
 Plugins::IO::IO() {}
 
@@ -66,6 +67,12 @@ std::shared_ptr<Object> Print(Args args) {
         std::cout << e->toString();
     }
     return gVM->VNull;
+}
+
+std::shared_ptr<Object> Print_Ln(Args args) {
+    auto res = Print(args);
+    std::cout << '\n';
+    return res;
 }
 
 std::shared_ptr<Object> FastIO_Get_Int(Args args) {
@@ -133,16 +140,73 @@ void Write_Int_only(long long x)
 } 
 
 std::shared_ptr<Object> FastIO_Print_Int(Args args) {
-    if(args.size() != 1 || args[0]->type != Object::Type::Integer)
+    plain(args);
+    if(args.size() == 0)
     {
         throw VMError("(IO)FastIO:Print_Int" , "Incorrect Format");
+    }
+    for (auto& e : args) {
+        if (e->type != Object::Type::Integer) {
+            throw VMError("(IO)FastIO:Print_Int" , "Incorrect Format");
+        }
     }
     bool isFirst = true;
     for (auto& e : args) {
         if (isFirst) isFirst = false;
         else std::cout << ' ';
-        Write_Int_only(std::dynamic_pointer_cast<Integer>(args[0])->value);
+        Write_Int_only(std::dynamic_pointer_cast<Integer>(e)->value);
     }
+    return gVM->VNull;
+}
+
+void Write_Float_only(double x , long long k)
+{
+    static long long n = _FastPow(10 , k);
+    if (x == 0)
+    {
+        putchar('0');
+        putchar('.');
+        for (int i = 1 ; i <= k ; i++)
+        {
+            putchar('0');
+        }
+        return;
+    }
+    if (x < 0)
+    {
+        putchar('-');
+        x = -x;
+    }
+    long long y = (long long)(x * n) % n;
+    x = (long long)x;
+    Write_Int_only(x);
+    putchar('.');
+    int bit[10],p=0,i;
+    for (; p < k ; y /= 10) {
+        bit[++p] = y % 10;
+    }
+    for (i = p ; i > 0 ; i--) {
+        putchar(bit[i] + 48);
+    }
+}
+
+std::shared_ptr<Object> FastIO_Print_Double(Args args) {
+    plain(args);
+    if(args.size() == 1)
+    {
+        args.push_back(std::make_shared<Integer>(6));
+    }
+    if(args.size() != 2)
+    {
+        throw VMError("(IO)FastIO:Print_Double" , "Incorrect Format");
+    }
+    if (args[0]->type == Object::Type::Integer) {
+        args[0] = std::make_shared<Float>(std::dynamic_pointer_cast<Integer>(args[0])->value);
+    }
+    if (args[0]->type != Object::Type::Float || args[1]->type != Object::Type::Integer) {
+        throw VMError("(IO)FastIO:Print_Double" , "Incorrect Format");
+    }
+    Write_Float_only(std::dynamic_pointer_cast<Float>(args[0])->value, std::dynamic_pointer_cast<Integer>(args[1])->value);
     return gVM->VNull;
 }
 
@@ -153,6 +217,7 @@ void Plugins::IO::enable() {
     regist("getline" , Get_Line);
     regist("getchar" , Get_Char);
     regist("print" , Print);
+    regist("println" , Print_Ln);
     auto FastIO = std::make_shared<NativeObject>();
     FastIO->set("getint", std::make_shared<NativeFunction>(FastIO_Get_Int));
     FastIO->set("getfloat" , std::make_shared<NativeFunction>(FastIO_Get_Float));
