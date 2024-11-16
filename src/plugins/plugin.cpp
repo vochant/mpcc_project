@@ -13,4 +13,12 @@ void Plugin::regist(std::string name, NFunc func) {
     _env->set(name, std::make_shared<NativeFunction>(func));
 }
 
+void plain(Args& args) {
+    for (auto& e : args) {
+        if (e->type == Object::Type::Reference || e->type == Object::Type::LowReference) {
+            e = e->make_copy();
+        }
+    }
+}
+
 Plugin::Plugin() {}

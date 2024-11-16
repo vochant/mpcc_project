@@ -5,34 +5,40 @@
 // MPCC Arkscene 1.0dev1
 
 #include <iostream>
-#include "parser/parser.hpp"
-#include "compiler/compiler.hpp"
-#include "linker/linker.hpp"
-#include "convertor/asm2plain.hpp"
+#include "program/program.hpp"
+
+#include "plugins/plugin.hpp"
+
+template<typename _Tp>
+std::shared_ptr<Plugin> makePlugin() {
+    return std::make_shared<_Tp>();
+} 
 
 int main(int argc, char* argv[]) {
-    std::ios::sync_with_stdio(false);
-    std::fstream fs("main.mpc", std::ios::in);
-    std::string src = "", tmp;
-    while (!fs.eof()) {
-        std::getline(fs, tmp);
-        src = src + "\n" + tmp;
-    }
-    try {
-        Parser parser(src, "main.mpc");
-        auto res = parser.parse_program();
-        Compiler compiler(res);
-        size_t count;
-        auto asmcode = compiler.compile(count);
-        Linker linker(asmcode, count);
-        auto linked = linker.link_program();
-        for (auto i : linked) {
-            std::cout << asm2plain(i) << '\n';
-        }
-    }
-    catch (const std::exception& e) {
-        std::cerr << e.what() << '\n';
+    Program program;
+    program.loadLibrary(makePlugin<Plugins::Base>());
+    program.loadLibrary(makePlugin<Plugins::IO>());
+    program.loadLibrary(makePlugin<Plugins::FileIO>());
+    program.loadLibrary(makePlugin<Plugins::Math>());
+    if (argc < 2) {
+        std::cerr << "At least two arguments required\n";
         return 1;
     }
-	return 0;
+    int retval = 0;
+    bool flag = false;
+    if (argv[1][1] == '\0') {
+        flag = true;
+        switch (argv[1][0]) {
+        case 'r':
+            program.REPL();
+            break;
+        default:
+            flag = false;
+            break;
+        }
+    }
+    if (!flag) {
+        
+    }
+	return retval;
 }
