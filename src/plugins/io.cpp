@@ -4,6 +4,7 @@
 #include "object/integer.hpp"
 #include "object/string.hpp"
 #include "object/float.hpp"
+#include "object/nativeobject.hpp"
 
 Plugins::IO::IO() {}
 
@@ -52,10 +53,66 @@ std::shared_ptr<Object> Get_Char(Args args) {
     return std::make_shared<String>(tmp);
 }
 
+std::shared_ptr<Object> FastIO_Get_Int(Args args) {
+    if(args.size()) {
+        throw VMError("(IO)FastIO:Get_Int", "Incorrect Format");
+    }
+    long long tmp , f = 1;
+    char ch;
+    std::cin.get(ch);
+    while(ch < '0' || ch > '9') {
+        if(ch == '-')
+        {
+            f = -1;
+        }
+        std::cin.get(ch);
+    }
+    while(ch >= '0' && ch <= '9') {
+        tmp = tmp * 10 + ch - '0';
+        std::cin.get(ch);
+    }
+    return std::make_shared<Integer>(f * tmp);
+}
+
+std::shared_ptr<Object> FastIO_Get_Float(Args args) {
+    if(args.size()) {
+        throw VMError("(IO)FastIO:Get_Float", "Incorrect Format");
+    }
+    double tmp , f = 1 , s = 1;
+    char ch;
+    std::cin.get(ch);
+    while(ch < '0' || ch > '9') {
+        if(ch == '-')
+        {
+            f = -1;
+        }
+        if(ch == '.')
+        {
+            goto readt;
+        }
+        std::cin.get(ch);
+    }
+    while(ch >= '0' && ch <= '9' && ch != '.') {
+        tmp = tmp * 10 + ch - '0';
+        std::cin.get(ch);
+    }
+    readt:while(ch == '.') {std::cin.get(ch);}
+    while(ch >= '0' && ch <= '9') {
+        tmp = tmp * 10 + ch - 0;
+        s *= 10;
+        std::cin.get(ch);
+    }
+    return std::make_shared<Integer>(f * (tmp / s));
+}
+
 void Plugins::IO::enable() {
     regist("getint" , Get_Int);
     regist("input" , Get_String);
     regist("getfloat" , Get_Float);
     regist("getline" , Get_Line);
     regist("getchar" , Get_Char);
+    auto FastIO = std::make_shared<NativeObject>();
+    FastIO->set("getint", std::make_shared<NativeFunction>(FastIO_Get_Int));
+    FastIO->set("getfloat" , std::make_shared<NativeFunction>(FastIO_Get_Float));
+    regist("FastIO", FastIO);
 }
