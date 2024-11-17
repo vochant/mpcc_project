@@ -24,6 +24,7 @@ public:
 public:
     long long getAL(std::string str);
     bool Ism(std::string str);
+    std::shared_ptr<Object> getObject(std::string name, std::shared_ptr<Environment> binder);
 private:
     std::shared_ptr<Object> getIStatic(std::string name);
     void copyInstance(std::map<std::string, std::shared_ptr<Object>>& store);

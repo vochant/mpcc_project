@@ -28,7 +28,7 @@ Boolean::Boolean(bool value) : Object(Type::Boolean), value(value) {}
 Byte::Byte(unsigned char value) : Object(Type::Byte), value(value) {}
 Executable::Executable(ExecType etype) : Object(Type::Executable), etype(etype) {}
 Float::Float(double value) : Object(Type::Float), value(value) {}
-Function::Function(std::shared_ptr<Node> inner, std::shared_ptr<Environment> env) : Executable(ExecType::Function), inner(inner), env(env) {}
+Function::Function(std::shared_ptr<Node> inner, std::shared_ptr<Environment> env) : Executable(ExecType::Function), indexer(-1), inner(inner), env(env) {}
 Integer::Integer(long long value) : Object(Type::Integer), value(value) {}
 NativeFunction::NativeFunction(NFunc func) : Executable(ExecType::NativeFunction), func(func) {}
 Null::Null() : Object(Type::Null) {}
@@ -317,6 +317,9 @@ std::shared_ptr<Object> Function::call(std::vector<std::shared_ptr<Object>> carg
         }
         ienv->set(earg, vec);
     }
+    if (indexer != -1) {
+        ienv->set("__index__", std::make_shared<Integer>(indexer));
+    }
     if (inner->type != Node::Type::Scope) {
         throw VMError("Function:call", "Inner node must be a scope");
     }
@@ -335,10 +338,11 @@ std::string Mark::toString() {
     return (isEnum ? "[enum " : "[class ") + value + "]";
 }
 
-std::shared_ptr<Executable> MemberFunction::apply(std::shared_ptr<Environment> env) {
+std::shared_ptr<Executable> MemberFunction::apply(std::shared_ptr<Environment> env, long long id) {
     auto copy = std::dynamic_pointer_cast<Executable>(exec->make_copy());
     if (copy->etype == Executable::ExecType::Function) {
         std::dynamic_pointer_cast<Function>(copy)->env = env;
+        std::dynamic_pointer_cast<Function>(copy)->indexer = id;
     }
     else if (copy->etype == Executable::ExecType::NativeFunction) {
         NF_Environment = env.get();

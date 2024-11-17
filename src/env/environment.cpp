@@ -76,37 +76,28 @@ std::shared_ptr<Object> InstanceBinder::get(std::string name) {
     if (name == "__index__") {
         return std::make_shared<Integer>(cls->id);
     }
-    if (!cls->accessLookup.count(name)) {
+    if (!cls->getAL(name)) {
         return parent->get(name);
     }
     if (obj->value_store.count(name)) {
         return std::make_shared<Reference>(&obj->value_store[name]);
     }
-    if (cls->methods.count(name)) {
-        return cls->methods[name]->apply(obj->innerBinder);
-    }
-    return cls->statics[name];
+    return cls->getObject(name, obj->innerBinder);
 }
 
 std::shared_ptr<Object> InstanceBinder::getUnder(std::string name, long long ident) {
-    if (!cls->accessLookup.count(name)) {
+    if (!cls->getAL(name)) {
         return std::make_shared<Null>();
     }
-    if (ident != -1 && cls->accessLookup[name] == -2) {
+    if (ident != -1 && cls->getAL(name) == -2) {
         if (!cls->ids.count(ident)) {
             return std::make_shared<Null>();
         }
     }
-    else if (cls->accessLookup[name] != -1 && ident != -1 && cls->accessLookup[name] != ident) {
+    else if (cls->getAL(name) != -1 && ident != -1 && cls->getAL(name) != ident) {
         return std::make_shared<Null>();
     }
-    if (obj->value_store.count(name)) {
-        return std::make_shared<Reference>(&obj->value_store[name]);
-    }
-    if (cls->methods.count(name)) {
-        return cls->methods[name]->apply(obj->innerBinder);
-    }
-    return cls->statics[name];
+    return cls->getObject(name, obj->innerBinder);
 }
 
 void InstanceBinder::set(std::string name, std::shared_ptr<Object> val) {

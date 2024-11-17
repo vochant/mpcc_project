@@ -14,6 +14,7 @@ public:
     std::vector<std::string> args;
     std::map<size_t, std::string> checks;
     std::string earg;
+    long long indexer;
 public:
     Function(std::shared_ptr<Node> inner, std::shared_ptr<Environment> env);
     std::shared_ptr<Object> call(std::vector<std::shared_ptr<Object>> cargs) override;

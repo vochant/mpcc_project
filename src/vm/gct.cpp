@@ -63,7 +63,7 @@ std::shared_ptr<Object> MpcClass::makeInstance(std::vector<std::shared_ptr<Objec
     inst->innerBinder = std::make_shared<InstanceBinder>(inst.get(), gVM->inner);
     auto cons = constructors.find(args.size());
     if (cons != constructors.end()) {
-        cons->second->apply(inst->innerBinder)->call(args);
+        cons->second->apply(inst->innerBinder, id)->call(args);
     }
     else if (args.size()) {
         throw VMError("MpcClass:makeInstance", "Class " + name + ": no such constructor with " + std::to_string(args.size()) + " args");
@@ -74,12 +74,22 @@ std::shared_ptr<Object> MpcClass::makeInstance(std::vector<std::shared_ptr<Objec
 std::shared_ptr<Object> MpcClass::runConstruct(std::shared_ptr<Environment> instr, std::vector<std::shared_ptr<Object>> args) {
     auto cons = constructors.find(args.size());
     if (cons != constructors.end()) {
-        cons->second->apply(instr)->call(args);
+        cons->second->apply(instr, id)->call(args);
     }
     else {
         throw VMError("MpcClass:runConstruct", "Class " + name + ": no such constructor with " + std::to_string(args.size()) + " args");
     }
     return gVM->VNull;
+}
+
+std::shared_ptr<Object> MpcClass::getObject(std::string name, std::shared_ptr<Environment> binder) {
+    if (methods.count(name)) {
+        return methods[name]->apply(binder, id);
+    }
+    if (statics.count(name)) {
+        return statics[name];
+    }
+    return parent->getObject(name, binder);
 }
 
 MpcEnum::MpcEnum() {}
