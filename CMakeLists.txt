@@ -44,6 +44,8 @@ set(LIBRARY_SOURCES
     src/plugins/base.cpp
     src/plugins/dynamic_load.cpp
     src/plugins/io.cpp
+    src/plugins/math.cpp
+    src/plugins/fileio.cpp
 )
 
 set(PROGRAM_SOURCES src/main.cpp)
