@@ -39,6 +39,10 @@
 #include "ast/ternary.hpp"
 #include "ast/while.hpp"
 
+#include "object/array.hpp"
+#include "object/integer.hpp"
+#include "object/float.hpp"
+
 #include <stack>
 #include <vector>
 
@@ -81,7 +85,7 @@ public:
     std::shared_ptr<Object> ExecutePrefix(std::shared_ptr<PrefixNode> calc, std::shared_ptr<Environment> env);
     std::shared_ptr<Object> ExecuteRemove(std::shared_ptr<RemoveNode> rmv, std::shared_ptr<Environment> env);
     std::shared_ptr<Object> ExecuteReturn(std::shared_ptr<ReturnNode> ret, std::shared_ptr<Environment> env);
-    std::shared_ptr<Object> ExecuteScope(std::shared_ptr<ScopeNode> scope, std::shared_ptr<Environment> env);
+    std::shared_ptr<Object> ExecuteScope(std::shared_ptr<ScopeNode> scope, std::shared_ptr<Environment> env, bool notIsolated = false);
     std::shared_ptr<Object> ExecuteString(std::shared_ptr<StringNode> str, std::shared_ptr<Environment> env);
     std::shared_ptr<Object> ExecuteTernary(std::shared_ptr<TernaryNode> tern, std::shared_ptr<Environment> env);
     std::shared_ptr<Object> ExecuteWhile(std::shared_ptr<WhileNode> wh, std::shared_ptr<Environment> env);

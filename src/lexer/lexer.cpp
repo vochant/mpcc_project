@@ -25,7 +25,7 @@ void Lexer::break_whitespace() {
     }
 }
 
-Lexer::Lexer(std::string _input, std::string _describe) : _input(_input), _describe(_describe), _at(0), _line(1), _column(0) {}
+Lexer::Lexer(std::string _input, std::string _describe) : _input(_input + " "), _describe(_describe), _at(0), _line(1), _column(0) {}
 
 std::string Lexer::get_desc() const {
     return "at (" + std::to_string(_line - 1) + ", " + std::to_string(_column + 1) + ") of " + _describe;

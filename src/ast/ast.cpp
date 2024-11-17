@@ -32,6 +32,7 @@
 #include "ast/string.hpp"
 #include "ast/ternary.hpp"
 #include "ast/while.hpp"
+#include "ast/object.hpp"
 
 #include "compiler_error.hpp"
 #include "util.hpp"
@@ -73,3 +74,6 @@ ScopeNode::ScopeNode() : Node(Node::Type::Scope) {}
 StringNode::StringNode(std::string value) : value(unescape(value)), Node(Node::Type::String) {}
 TernaryNode::TernaryNode(std::shared_ptr<Node> _cond) : _cond(_cond), Node(Node::Type::Ternary) {}
 WhileNode::WhileNode(bool isDoWhile) : isDoWhile(isDoWhile), Node(Node::Type::While) {}
+ObjectNode::ObjectNode(std::shared_ptr<Object> obj) : obj(obj), Node(Node::Type::Object) {}
+
+Node::~Node() = default;

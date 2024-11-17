@@ -1,5 +1,3 @@
-#pragma once
-
 #include "ast/array.hpp"
 #include "ast/assign.hpp"
 #include "ast/boolean.hpp"
@@ -50,12 +48,15 @@ void Parser::parse_token() {
     if (_current->type == Token::Type::LParan || _current->type == Token::Type::LBrace || _current->type == Token::Type::LBracket) stacking++;
     if (_current->type == Token::Type::RParan || _current->type == Token::Type::RBrace || _current->type == Token::Type::RBracket) stacking--;
     if (_current->type == Token::Type::End && stacking) {
-        lexer = Lexer(getNext(), source);
+        auto bprev = _prev;
+        lexer = Lexer(_getNext(), source);
         parse_token(); 
+        _prev = bprev;
     }
+    // std::cout << "Got " << _current->value << "\n";
 }
 
-Parser::Parser(const std::string code, const std::string src, std::function<std::string()> getMext) : lexer(code, src), getNext(getNext) {
+Parser::Parser(const std::string code, const std::string src, std::function<std::string()> _getNext) : lexer(code, src), _getNext(_getNext) {
     stacking = 0;
     source = src;
     parse_token();
@@ -292,7 +293,15 @@ std::shared_ptr<Node> Parser::parse_if() {
     }
     parse_token();
     auto _node = std::make_shared<IfNode>();
+    if (_current->type != Token::Type::LParan) {
+        throw ParserError("If statement should have a paran");
+    }
+    parse_token();
     _node->_cond = parse_expr();
+    if (_current->type != Token::Type::RParan) {
+        throw ParserError("If statement should have a paran");
+    }
+    parse_token();
     _node->_then = parse_statement();
     if (_current->type == Token::Type::Else) {
         parse_token();

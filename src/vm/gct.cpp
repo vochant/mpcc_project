@@ -83,3 +83,7 @@ std::shared_ptr<Object> MpcClass::runConstruct(std::shared_ptr<Environment> inst
 }
 
 MpcEnum::MpcEnum() {}
+
+std::map<std::string, std::shared_ptr<MpcClass>> GCT;
+long long gctIdCount;
+std::map<std::string, std::shared_ptr<MpcEnum>> GENT;

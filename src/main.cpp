@@ -1,5 +1,3 @@
-#pragma once
-
 // The Next Generation of MPCC Project
 // Copyright(C) 2009-2024 Mirekintoc Void
 // MPCC Arkscene 1.0dev1
@@ -17,7 +15,7 @@ int main(int argc, char* argv[]) {
     program.loadLibrary(std::make_shared<Plugins::FileIO>());
     program.loadLibrary(std::make_shared<Plugins::Math>());
     if (argc < 2) {
-        std::cerr << "At least two arguments required\n";
+        std::cerr << "At least an argument required\n";
         return 1;
     }
     int retval = 0;
@@ -37,4 +35,5 @@ int main(int argc, char* argv[]) {
         
     }
 	return retval;
+    return 0;
 }

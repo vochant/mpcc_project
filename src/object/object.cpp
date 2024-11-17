@@ -59,7 +59,15 @@ std::shared_ptr<Object> Float::make_copy() {
 }
 
 std::shared_ptr<Object> Function::make_copy() {
-    return std::make_shared<Function>(inner, env);
+    auto res = std::make_shared<Function>(inner, env);
+    res->earg = earg;
+    for (auto& v : args) {
+        res->args.push_back(v);
+    }
+    for (auto& tc : checks) {
+        res->checks.insert(tc);
+    }
+    return res;
 }
 
 std::shared_ptr<Object> Integer::make_copy() {
@@ -241,7 +249,7 @@ void File::close() {
 }
 
 File::File(std::string name, std::string mode) : Object(Type::File), isClosed(false) {
-    int om = 0;
+    std::ios_base::openmode om = (std::ios_base::openmode)0;
     for (size_t i = 0; i < mode.length(); i++) {
         if (mode[i] == 'r') {
             om |= std::ios::in;
@@ -265,7 +273,7 @@ File::File(std::string name, std::string mode) : Object(Type::File), isClosed(fa
             throw VMError("File:construct", "Unknown open mode: " + mode[i]);
         }
     }
-    fs = std::make_shared<std::fstream>(name, om);
+    fs = std::make_shared<std::fstream>(name.c_str(), om);
 }
 
 File::File(std::shared_ptr<std::fstream> fs) : Object(Type::File), fs(fs), isClosed(false) {}
@@ -392,5 +400,24 @@ void RangeBasedIterator::go() {
 }
 
 RangeBasedIterator::RangeBasedIterator(long long b, long long e, long long s) : c(b), e(e), s(s), Iterator() {}
+
+String::String(char ch) : Object(Type::String) {
+    char str[2] = {ch, 0};
+    value = str;
+}
+
+std::shared_ptr<Object> ArrayBasedIterator::make_copy() {
+    auto res = std::make_shared<ArrayBasedIterator>(baseArr);
+    res->ptr = ptr;
+    return res;
+}
+
+std::shared_ptr<Object> RangeBasedIterator::make_copy() {
+    return std::make_shared<RangeBasedIterator>(c, e, s);
+}
+
+std::shared_ptr<Object> Null::make_copy() {
+    return std::make_shared<Null>();
+}
 
 Environment* NF_Environment;

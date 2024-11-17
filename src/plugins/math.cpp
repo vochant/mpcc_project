@@ -1,3 +1,5 @@
+#define _USE_MATH_DEFINES
+
 #include "plugins/plugin.hpp"
 #include "vm_error.hpp"
 #include "object/integer.hpp"
@@ -5,9 +7,15 @@
 #include "object/nativeobject.hpp"
 #include "object/boolean.hpp"
 #include "vm/vm.hpp"
-
-#define _USE_MATH_DEFINES
 #include <cmath>
+
+#ifndef M_SQRT2
+# define M_SQRT2 sqrt(2)
+#endif
+
+#ifndef M_SQRT1_2
+# define M_SQRT1_2 (0.5 * M_SQRT2)
+#endif
 
 Plugins::Math::Math() {}
 
@@ -48,7 +56,7 @@ std::shared_ptr<Object> Math_Pow(Args args) {
             }
             if (sup == 0) {
                 if (args[0]->type == Object::Type::Float) return std::make_shared<Float>(1) ;
-                else std::make_shared<Integer>(1);
+                else return std::make_shared<Integer>(1);
             }
             if (args[0]->type == Object::Type::Float) {
                 return std::make_shared<Float>(1 / Math_FastPow_Core(std::dynamic_pointer_cast<Float>(args[0])->value, -sup));

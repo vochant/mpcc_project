@@ -16,7 +16,7 @@ private:
     };
     std::shared_ptr<Token> _current, _prev;
     Lexer lexer;
-    std::function<std::string()> getNext;
+    std::function<std::string()> _getNext;
     int stacking;
     std::string source;
     void parse_token();

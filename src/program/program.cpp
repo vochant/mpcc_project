@@ -1,5 +1,3 @@
-#pragma once
-
 #include "program/program.hpp"
 
 void Program::loadLibrary(std::shared_ptr<Plugin> _plg) {
@@ -27,16 +25,17 @@ void Program::REPL() {
             long long _shift = 0;
             std::string src = "";
             std::cout << ">> ";
-            std::cin >> src;
+            std::getline(std::cin, src);
             if (src == ":exit") break;
             Parser parser(src, "[stdin]", []()->std::string {
                 std::string tmp;
                 std::cout << ".. ";
-                std::cin >> tmp;
+                std::getline(std::cin, tmp);
                 return tmp;
             });
             auto prog = parser.parse_program();
             gVM->Execute(std::dynamic_pointer_cast<ProgramNode>(prog), gVM->inner);
+            std::cout << "\n<< ";
             if (gVM->lastObject->type == Object::Type::String) {
                 std::cout << escape(gVM->lastObject->toString()) << '\n';
             }

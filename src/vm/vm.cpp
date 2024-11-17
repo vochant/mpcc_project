@@ -28,26 +28,16 @@
 
 #include <sstream>
 
-template<typename _Tp>
-std::shared_ptr<_Tp> As(std::shared_ptr<Node> obj) {
-    return std::dynamic_pointer_cast<_Tp>(obj);
-}
-
-template<typename _Tp>
-std::shared_ptr<_Tp> As(std::shared_ptr<Object> obj) {
-    return std::dynamic_pointer_cast<_Tp>(obj);
-}
-
 int VirtualMachine::Execute(std::shared_ptr<ProgramNode> program, std::shared_ptr<Environment> env) {
     if (program->mainScope->type != Node::Type::Scope) {
         throw VMError("VM:Execute", "The main scope of the program must be a scope");
     }
-    auto v = ExecuteScope(As<ScopeNode>(program->mainScope), env);
+    auto v = ExecuteScope(std::dynamic_pointer_cast<ScopeNode>(program->mainScope), env, true);
     if (v->type == Object::Type::Reference || v->type == Object::Type::LowReference) {
         v = v->make_copy();
     }
     if (v->type == Object::Type::Integer) {
-        return As<Integer>(v)->value;
+        return std::dynamic_pointer_cast<Integer>(v)->value;
     }
     return 0;
 }
@@ -72,7 +62,7 @@ std::shared_ptr<Object> VirtualMachine::ExecuteAssign(std::shared_ptr<AssignNode
     if (l->type != Object::Type::Reference) {
         throw VMError("VM:ExecuteAssign", "Assign to constant");
     }
-    *(As<Reference>(l)->ptr) = r;
+    *(std::dynamic_pointer_cast<Reference>(l)->ptr) = r;
     return r;
 }
 
@@ -93,13 +83,13 @@ std::shared_ptr<Object> VirtualMachine::ExecuteCall(std::shared_ptr<CallNode> ca
         auto obj = ExecuteValue(call->args[i], env);
         if (ix < call->expands.size() && call->expands[ix] == i) {
             if (obj->type == Object::Type::Array) {
-                auto cast = As<Array>(obj);
+                auto cast = std::dynamic_pointer_cast<Array>(obj);
                 for (auto& j : cast->value) {
                     args.push_back(j);
                 }
             }
             else if (obj->type == Object::Type::Iterator) {
-                auto cast = As<Iterator>(obj)->toArray();
+                auto cast = std::dynamic_pointer_cast<Array>(std::dynamic_pointer_cast<Iterator>(obj)->toArray());
                 for (auto& j : cast->value) {
                     args.push_back(j);
                 }
@@ -116,7 +106,7 @@ std::shared_ptr<Object> VirtualMachine::ExecuteCall(std::shared_ptr<CallNode> ca
     if (callable->type != Object::Type::Executable) {
         throw VMError("VM:ExecuteCall", "Not Executable");
     }
-    return As<Executable>(callable)->call(args);
+    return std::dynamic_pointer_cast<Executable>(callable)->call(args);
 }
 
 std::shared_ptr<Object> VirtualMachine::ExecuteCFor(std::shared_ptr<CForNode> r, std::shared_ptr<Environment> env) {
@@ -133,7 +123,7 @@ std::shared_ptr<Object> VirtualMachine::ExecuteCFor(std::shared_ptr<CForNode> r,
         if (r->_cond->type != Node::Type::Expr) {
             throw VMError("VM:ExecuteCFor", "Condition must be an expression");
         }
-        auto v = isTrue(ExecuteExpr(As<ExprNode>(r->_cond), inner));
+        auto v = isTrue(ExecuteExpr(std::dynamic_pointer_cast<ExprNode>(r->_cond), inner));
         if (!v) break;
         auto v2 = ExecuteStatement(r->_body, inner);
         if (state == State::RETURN) {
@@ -171,22 +161,22 @@ std::shared_ptr<Object> VirtualMachine::ExecuteClass(std::shared_ptr<ClassNode> 
     _class->ids.insert(_class->id);
     for (auto& i : cls->inner) {
         if (i->type == Node::Type::Constructor) {
-            auto c = As<ConstructorNode>(i);
-            _class->constructors.insert({c->argcount, As<MemberFunction>(ExecuteConstructor(c, env))});
+            auto c = std::dynamic_pointer_cast<ConstructorNode>(i);
+            _class->constructors.insert({c->argcount, std::dynamic_pointer_cast<MemberFunction>(ExecuteConstructor(c, env))});
         }
         else if (i->type == Node::Type::Destructor) {
-            auto d = As<DestructorNode>(i);
-            _class->destructor = As<MemberFunction>(ExecuteDestructor(d, env));
+            auto d = std::dynamic_pointer_cast<DestructorNode>(i);
+            _class->destructor = std::dynamic_pointer_cast<MemberFunction>(ExecuteDestructor(d, env));
         }
         else if (i->type == Node::Type::ClassMember) {
-            auto cm = As<ClassMember>(i);
+            auto cm = std::dynamic_pointer_cast<ClassMember>(i);
             auto v = ExecuteCommon(cm->inner, env);
             auto al = _class->getAL(cm->name);
             if (cm->ctype == ClassMember::METHOD) {
                 if (v->type != Object::Type::Executable) {
                     throw VMError("VM:ExecuteClass", "Unable to create method: Not Executable");
                 }
-                auto e = std::make_shared<MemberFunction>(As<Executable>(v));
+                auto e = std::make_shared<MemberFunction>(std::dynamic_pointer_cast<Executable>(v));
                 if (al != -3) {
                     if (al >= 0) {
                         throw VMError("VM:ExecuteClass", "Unable to overwrite private: " + cm->name + " in class " + cls->_name);
@@ -263,7 +253,7 @@ std::shared_ptr<Object> VirtualMachine::ExecuteDecorate(std::shared_ptr<Decorate
     if (d->type != Object::Type::Executable) {
         throw VMError("VM:ExecuteDecorate", "Decorator must be executable");
     }
-    auto de = As<Executable>(d);
+    auto de = std::dynamic_pointer_cast<Executable>(d);
     return de->call({v});
 }
 
@@ -289,45 +279,45 @@ std::shared_ptr<Object> VirtualMachine::ExecuteError(std::shared_ptr<ErrorNode> 
 std::shared_ptr<Object> VirtualMachine::ExecuteExpr(std::shared_ptr<ExprNode> expr, std::shared_ptr<Environment> env) {
     switch (expr->inner->type) {
     case Node::Type::Assign:
-        return ExecuteAssign(As<AssignNode>(expr->inner), env);
+        return ExecuteAssign(std::dynamic_pointer_cast<AssignNode>(expr->inner), env);
     case Node::Type::Infix:
-        return ExecuteInfix(As<InfixNode>(expr->inner), env);
+        return ExecuteInfix(std::dynamic_pointer_cast<InfixNode>(expr->inner), env);
     case Node::Type::Call:
-        return ExecuteCall(As<CallNode>(expr->inner), env);
+        return ExecuteCall(std::dynamic_pointer_cast<CallNode>(expr->inner), env);
     case Node::Type::Index:
-        return ExecuteIndex(As<IndexNode>(expr->inner), env);
+        return ExecuteIndex(std::dynamic_pointer_cast<IndexNode>(expr->inner), env);
     case Node::Type::InDecrement:
-        return ExecuteInDecrement(As<InDecrementNode>(expr->inner), env);
+        return ExecuteInDecrement(std::dynamic_pointer_cast<InDecrementNode>(expr->inner), env);
     case Node::Type::Ternary:
-        return ExecuteTernary(As<TernaryNode>(expr->inner), env);
+        return ExecuteTernary(std::dynamic_pointer_cast<TernaryNode>(expr->inner), env);
     case Node::Type::Object:
-        return ExecuteObject(As<ObjectNode>(expr->inner), env);
+        return ExecuteObject(std::dynamic_pointer_cast<ObjectNode>(expr->inner), env);
     case Node::Type::Integer:
-        return ExecuteInteger(As<IntegerNode>(expr->inner), env);
+        return ExecuteInteger(std::dynamic_pointer_cast<IntegerNode>(expr->inner), env);
     case Node::Type::Float:
-        return ExecuteFloat(As<FloatNode>(expr->inner), env);
+        return ExecuteFloat(std::dynamic_pointer_cast<FloatNode>(expr->inner), env);
     case Node::Type::Boolean:
-        return ExecuteBoolean(As<BooleanNode>(expr->inner), env);
+        return ExecuteBoolean(std::dynamic_pointer_cast<BooleanNode>(expr->inner), env);
     case Node::Type::Identifier:
-        return ExecuteIdentifier(As<IdentifierNode>(expr->inner), env);
+        return ExecuteIdentifier(std::dynamic_pointer_cast<IdentifierNode>(expr->inner), env);
     case Node::Type::Function:
-        return ExecuteFunction(As<FunctionNode>(expr->inner), env);
+        return ExecuteFunction(std::dynamic_pointer_cast<FunctionNode>(expr->inner), env);
     case Node::Type::Array:
-        return ExecuteArray(As<ArrayNode>(expr->inner), env);
+        return ExecuteArray(std::dynamic_pointer_cast<ArrayNode>(expr->inner), env);
     case Node::Type::Null:
-        return ExecuteNull(As<NullNode>(expr->inner), env);
+        return ExecuteNull(std::dynamic_pointer_cast<NullNode>(expr->inner), env);
     case Node::Type::String:
-        return ExecuteString(As<StringNode>(expr->inner), env);
+        return ExecuteString(std::dynamic_pointer_cast<StringNode>(expr->inner), env);
     case Node::Type::Group:
-        return ExecuteGroup(As<GroupNode>(expr->inner), env);
+        return ExecuteGroup(std::dynamic_pointer_cast<GroupNode>(expr->inner), env);
     case Node::Type::Prefix:
-        return ExecutePrefix(As<PrefixNode>(expr->inner), env);
+        return ExecutePrefix(std::dynamic_pointer_cast<PrefixNode>(expr->inner), env);
     case Node::Type::Decorate:
-        return ExecuteDecorate(As<DecorateNode>(expr->inner), env);
+        return ExecuteDecorate(std::dynamic_pointer_cast<DecorateNode>(expr->inner), env);
     case Node::Type::New:
-        return ExecuteNew(As<NewNode>(expr->inner), env);
+        return ExecuteNew(std::dynamic_pointer_cast<NewNode>(expr->inner), env);
     case Node::Type::Expr:
-        return ExecuteExpr(As<ExprNode>(expr->inner), env);
+        return ExecuteExpr(std::dynamic_pointer_cast<ExprNode>(expr->inner), env);
     default:
         throw VMError("VM:ExecuteExpr", "Unable to get value - unknown node type");
     }
@@ -339,11 +329,11 @@ std::shared_ptr<Object> VirtualMachine::ExecuteFloat(std::shared_ptr<FloatNode> 
 
 std::shared_ptr<Object> VirtualMachine::ExecuteFor(std::shared_ptr<ForNode> f, std::shared_ptr<Environment> env) {
     auto r = ExecuteCommon(f->_elem, env);
-    if (r->type == Object::Type::Array) r = Array2Iterator(As<Array>(r));
+    if (r->type == Object::Type::Array) r = Array2Iterator(std::dynamic_pointer_cast<Array>(r));
     if (r->type != Object::Type::Iterator) {
         throw VMError("VM:ExecuteFor", "Element is not an iterator");
     }
-    auto it = As<Iterator>(r);
+    auto it = std::dynamic_pointer_cast<Iterator>(r);
     auto inner = std::make_shared<CommonEnvironment>(env);
     while (it->hasNext()) {
         inner->set(f->_var, it->next());
@@ -402,34 +392,34 @@ std::shared_ptr<Object> VirtualMachine::ExecuteInDecrement(std::shared_ptr<InDec
     if (a->type != Object::Type::Reference) {
         throw VMError("VM:ExecuteXcrement", "Cannot use increment/decrement on rval");
     }
-    auto rv = *(As<Reference>(a)->ptr);
+    auto rv = *(std::dynamic_pointer_cast<Reference>(a)->ptr);
     if (rv->type == Object::Type::Instance) {
         auto name = std::string(idc->isAfter ? "operator" : "prefix") + (idc->isDecrement ? "--" : "++");
-        auto f = As<Instance>(rv)->innerBinder->getUnder(name, getIdent(env));
+        auto f = std::dynamic_pointer_cast<Instance>(rv)->innerBinder->getUnder(name, getIdent(env));
         if (f->type != Object::Type::Executable) {
-            throw VMError("VM:ExecuteXcrement", "Member function " + name + " not found in class " + As<Instance>(rv)->belong->name);
+            throw VMError("VM:ExecuteXcrement", "Member function " + name + " not found in class " + std::dynamic_pointer_cast<Instance>(rv)->belong->name);
         }
-        return As<Executable>(f)->call({});
+        return std::dynamic_pointer_cast<Executable>(f)->call({});
     }
     if (rv->type == Object::Type::Integer) {
         if (idc->isAfter) {
             auto cpy = rv->make_copy();
-            As<Integer>(rv)->value += idc->isDecrement ? -1 : 1;
+            std::dynamic_pointer_cast<Integer>(rv)->value += idc->isDecrement ? -1 : 1;
             return cpy;
         }
         else {
-            As<Integer>(rv)->value += idc->isDecrement ? -1 : 1;
+            std::dynamic_pointer_cast<Integer>(rv)->value += idc->isDecrement ? -1 : 1;
             return rv->make_copy();
         }
     }
     else if (rv->type == Object::Type::Float) {
         if (idc->isAfter) {
             auto cpy = rv->make_copy();
-            As<Float>(rv)->value += idc->isDecrement ? -1 : 1;
+            std::dynamic_pointer_cast<Float>(rv)->value += idc->isDecrement ? -1 : 1;
             return cpy;
         }
         else {
-            As<Float>(rv)->value += idc->isDecrement ? -1 : 1;
+            std::dynamic_pointer_cast<Float>(rv)->value += idc->isDecrement ? -1 : 1;
             return rv->make_copy();
         }
     }
@@ -438,13 +428,13 @@ std::shared_ptr<Object> VirtualMachine::ExecuteInDecrement(std::shared_ptr<InDec
             throw VMError("VM:ExecuteXcrement", "Common Iterator does not support decreament");
         }
         if (idc->isAfter) {
-            auto v = As<Iterator>(rv)->next();
-            As<Iterator>(rv)->go();
+            auto v = std::dynamic_pointer_cast<Iterator>(rv)->next();
+            std::dynamic_pointer_cast<Iterator>(rv)->go();
             return v;
         }
         else {
-            As<Iterator>(rv)->go();
-            return As<Iterator>(rv)->next();
+            std::dynamic_pointer_cast<Iterator>(rv)->go();
+            return std::dynamic_pointer_cast<Iterator>(rv)->next();
         }
     }
     throw VMError("VM:ExecuteXcrement", "Unknown object type");
@@ -454,60 +444,60 @@ std::shared_ptr<Object> VirtualMachine::ExecuteIndex(std::shared_ptr<IndexNode> 
     auto l = ExecuteValue(ix->left, env), inx = ExecuteCommon(ix->index, env);
     bool isr;
     if (isr = (l->type == Object::Type::Reference)) {
-        l = *(As<Reference>(l)->ptr);
+        l = *(std::dynamic_pointer_cast<Reference>(l)->ptr);
     }
     if (l->type == Object::Type::Instance) {
-        auto f = As<Instance>(l)->innerBinder->getUnder("opreator[]", getIdent(env));
+        auto f = std::dynamic_pointer_cast<Instance>(l)->innerBinder->getUnder("opreator[]", getIdent(env));
         if (f->type != Object::Type::Executable) {
-            throw VMError("VM:ExecuteIndex", "Member function operator[] not found in class " + As<Instance>(l)->belong->name);
+            throw VMError("VM:ExecuteIndex", "Member function operator[] not found in class " + std::dynamic_pointer_cast<Instance>(l)->belong->name);
         }
-        return As<Executable>(f)->call({inx});
+        return std::dynamic_pointer_cast<Executable>(f)->call({inx});
     }
     if (inx->type == Object::Type::CommonObject) {
-        return As<CommonObject>(inx)->get(inx->toString());
+        return std::dynamic_pointer_cast<CommonObject>(inx)->get(inx->toString());
     }
     if (inx->type != Object::Type::Integer && inx->type != Object::Type::Array) {
         throw VMError("VM:ExecuteIndex", "Unsupported index type");
     }
     if (l->type == Object::Type::String) {
         if (inx->type == Object::Type::Integer) {
-            auto sl = As<String>(l)->value.length();
-            return std::make_shared<String>(As<String>(l)->value.at((As<Integer>(inx)->value % sl + sl) % sl));
+            auto sl = std::dynamic_pointer_cast<String>(l)->value.length();
+            return std::make_shared<String>(std::dynamic_pointer_cast<String>(l)->value.at((std::dynamic_pointer_cast<Integer>(inx)->value % sl + sl) % sl));
         }
         else {
             std::string rstr = "";
-            auto arr = As<Array>(inx);
-            auto& str = As<String>(l)->value;
+            auto arr = std::dynamic_pointer_cast<Array>(inx);
+            auto& str = std::dynamic_pointer_cast<String>(l)->value;
             auto sl = str.length();
             for (auto& e : arr->value) {
                 if (e->type != Object::Type::Integer) {
                     throw VMError("VM:ExecuteIndex", "Unsupported index type");
                 }
-                rstr += str.at((As<Integer>(e)->value % sl + sl) % sl);
+                rstr += str.at((std::dynamic_pointer_cast<Integer>(e)->value % sl + sl) % sl);
             }
             return std::make_shared<String>(rstr);
         }
     }
     else if (l->type == Object::Type::Array) {
         if (inx->type == Object::Type::Integer) {
-            auto al = As<Array>(l)->value.size();
+            auto al = std::dynamic_pointer_cast<Array>(l)->value.size();
             if (isr) {
-                return std::make_shared<Reference>(&(As<Array>(l)->value[(As<Integer>(l)->value % al + al) % al]));
+                return std::make_shared<Reference>(&(std::dynamic_pointer_cast<Array>(l)->value[(std::dynamic_pointer_cast<Integer>(l)->value % al + al) % al]));
             }
             else {
-                return As<Array>(l)->value[(As<Integer>(l)->value % al + al) % al];
+                return std::dynamic_pointer_cast<Array>(l)->value[(std::dynamic_pointer_cast<Integer>(l)->value % al + al) % al];
             }
         }
         else {
             auto res = std::make_shared<Array>();
-            auto& arr = As<Array>(l)->value;
-            auto idx = As<Array>(inx);
+            auto& arr = std::dynamic_pointer_cast<Array>(l)->value;
+            auto idx = std::dynamic_pointer_cast<Array>(inx);
             auto al = arr.size();
             for (auto& e : idx->value) {
                 if (e->type != Object::Type::Integer) {
                     throw VMError("VM:ExecuteIndex", "Unsupported index type");
                 }
-                res->value.push_back(arr[(As<Integer>(e)->value % al + al) % al]);
+                res->value.push_back(arr[(std::dynamic_pointer_cast<Integer>(e)->value % al + al) % al]);
             }
             return res;
         }
@@ -530,7 +520,7 @@ std::shared_ptr<Object> VirtualMachine::ExecuteInfix(std::shared_ptr<InfixNode> 
         if (calc->right->type != Node::Type::Identifier) {
             throw VMError("VM:ExecuteInfix", "Getter right must be an identifier");
         }
-        return CalculateGetter(ExecuteCommon(calc->left, env), As<IdentifierNode>(calc->right)->id, env, calc->_op == "::");
+        return CalculateGetter(ExecuteCommon(calc->left, env), std::dynamic_pointer_cast<IdentifierNode>(calc->right)->id, env, calc->_op == "::");
     }
     auto le = ExecuteCommon(calc->left, env), ri = ExecuteCommon(calc->right, env);
     return CalculateInfix(calc->_op, le, ri, env);
@@ -553,13 +543,13 @@ std::shared_ptr<Object> VirtualMachine::ExecuteNew(std::shared_ptr<NewNode> nw, 
         auto obj = ExecuteValue(nw->args[i], env);
         if (ix < nw->expands.size() && nw->expands[ix] == i) {
             if (obj->type == Object::Type::Array) {
-                auto cast = As<Array>(obj);
+                auto cast = std::dynamic_pointer_cast<Array>(obj);
                 for (auto& j : cast->value) {
                     args.push_back(j);
                 }
             }
             else if (obj->type == Object::Type::Iterator) {
-                auto cast = As<Iterator>(obj)->toArray();
+                auto cast = std::dynamic_pointer_cast<Iterator>(obj)->toArray();
                 for (auto& j : cast->value) {
                     args.push_back(j);
                 }
@@ -587,18 +577,18 @@ std::shared_ptr<Object> VirtualMachine::ExecutePrefix(std::shared_ptr<PrefixNode
     auto obj = ExecuteCommon(calc->right, env);
     if (obj->type == Object::Type::Instance) {
         std::string fn = "prefix" + calc->_op;
-        auto f = As<Instance>(obj)->innerBinder->getUnder(fn, getIdent(env));
+        auto f = std::dynamic_pointer_cast<Instance>(obj)->innerBinder->getUnder(fn, getIdent(env));
         if (f->type != Object::Type::Executable) {
-            throw VMError("VM:ExecutePrefix", "Member function " + fn + " not found in class " + As<Instance>(obj)->belong->name);
+            throw VMError("VM:ExecutePrefix", "Member function " + fn + " not found in class " + std::dynamic_pointer_cast<Instance>(obj)->belong->name);
         }
-        return As<Executable>(f)->call({});
+        return std::dynamic_pointer_cast<Executable>(f)->call({});
     }
     if (calc->_op == "-") {
         if (obj->type == Object::Type::Integer) {
-            return std::make_shared<Integer>(-(As<Integer>(obj)->value));
+            return std::make_shared<Integer>(-(std::dynamic_pointer_cast<Integer>(obj)->value));
         }
         else if (obj->type == Object::Type::Float) {
-            return std::make_shared<Float>(-(As<Float>(obj)->value));
+            return std::make_shared<Float>(-(std::dynamic_pointer_cast<Float>(obj)->value));
         }
         throw VMError("VM:ExecutePrefix", "Unsupported type for operator-");
     }
@@ -614,13 +604,13 @@ std::shared_ptr<Object> VirtualMachine::ExecutePrefix(std::shared_ptr<PrefixNode
     }
     else if (calc->_op == "~") {
         if (obj->type == Object::Type::Integer) {
-            return std::make_shared<Integer>(~(As<Integer>(obj)->value));
+            return std::make_shared<Integer>(~(std::dynamic_pointer_cast<Integer>(obj)->value));
         }
         else if (obj->type == Object::Type::Byte) {
-            return std::make_shared<Byte>(~(As<Byte>(obj)->value));
+            return std::make_shared<Byte>(~(std::dynamic_pointer_cast<Byte>(obj)->value));
         }
         else if (obj->type == Object::Type::ByteArray) {
-            auto res = std::make_shared<ByteArray>(), cast = As<ByteArray>(obj);
+            auto res = std::make_shared<ByteArray>(), cast = std::dynamic_pointer_cast<ByteArray>(obj);
             for (auto& e : cast->value) {
                 res->value.push_back(~e);
             }
@@ -637,21 +627,23 @@ std::shared_ptr<Object> VirtualMachine::ExecuteRemove(std::shared_ptr<RemoveNode
 }
 
 std::shared_ptr<Object> VirtualMachine::ExecuteReturn(std::shared_ptr<ReturnNode> ret, std::shared_ptr<Environment> env) {
-    state = State::RETURN;
+    std::shared_ptr<Object> res;
     if (ret->isReference) {
         auto v = ExecuteValue(ret->obj, env);
         if (v->type != Object::Type::Reference) {
             throw VMError("VM:ExecuteReturn", "Unable to return a non-reference");
         }
-        return v;
+        res = v;
     }
     else {
-        return ExecuteCommon(ret->obj, env);
+        res = ExecuteCommon(ret->obj, env);
     }
+    state = State::RETURN;
+    return res;
 }
 
-std::shared_ptr<Object> VirtualMachine::ExecuteScope(std::shared_ptr<ScopeNode> scope, std::shared_ptr<Environment> env) {
-    auto inner = std::make_shared<CommonEnvironment>(env);
+std::shared_ptr<Object> VirtualMachine::ExecuteScope(std::shared_ptr<ScopeNode> scope, std::shared_ptr<Environment> env, bool notIsolated) {
+    auto inner = notIsolated ? env : std::dynamic_pointer_cast<Environment>(std::make_shared<CommonEnvironment>(env));
     for (auto& s : scope->statements) {
         auto v = ExecuteStatement(s, inner);
         if (state == State::RETURN) {
@@ -708,7 +700,7 @@ std::shared_ptr<Object> VirtualMachine::ExecuteWhile(std::shared_ptr<WhileNode> 
 }
 
 std::shared_ptr<Object> VirtualMachine::ExecuteValue(std::shared_ptr<Node> v, std::shared_ptr<Environment> env) {
-    if (v->type == Node::Type::Expr) return ExecuteExpr(As<ExprNode>(v), env);
+    if (v->type == Node::Type::Expr) return ExecuteExpr(std::dynamic_pointer_cast<ExprNode>(v), env);
     else return ExecuteExpr(std::make_shared<ExprNode>(v), env);
 }
 
@@ -723,29 +715,29 @@ std::shared_ptr<Object> VirtualMachine::ExecuteCommon(std::shared_ptr<Node> v, s
 std::shared_ptr<Object> VirtualMachine::ExecuteStatement(std::shared_ptr<Node> v, std::shared_ptr<Environment> env) {
     switch (v->type) {
     case Node::Type::BreakContinue:
-        return ExecuteBreakContinue(As<BreakContinueNode>(v), env);
+        return ExecuteBreakContinue(std::dynamic_pointer_cast<BreakContinueNode>(v), env);
     case Node::Type::CFor:
-        return ExecuteCFor(As<CForNode>(v), env);
+        return ExecuteCFor(std::dynamic_pointer_cast<CForNode>(v), env);
     case Node::Type::Class:
-        return ExecuteClass(As<ClassNode>(v), env);
+        return ExecuteClass(std::dynamic_pointer_cast<ClassNode>(v), env);
     case Node::Type::Scope:
-        return ExecuteScope(As<ScopeNode>(v), env);
+        return ExecuteScope(std::dynamic_pointer_cast<ScopeNode>(v), env);
     case Node::Type::Creation:
-        return ExecuteCreation(As<CreationNode>(v), env);
+        return ExecuteCreation(std::dynamic_pointer_cast<CreationNode>(v), env);
     case Node::Type::If:
-        return ExecuteIf(As<IfNode>(v), env);
+        return ExecuteIf(std::dynamic_pointer_cast<IfNode>(v), env);
     case Node::Type::Return:
-        return ExecuteReturn(As<ReturnNode>(v), env);
+        return ExecuteReturn(std::dynamic_pointer_cast<ReturnNode>(v), env);
     case Node::Type::For:
-        return ExecuteFor(As<ForNode>(v), env);
+        return ExecuteFor(std::dynamic_pointer_cast<ForNode>(v), env);
     case Node::Type::While:
-        return ExecuteWhile(As<WhileNode>(v), env);
+        return ExecuteWhile(std::dynamic_pointer_cast<WhileNode>(v), env);
     case Node::Type::Enumerate:
-        return ExecuteEnum(As<EnumerateNode>(v), env);
+        return ExecuteEnum(std::dynamic_pointer_cast<EnumerateNode>(v), env);
     case Node::Type::Remove:
-        return ExecuteRemove(As<RemoveNode>(v), env);
+        return ExecuteRemove(std::dynamic_pointer_cast<RemoveNode>(v), env);
     case Node::Type::Expr:
-        return ExecuteExpr(As<ExprNode>(v), env);
+        return ExecuteExpr(std::dynamic_pointer_cast<ExprNode>(v), env);
     default:
         throw VMError("VM:ExecuteStat", "Unknown Statement Type");
     }
@@ -756,33 +748,33 @@ bool VirtualMachine::isTrue(std::shared_ptr<Object> obj) {
         obj = obj->make_copy();
     }
     if (obj->type == Object::Type::Boolean) {
-        return As<Boolean>(obj)->value;
+        return std::dynamic_pointer_cast<Boolean>(obj)->value;
     }
     if (obj->type == Object::Type::Integer) {
-        return As<Integer>(obj)->value;
+        return std::dynamic_pointer_cast<Integer>(obj)->value;
     }
     if (obj->type == Object::Type::Float) {
-        return As<Float>(obj)->value;
+        return std::dynamic_pointer_cast<Float>(obj)->value;
     }
     if (obj->type == Object::Type::File) {
-        return !(As<File>(obj)->fs->good());
+        return !(std::dynamic_pointer_cast<File>(obj)->fs->good());
     }
     if (obj->type == Object::Type::Instance) {
-        auto f = As<Instance>(obj)->innerBinder->get("_cond");
+        auto f = std::dynamic_pointer_cast<Instance>(obj)->innerBinder->get("_cond");
         if (f->type == Object::Type::Executable) {
-            auto r = As<Executable>(f)->call({});
+            auto r = std::dynamic_pointer_cast<Executable>(f)->call({});
             if (r->type != Object::Type::Boolean) {
                 throw VMError("VM:isTrue", "_cond function must return true or false");
             }
-            return As<Boolean>(r)->value;
+            return std::dynamic_pointer_cast<Boolean>(r)->value;
         }
         return true;
     }
     if (obj->type == Object::Type::Iterator) {
-        return As<Iterator>(obj)->hasNext();
+        return std::dynamic_pointer_cast<Iterator>(obj)->hasNext();
     }
     if (obj->type == Object::Type::Byte) {
-        return As<Byte>(obj)->value;
+        return std::dynamic_pointer_cast<Byte>(obj)->value;
     }
     return true;
 }
@@ -792,9 +784,9 @@ std::shared_ptr<Object> VirtualMachine::CalculateInfix(std::string op, std::shar
     if (op == "!==" && a->type == b->type) return False;
     if (a->type == Object::Type::Instance) {
         std::string fn = "operator" + op;
-        auto f = As<Instance>(a)->innerBinder->getUnder(fn, getIdent(env));
+        auto f = std::dynamic_pointer_cast<Instance>(a)->innerBinder->getUnder(fn, getIdent(env));
         if (f->type == Object::Type::Executable) {
-            return As<Executable>(f)->call({b});
+            return std::dynamic_pointer_cast<Executable>(f)->call({b});
         }
     }
     if (a->type <= Object::Type::Float && b->type <= Object::Type::Float) {
@@ -803,28 +795,28 @@ std::shared_ptr<Object> VirtualMachine::CalculateInfix(std::string op, std::shar
         if (a->type == Object::Type::Null) a = std::make_shared<Byte>(0);
         if (b->type == Object::Type::Null) b = std::make_shared<Byte>(0);
         if (a->type == Object::Type::Byte && b->type == Object::Type::Byte) {
-            return CalculateInteger<Byte>(op, As<Byte>(a), As<Byte>(b));
+            return CalculateInteger<Byte>(op, std::dynamic_pointer_cast<Byte>(a), std::dynamic_pointer_cast<Byte>(b));
         }
-        if (a->type == Object::Type::Byte) a = std::make_shared<Integer>(As<Byte>(a)->value);
-        if (b->type == Object::Type::Byte) b = std::make_shared<Integer>(As<Byte>(b)->value);
+        if (a->type == Object::Type::Byte) a = std::make_shared<Integer>(std::dynamic_pointer_cast<Byte>(a)->value);
+        if (b->type == Object::Type::Byte) b = std::make_shared<Integer>(std::dynamic_pointer_cast<Byte>(b)->value);
         if (a->type == Object::Type::Integer && b->type == Object::Type::Integer) {
-            return CalculateInteger<Integer>(op, As<Integer>(a), As<Integer>(b));
+            return CalculateInteger<Integer>(op, std::dynamic_pointer_cast<Integer>(a), std::dynamic_pointer_cast<Integer>(b));
         }
-        if (a->type == Object::Type::Integer) a = std::make_shared<Float>(As<Integer>(a)->value);
-        if (b->type == Object::Type::Integer) b = std::make_shared<Float>(As<Integer>(b)->value);
-        return CalculateFloat(op, As<Float>(a), As<Float>(b));
+        if (a->type == Object::Type::Integer) a = std::make_shared<Float>(std::dynamic_pointer_cast<Integer>(a)->value);
+        if (b->type == Object::Type::Integer) b = std::make_shared<Float>(std::dynamic_pointer_cast<Integer>(b)->value);
+        return CalculateFloat(op, std::dynamic_pointer_cast<Float>(a), std::dynamic_pointer_cast<Float>(b));
     }
     if (op == "==" || op == "!=" || op == ">" || op == "<" || op == ">=" || op == "<=" || op == "===" || op == "!==") {
         return CalculateRelationship(op, a, b);
     }
     if (op == "*" && (b->type == Object::Type::Byte || b->type == Object::Type::Integer || b->type == Object::Type::Boolean)) {
         if (b->type == Object::Type::Boolean) b = std::make_shared<Integer>(isTrue(b));
-        if (b->type == Object::Type::Byte) b = std::make_shared<Integer>(As<Byte>(b)->value);
-        long long rep = As<Integer>(b)->value;
+        if (b->type == Object::Type::Byte) b = std::make_shared<Integer>(std::dynamic_pointer_cast<Byte>(b)->value);
+        long long rep = std::dynamic_pointer_cast<Integer>(b)->value;
         if ((a->type == Object::Type::Array || a->type == Object::Type::Iterator) && (b->type == Object::Type::Byte || b->type == Object::Type::Integer || b->type == Object::Type::Boolean)) {
-            if (a->type == Object::Type::Iterator) a = As<Iterator>(a)->toArray();
+            if (a->type == Object::Type::Iterator) a = std::dynamic_pointer_cast<Iterator>(a)->toArray();
             if (rep <= 0) return std::make_shared<Array>();
-            auto res = std::make_shared<Array>(), cas = As<Array>(a);
+            auto res = std::make_shared<Array>(), cas = std::dynamic_pointer_cast<Array>(a);
             while (rep--) {
                 res->value.insert(res->value.end(), cas->value.begin(), cas->value.end());
             }
@@ -833,7 +825,7 @@ std::shared_ptr<Object> VirtualMachine::CalculateInfix(std::string op, std::shar
         else if (a->type == Object::Type::String) {
             if (rep <= 0) return std::make_shared<String>("");
             std::stringstream ss;
-            auto cas = As<String>(a);
+            auto cas = std::dynamic_pointer_cast<String>(a);
             StringHash hash = {0, 0};
             while (rep--) {
                 ss << cas->value;
@@ -843,7 +835,7 @@ std::shared_ptr<Object> VirtualMachine::CalculateInfix(std::string op, std::shar
         }
         else if (a->type == Object::Type::ByteArray) {
             if (rep <= 0) return std::make_shared<ByteArray>();
-            auto res = std::make_shared<ByteArray>(), cas = As<ByteArray>(a);
+            auto res = std::make_shared<ByteArray>(), cas = std::dynamic_pointer_cast<ByteArray>(a);
             while (rep--) {
                 res->value.insert(res->value.end(), cas->value.begin(), cas->value.end());
             }
@@ -854,8 +846,8 @@ std::shared_ptr<Object> VirtualMachine::CalculateInfix(std::string op, std::shar
         throw VMError("VM:CalculateInfix", "No that operator " + op + " between these objects");
     }
     if ((a->type == Object::Type::Array || a->type == Object::Type::Iterator) && (b->type == Object::Type::Array || b->type == Object::Type::Iterator)) {
-        if (a->type == Object::Type::Iterator) a = As<Iterator>(a)->toArray();
-        if (b->type == Object::Type::Iterator) b = As<Iterator>(b)->toArray();
+        if (a->type == Object::Type::Iterator) a = std::dynamic_pointer_cast<Iterator>(a)->toArray();
+        if (b->type == Object::Type::Iterator) b = std::dynamic_pointer_cast<Iterator>(b)->toArray();
         return CalculateArrStrExt(a, b);
     }
     return CalculatePlusToString(a, b);
@@ -920,18 +912,18 @@ std::shared_ptr<Object> VirtualMachine::CalculateFloat(std::string op, std::shar
     if (op == "*") return std::make_shared<Float>(av * bv);
     if (op == "/") return std::make_shared<Float>(av / bv);
     if (op == "%") return std::make_shared<Float>(fmod(av, bv));
-    if (op == ">") return av > bv ? True : False;
-    if (op == ">=") return av >= bv ? True : False;
-    if (op == "<") return av < bv ? True : False;
-    if (op == "<") return av <= bv ? True : False;
-    if (op == "==" || op == "===") return av == bv ? True : False;
-    if (op == "!=" || op == "!==") return av != bv ? True : False;
+    if (op == ">") return (av > bv) ? True : False;
+    if (op == ">=") return (av >= bv) ? True : False;
+    if (op == "<") return (av < bv) ? True : False;
+    if (op == "<") return (av <= bv) ? True : False;
+    if (op == "==" || op == "===") return (av == bv) ? True : False;
+    if (op == "!=" || op == "!==") return (av != bv) ? True : False;
     if (op == "**") return std::make_shared<Float>(VM_fastPow(av, bv));
     throw VMError("VM:CalcFloat", "Unknown operator " + op);
 }
 
 std::shared_ptr<Object> VirtualMachine::CalculateArrStrExt(std::shared_ptr<Object> a, std::shared_ptr<Object> b) {
-    auto aa = As<Array>(a), ab = As<Array>(b), ac = std::make_shared<Array>();
+    auto aa = std::dynamic_pointer_cast<Array>(a), ab = std::dynamic_pointer_cast<Array>(b), ac = std::make_shared<Array>();
     ac->value.insert(ac->value.end(), aa->value.begin(), aa->value.end());
     ac->value.insert(ac->value.end(), ab->value.begin(), ab->value.end());
     return ac;
@@ -939,16 +931,16 @@ std::shared_ptr<Object> VirtualMachine::CalculateArrStrExt(std::shared_ptr<Objec
 
 std::shared_ptr<Object> VirtualMachine::CalculateRelationship(std::string op, std::shared_ptr<Object> a, std::shared_ptr<Object> b) {
     if (a->type == Object::Type::Instance && b->type == Object::Type::Instance) {
-        long long ai = As<Instance>(a)->belong->id;
-        long long bi = As<Instance>(b)->belong->id;
+        long long ai = std::dynamic_pointer_cast<Instance>(a)->belong->id;
+        long long bi = std::dynamic_pointer_cast<Instance>(b)->belong->id;
         if (op == "===" && ai != bi) return False;
         if (op == "!==" && ai == bi) return False;
     }
     if (op == "===") {
         if (a->type == Object::Type::Null) return True;
-        if (a->type == Object::Type::String) return (As<String>(a)->hash) == (As<String>(b)->hash) ? True : False;
+        if (a->type == Object::Type::String) return (std::dynamic_pointer_cast<String>(a)->hash) == (std::dynamic_pointer_cast<String>(b)->hash) ? True : False;
         if (a->type == Object::Type::Array) {
-            auto ac = As<Array>(a), bc = As<Array>(b);
+            auto ac = std::dynamic_pointer_cast<Array>(a), bc = std::dynamic_pointer_cast<Array>(b);
             if (ac->value.size() != bc->value.size()) return False;
             for (auto ait = ac->value.begin(), bit = bc->value.begin(); ait != ac->value.end(); ait++, bit++) {
                 if (!isTrue(CalculateRelationship("===", *ait, *bit))) return False;
@@ -959,9 +951,9 @@ std::shared_ptr<Object> VirtualMachine::CalculateRelationship(std::string op, st
     }
     if (op == "!==") {
         if (a->type == Object::Type::Null) return False;
-        if (a->type == Object::Type::String) return (As<String>(a)->hash) == (As<String>(b)->hash) ? False : True;
+        if (a->type == Object::Type::String) return (std::dynamic_pointer_cast<String>(a)->hash) == (std::dynamic_pointer_cast<String>(b)->hash) ? False : True;
         if (a->type == Object::Type::Array) {
-            auto ac = As<Array>(a), bc = As<Array>(b);
+            auto ac = std::dynamic_pointer_cast<Array>(a), bc = std::dynamic_pointer_cast<Array>(b);
             if (ac->value.size() != bc->value.size()) return True;
             for (auto ait = ac->value.begin(), bit = bc->value.begin(); ait != ac->value.end(); ait++, bit++) {
                 if (!isTrue(CalculateRelationship("===", *ait, *bit))) return True;
@@ -971,8 +963,8 @@ std::shared_ptr<Object> VirtualMachine::CalculateRelationship(std::string op, st
         return True;
     }
     if (a->type == Object::Type::String && b->type == Object::Type::String) {
-        if (op == "==") return (As<String>(a)->hash == As<String>(b)->hash) ? True : False;
-        if (op == "!=") return (As<String>(a)->hash == As<String>(b)->hash) ? False : True;
+        if (op == "==") return (std::dynamic_pointer_cast<String>(a)->hash == std::dynamic_pointer_cast<String>(b)->hash) ? True : False;
+        if (op == "!=") return (std::dynamic_pointer_cast<String>(a)->hash == std::dynamic_pointer_cast<String>(b)->hash) ? False : True;
     }
     else return False;
     std::string as = a->toString(), bs = b->toString();
@@ -988,7 +980,7 @@ std::shared_ptr<Object> VirtualMachine::CalculateRelationship(std::string op, st
 std::shared_ptr<Object> VirtualMachine::CalculateGetter(std::shared_ptr<Object> a, std::string b, std::shared_ptr<Environment> env, bool isForced) {
     long long ident = isForced ? -1 : getIdent(env);
     if (a->type == Object::Type::Mark) {
-        auto mrk = As<Mark>(a);
+        auto mrk = std::dynamic_pointer_cast<Mark>(a);
         if (mrk->isEnum) {
             auto it = GENT.find(mrk->value);
             if (it == GENT.end()) {
@@ -1009,7 +1001,7 @@ std::shared_ptr<Object> VirtualMachine::CalculateGetter(std::shared_ptr<Object> 
         }
     }
     if (a->type == Object::Type::Instance) {
-        return As<Instance>(a)->innerBinder->getUnder(b, ident);
+        return std::dynamic_pointer_cast<Instance>(a)->innerBinder->getUnder(b, ident);
     }
     auto f = env->get(b);
     if (f->type != Object::Type::Executable) {
@@ -1034,7 +1026,7 @@ std::shared_ptr<Object> VirtualMachine::Array2Iterator(std::shared_ptr<Array> ar
 long long VirtualMachine::getIdent(std::shared_ptr<Environment> env) {
     auto item = env->get("__index__");
     if (item->type == Object::Type::Integer) {
-        return As<Integer>(item)->value;
+        return std::dynamic_pointer_cast<Integer>(item)->value;
     }
     return 0;
 }
@@ -1062,7 +1054,7 @@ std::string VirtualMachine::getTypeString(std::shared_ptr<Object> obj) {
     else if (obj->type == Object::Type::Executable) return "executable";
     else if (obj->type == Object::Type::File) return "File";
     else if (obj->type == Object::Type::Float) return "float";
-    else if (obj->type == Object::Type::Instance) return As<Instance>(obj)->belong->name;
+    else if (obj->type == Object::Type::Instance) return std::dynamic_pointer_cast<Instance>(obj)->belong->name;
     else if (obj->type == Object::Type::Integer) return "int";
     else if (obj->type == Object::Type::Iterator) return "iterator";
     else if (obj->type == Object::Type::Map) return "Map";
@@ -1074,3 +1066,5 @@ std::string VirtualMachine::getTypeString(std::shared_ptr<Object> obj) {
     else if (obj->type == Object::Type::String) return "string";
     else return "unknown";
 }
+
+VirtualMachine* gVM;

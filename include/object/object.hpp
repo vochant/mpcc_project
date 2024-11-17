@@ -26,7 +26,6 @@ public:
         Reference, // Remote Reference
         LowReference, // Reference with C-style pointer (like "this")
         MemberFunc, // member function, can apply
-        Iterator, // universal iterator
         Mark // mark a class or enumerate
     } type;
 public:

@@ -9,6 +9,7 @@ public:
     bool hasNext() override;
     std::shared_ptr<Object> next() override;
     void go() override;
+    std::shared_ptr<Object> make_copy() override;
 public:
     ArrayBasedIterator(std::shared_ptr<Array> baseArr);
 };

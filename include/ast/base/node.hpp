@@ -22,4 +22,5 @@ public:
         Destructor, BreakContinue
     } type;
     Node(Type type);
+    virtual ~Node();
 };

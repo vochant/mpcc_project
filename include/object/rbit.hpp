@@ -8,6 +8,7 @@ public:
     bool hasNext() override;
     std::shared_ptr<Object> next() override;
     void go() override;
+    std::shared_ptr<Object> make_copy() override;
 public:
     RangeBasedIterator(long long b, long long e, long long s);
 };
