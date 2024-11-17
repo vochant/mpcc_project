@@ -202,7 +202,7 @@ std::shared_ptr<Object> String_Split(Args args) {
         if (args[1]->type != Object::Type::String) {
             throw VMError("(Base)String_Split", "Incorrect Format");
         }
-        if (std::dynamic_pointer_cast<String>(args[2])->value == "") args.pop_back();
+        if (std::dynamic_pointer_cast<String>(args[1])->value == "") args.pop_back();
     }
     auto& str = std::dynamic_pointer_cast<String>(args[0])->value;
     if (args.size() == 1) {
@@ -219,7 +219,7 @@ std::shared_ptr<Object> String_Split(Args args) {
         auto& mode = std::dynamic_pointer_cast<String>(args[1])->value;
         auto res = std::make_shared<Array>();
         std::vector<size_t> fail;
-        fail.reserve(str.length());
+        fail.reserve(mode.length());
         fail.push_back(0);
         size_t mode_length = mode.length();
         for (size_t i = 1; i < mode_length; i++) {
@@ -232,7 +232,8 @@ std::shared_ptr<Object> String_Split(Args args) {
             while (e && mode[e] != str[i]) e = fail[e - 1];
             if (mode[e] == str[i]) e++;
             if (e == mode_length) {
-                res->value.push_back(std::make_shared<String>(str.substr(begin, i + 1 - mode_length - begin)));
+                if (i + 1 - mode_length - begin == 0) res->value.push_back(std::make_shared<String>(""));
+                else res->value.push_back(std::make_shared<String>(str.substr(begin, i + 1 - mode_length - begin)));
                 begin = i + 1;
                 e = 0;
             }

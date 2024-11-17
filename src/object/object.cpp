@@ -96,10 +96,10 @@ std::shared_ptr<Object> ConstructorProxy::make_copy() {
 
 std::string Array::toString() {
     std::stringstream ss;
+    ss << '[';
     bool isFirst = true;
     for (auto i : value) {
         if (isFirst) {
-            ss << '[';
             isFirst = false;
         }
         else {
@@ -216,9 +216,9 @@ std::string ByteArray::toString() {
         return str;
     };
     std::stringstream ss;
+    ss << "[";
     for (size_t i = 0; i < value.size(); i++) {
-        if (i == 0) ss << "[";
-        else ss << ", ";
+        if (i != 0) ss << ", ";
         ss << single(value[i]);
     }
     ss << "]";

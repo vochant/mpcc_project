@@ -82,6 +82,9 @@ std::shared_ptr<Object> VirtualMachine::ExecuteCall(std::shared_ptr<CallNode> ca
     for (size_t i = 0; i < call->args.size(); i++) {
         auto obj = ExecuteValue(call->args[i], env);
         if (ix < call->expands.size() && call->expands[ix] == i) {
+            if (obj->type == Object::Type::Reference) {
+                obj = obj->make_copy();
+            }
             if (obj->type == Object::Type::Array) {
                 auto cast = std::dynamic_pointer_cast<Array>(obj);
                 for (auto& j : cast->value) {
@@ -520,7 +523,7 @@ std::shared_ptr<Object> VirtualMachine::ExecuteInfix(std::shared_ptr<InfixNode> 
         if (calc->right->type != Node::Type::Identifier) {
             throw VMError("VM:ExecuteInfix", "Getter right must be an identifier");
         }
-        return CalculateGetter(ExecuteCommon(calc->left, env), std::dynamic_pointer_cast<IdentifierNode>(calc->right)->id, env, calc->_op == "::");
+        return CalculateGetter(ExecuteValue(calc->left, env), std::dynamic_pointer_cast<IdentifierNode>(calc->right)->id, env, calc->_op == "::");
     }
     auto le = ExecuteCommon(calc->left, env), ri = ExecuteCommon(calc->right, env);
     return CalculateInfix(calc->_op, le, ri, env);
@@ -979,7 +982,11 @@ std::shared_ptr<Object> VirtualMachine::CalculateRelationship(std::string op, st
 
 std::shared_ptr<Object> VirtualMachine::CalculateGetter(std::shared_ptr<Object> a, std::string b, std::shared_ptr<Environment> env, bool isForced) {
     long long ident = isForced ? -1 : getIdent(env);
-    if (a->type == Object::Type::Mark) {
+    Object::Type type;
+    if (a->type == Object::Type::Reference) type = (*std::dynamic_pointer_cast<Reference>(a)->ptr)->type;
+    else type = a->type;
+    if (type == Object::Type::Mark) {
+        if (a->type == Object::Type::Reference) a = a->make_copy();
         auto mrk = std::dynamic_pointer_cast<Mark>(a);
         if (mrk->isEnum) {
             auto it = GENT.find(mrk->value);
@@ -1000,10 +1007,14 @@ std::shared_ptr<Object> VirtualMachine::CalculateGetter(std::shared_ptr<Object> 
             return it->second->getStatic(b, getIdent(env));
         }
     }
-    if (a->type == Object::Type::Instance) {
+    if (type == Object::Type::Instance) {
+        if (a->type == Object::Type::Reference) a = a->make_copy();
         return std::dynamic_pointer_cast<Instance>(a)->innerBinder->getUnder(b, ident);
     }
     auto f = env->get(b);
+    if (f->type == Object::Type::Reference) {
+        f = f->make_copy();
+    }
     if (f->type != Object::Type::Executable) {
         return VNull;
     }

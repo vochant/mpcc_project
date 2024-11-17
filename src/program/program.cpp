@@ -37,10 +37,10 @@ void Program::REPL() {
             gVM->Execute(std::dynamic_pointer_cast<ProgramNode>(prog), gVM->inner);
             std::cout << "\n<< ";
             if (gVM->lastObject->type == Object::Type::String) {
-                std::cout << escape(gVM->lastObject->toString()) << '\n';
+                std::cout << escape(gVM->lastObject->toString()) << "\n\n";
             }
             else {
-                std::cout << gVM->lastObject->toString() << '\n';
+                std::cout << gVM->lastObject->toString() << "\n\n";
             }
         }
         catch (const std::exception& e) {
