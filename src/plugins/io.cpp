@@ -124,19 +124,19 @@ std::shared_ptr<Object> FastIO_Get_Float(Args args) {
         s *= 10;
         std::cin.get(ch);
     }
-    return std::make_shared<Integer>(f * (tmp / s));
+    return std::make_shared<Float>(f * (tmp / s));
 }
 
 void Write_Int_only(long long x)
 {
     if(x < 0) {
-        putchar('-');
+        std::cout.put('-');
         x = -x;
     }
     if(x > 9) {
         Write_Int_only(x / 10);
     }
-    putchar(x % 10 + '0');
+    std::cout.put(x % 10 + '0');
 } 
 
 std::shared_ptr<Object> FastIO_Print_Int(Args args) {
@@ -164,29 +164,29 @@ void Write_Float_only(double x , long long k)
     static long long n = _FastPow(10 , k);
     if (x == 0)
     {
-        putchar('0');
-        putchar('.');
+        std::cout.put('0');
+        std::cout.put('.');
         for (int i = 1 ; i <= k ; i++)
         {
-            putchar('0');
+            std::cout.put('0');
         }
         return;
     }
     if (x < 0)
     {
-        putchar('-');
+        std::cout.put('-');
         x = -x;
     }
     long long y = (long long)(x * n) % n;
     x = (long long)x;
     Write_Int_only(x);
-    putchar('.');
+    std::cout.put('.');
     int bit[10],p=0,i;
     for (; p < k ; y /= 10) {
         bit[++p] = y % 10;
     }
     for (i = p ; i > 0 ; i--) {
-        putchar(bit[i] + 48);
+        std::cout.put(bit[i] + 48);
     }
 }
 
