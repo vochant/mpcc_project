@@ -211,16 +211,17 @@ std::shared_ptr<Object> FastIO_Print_Double(Args args) {
 }
 
 void Plugins::IO::enable() {
-    regist("getint" , Get_Int);
+    regist("getInt" , Get_Int);
     regist("input" , Get_String);
-    regist("getfloat" , Get_Float);
-    regist("getline" , Get_Line);
-    regist("getchar" , Get_Char);
+    regist("getFloat" , Get_Float);
+    regist("getLine" , Get_Line);
+    regist("getChar" , Get_Char);
     regist("print" , Print);
     regist("println" , Print_Ln);
     auto FastIO = std::make_shared<NativeObject>();
-    FastIO->set("getint", std::make_shared<NativeFunction>(FastIO_Get_Int));
-    FastIO->set("getfloat" , std::make_shared<NativeFunction>(FastIO_Get_Float));
-    FastIO->set("printint" , std::make_shared<NativeFunction>(FastIO_Print_Int));
+    FastIO->set("getInt", std::make_shared<NativeFunction>(FastIO_Get_Int));
+    FastIO->set("getFloat" , std::make_shared<NativeFunction>(FastIO_Get_Float));
+    FastIO->set("printInt" , std::make_shared<NativeFunction>(FastIO_Print_Int));
+    FastIO->set("printFloat", std::make_shared<NativeFunction>(FastIO_Print_Double));
     regist("FastIO", FastIO);
 }
