@@ -160,7 +160,7 @@ void Plugins::MyPlugin::enable() {
 
 ### 修改文件
 
-修改 `src/main.cpp`，添加对该插件的注册行为，即 `Program.loadLibrary(makePlugin<Plugins::MyPlugin>())`。
+修改 `src/main.cpp`，添加对该插件的注册行为，即 `Program.loadLibrary(std::make_shared<Plugins::MyPlugin>())`。
 
 ### 重新构建
 

@@ -9,18 +9,13 @@
 
 #include "plugins/plugin.hpp"
 
-template<typename _Tp>
-std::shared_ptr<Plugin> makePlugin() {
-    return std::make_shared<_Tp>();
-} 
-
 int main(int argc, char* argv[]) {
     Program program;
-    program.loadLibrary(makePlugin<Plugins::Base>());
-    program.loadLibrary(makePlugin<Plugins::DynamicLoad>());
-    program.loadLibrary(makePlugin<Plugins::IO>());
-    program.loadLibrary(makePlugin<Plugins::FileIO>());
-    program.loadLibrary(makePlugin<Plugins::Math>());
+    program.loadLibrary(std::make_shared<Plugins::Base>());
+    program.loadLibrary(std::make_shared<Plugins::DynamicLoad>());
+    program.loadLibrary(std::make_shared<Plugins::IO>());
+    program.loadLibrary(std::make_shared<Plugins::FileIO>());
+    program.loadLibrary(std::make_shared<Plugins::Math>());
     if (argc < 2) {
         std::cerr << "At least two arguments required\n";
         return 1;

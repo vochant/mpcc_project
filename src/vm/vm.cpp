@@ -974,6 +974,7 @@ std::shared_ptr<Object> VirtualMachine::CalculateRelationship(std::string op, st
         if (op == "==") return (As<String>(a)->hash == As<String>(b)->hash) ? True : False;
         if (op == "!=") return (As<String>(a)->hash == As<String>(b)->hash) ? False : True;
     }
+    else return False;
     std::string as = a->toString(), bs = b->toString();
     if (op == "==") return as == bs ? True : False;
     if (op == "!=") return as != bs ? True : False;

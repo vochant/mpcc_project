@@ -16,6 +16,7 @@
 #include "object/file.hpp"
 #include "object/mark.hpp"
 #include "object/memberf.hpp"
+#include "object/rbit.hpp"
 
 #include "util.hpp"
 
@@ -122,7 +123,7 @@ std::string Float::toString() {
     return std::to_string(value);
 }
 std::string Function::toString() {
-    return "func[ast]";
+    return "[func ast]";
 }
 
 std::string Integer::toString() {
@@ -130,7 +131,7 @@ std::string Integer::toString() {
 }
 
 std::string NativeFunction::toString() {
-    return "func[native]";
+    return "[func native]";
 }
 
 std::string Null::toString() {
@@ -150,7 +151,7 @@ std::string LowReference::toString() {
 }
 
 std::string ConstructorProxy::toString() {
-    return "func[proxy]";
+    return "[func proxy]";
 }
 
 #include "vm_error.hpp"
@@ -378,4 +379,18 @@ std::shared_ptr<Object> NativeObject::make_copy() {
     return copy;
 }
 
- Environment* NF_Environment;
+bool RangeBasedIterator::hasNext() {
+    return (s > 0) ? (c < e) : (c > e);
+}
+
+std::shared_ptr<Object> RangeBasedIterator::next() {
+    return hasNext() ? std::make_shared<Integer>(c) : gVM->VNull;
+}
+
+void RangeBasedIterator::go() {
+    if (hasNext()) c += s;
+}
+
+RangeBasedIterator::RangeBasedIterator(long long b, long long e, long long s) : c(b), e(e), s(s), Iterator() {}
+
+Environment* NF_Environment;
