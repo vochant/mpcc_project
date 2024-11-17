@@ -7,7 +7,17 @@
 
 #include "plugins/plugin.hpp"
 
+#ifdef _WIN32
+# include <windows.h>
+#endif
+
 int main(int argc, char* argv[]) {
+    #ifdef _WIN32
+    auto prevICP = GetConsoleCP(), prevOCP = GetConsoleOutputCP();
+    SetConsoleCP(65001);
+    SetConsoleOutputCP(65001);
+    #endif
+
     Program program;
     program.loadLibrary(std::make_shared<Plugins::Base>());
     program.loadLibrary(std::make_shared<Plugins::DynamicLoad>());
@@ -34,6 +44,10 @@ int main(int argc, char* argv[]) {
     if (!flag) {
         
     }
+
+    #ifdef _WIN32
+    SetConsoleCP(prevICP);
+    SetConsoleOutputCP(prevOCP);
+    #endif
 	return retval;
-    return 0;
 }

@@ -105,6 +105,7 @@ std::shared_ptr<Node> Parser::lookupIn(Token::Type type, std::shared_ptr<Node> l
     case Token::Type::Greater:
     case Token::Type::GreaterEqual:
     case Token::Type::Extand:
+    case Token::Type::ForceExtand:
     case Token::Type::Pow:
     case Token::Type::FullEqual:
     case Token::Type::NotFullEqual:

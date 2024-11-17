@@ -986,7 +986,7 @@ std::shared_ptr<Object> VirtualMachine::CalculateGetter(std::shared_ptr<Object> 
     if (a->type == Object::Type::Reference) type = (*std::dynamic_pointer_cast<Reference>(a)->ptr)->type;
     else type = a->type;
     if (type == Object::Type::Mark) {
-        if (a->type == Object::Type::Reference) a = a->make_copy();
+        if (a->type == Object::Type::Reference) a = *std::dynamic_pointer_cast<Reference>(a)->ptr;
         auto mrk = std::dynamic_pointer_cast<Mark>(a);
         if (mrk->isEnum) {
             auto it = GENT.find(mrk->value);
@@ -1008,8 +1008,12 @@ std::shared_ptr<Object> VirtualMachine::CalculateGetter(std::shared_ptr<Object> 
         }
     }
     if (type == Object::Type::Instance) {
-        if (a->type == Object::Type::Reference) a = a->make_copy();
+        if (a->type == Object::Type::Reference) a = *std::dynamic_pointer_cast<Reference>(a)->ptr;
         return std::dynamic_pointer_cast<Instance>(a)->innerBinder->getUnder(b, ident);
+    }
+    if (type == Object::Type::CommonObject) {
+        if (a->type == Object::Type::Reference) a = *std::dynamic_pointer_cast<Reference>(a)->ptr;
+        return std::dynamic_pointer_cast<CommonObject>(a)->get(b);
     }
     auto f = env->get(b);
     if (f->type == Object::Type::Reference) {

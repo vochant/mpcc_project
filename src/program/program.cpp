@@ -36,6 +36,9 @@ void Program::REPL() {
             auto prog = parser.parse_program();
             gVM->Execute(std::dynamic_pointer_cast<ProgramNode>(prog), gVM->inner);
             std::cout << "\n<< ";
+            if (gVM->lastObject->type == Object::Type::Reference) {
+                gVM->lastObject = gVM->lastObject->make_copy();
+            }
             if (gVM->lastObject->type == Object::Type::String) {
                 std::cout << escape(gVM->lastObject->toString()) << "\n\n";
             }

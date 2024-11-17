@@ -95,14 +95,12 @@ std::pair<std::string, Token::Type> Lexer::read_number() {
         }
     }
     while (isValid(_input.at(_at))) {
+        if (_input.at(_at) == '.' && (_input.length() <= (_at + 1) || !isdigit(_input.at(_at + 1)))) {
+            break;
+        }
         res += _input.at(_at);
         _column++;
         _at++;
-    }
-    if (res.at(res.length() - 1) == '.') {
-        res = res.substr(0, res.length() - 1);
-        _at--;
-        _column--;
     }
     return std::make_pair(res, (res.find('.') != res.npos) ? Token::Type::Float : Token::Type::Integer);
 }
