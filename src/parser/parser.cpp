@@ -653,7 +653,7 @@ std::shared_ptr<Node> Parser::parse_creation() {
         throw ParserError("Unknown creation header", &lexer);;
     }
     while (true) {
-        std::shared_ptr<Node> _obj = nullptr;
+        std::shared_ptr<Node> _obj = std::make_shared<NullNode>();
         if (_current->type != Token::Type::Identifier) {
             throw ParserError("The variable to create must be an identifier token", &lexer);
         }

@@ -161,7 +161,7 @@ std::shared_ptr<Object> FastIO_Print_Int(Args args) {
 
 void Write_Float_only(double x , long long k)
 {
-    static long long n = _FastPow(10 , k);
+    long long n = _FastPow(10 , k);
     if (x == 0)
     {
         std::cout.put('0');
@@ -181,7 +181,7 @@ void Write_Float_only(double x , long long k)
     x = (long long)x;
     Write_Int_only(x);
     std::cout.put('.');
-    int bit[10],p=0,i;
+    int bit[20],p=0,i;
     for (; p < k ; y /= 10) {
         bit[++p] = y % 10;
     }

@@ -646,8 +646,10 @@ void Plugins::Base::enable() {
     regist("less", Comparator_Less);
 
     auto _MPCC = std::make_shared<NativeObject>();
-    _MPCC->set("version", std::make_shared<String>("2.2"));
+    _MPCC->set("version", std::make_shared<String>("2.3"));
     _MPCC->set("arch", std::make_shared<String>("Arkscene"));
+    _MPCC->set("update_name", std::make_shared<String>("Aivot"));
     _MPCC->set("major_version", std::make_shared<Integer>(2));
+    _MPCC->set("update_version", std::make_shared<Integer>(3));
     regist("MPCC", _MPCC);
 }

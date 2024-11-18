@@ -57,7 +57,7 @@ std::shared_ptr<Object> VirtualMachine::ExecuteArray(std::shared_ptr<ArrayNode> 
 std::shared_ptr<Object> VirtualMachine::ExecuteAssign(std::shared_ptr<AssignNode> assign, std::shared_ptr<Environment> env) {
     auto l = ExecuteValue(assign->left, env), r = ExecuteCommon(assign->right, env);
     if (assign->_op != "=") {
-        r = CalculateInfix(assign->_op.substr(0, assign->_op.length() - 1), l, r, env);
+        r = CalculateInfix(assign->_op.substr(0, assign->_op.length() - 1), l->make_copy(), r, env);
     }
     if (l->type != Object::Type::Reference) {
         throw VMError("VM:ExecuteAssign", "Assign to constant");
@@ -265,7 +265,7 @@ std::shared_ptr<Object> VirtualMachine::ExecuteDestructor(std::shared_ptr<Destru
 }
 
 std::shared_ptr<Object> VirtualMachine::ExecuteEnum(std::shared_ptr<EnumerateNode> e, std::shared_ptr<Environment> env) {
-    inner->set(e->_name, std::make_shared<Mark>(false, e->_name));
+    inner->set(e->_name, std::make_shared<Mark>(true, e->_name));
     auto _enum = std::make_shared<MpcEnum>();
     size_t index = 0;
     for (auto& i : e->items) {
@@ -349,6 +349,7 @@ std::shared_ptr<Object> VirtualMachine::ExecuteFor(std::shared_ptr<ForNode> f, s
             return v;
         }
         state = State::COMMON;
+        it->go();
     }
     return VNull;
 }
@@ -845,6 +846,39 @@ std::shared_ptr<Object> VirtualMachine::CalculateInfix(std::string op, std::shar
             return res;
         }
     }
+    if (op == "*" && (a->type == Object::Type::Byte || a->type == Object::Type::Integer || a->type == Object::Type::Boolean)) {
+        if (a->type == Object::Type::Boolean) a = std::make_shared<Integer>(isTrue(a));
+        if (a->type == Object::Type::Byte) a = std::make_shared<Integer>(std::dynamic_pointer_cast<Byte>(a)->value);
+        long long rep = std::dynamic_pointer_cast<Integer>(a)->value;
+        if ((b->type == Object::Type::Array || b->type == Object::Type::Iterator) && (a->type == Object::Type::Byte || a->type == Object::Type::Integer || a->type == Object::Type::Boolean)) {
+            if (b->type == Object::Type::Iterator) b = std::dynamic_pointer_cast<Iterator>(b)->toArray();
+            if (rep <= 0) return std::make_shared<Array>();
+            auto res = std::make_shared<Array>(), cas = std::dynamic_pointer_cast<Array>(b);
+            while (rep--) {
+                res->value.insert(res->value.end(), cas->value.begin(), cas->value.end());
+            }
+            return res;
+        }
+        else if (b->type == Object::Type::String) {
+            if (rep <= 0) return std::make_shared<String>("");
+            std::stringstream ss;
+            auto cas = std::dynamic_pointer_cast<String>(b);
+            StringHash hash = {0, 0};
+            while (rep--) {
+                ss << cas->value;
+                hash = concatHash(hash, cas->hash, cas->value.length());
+            }
+            return std::make_shared<String>(ss.str(), hash);
+        }
+        else if (b->type == Object::Type::ByteArray) {
+            if (rep <= 0) return std::make_shared<ByteArray>();
+            auto res = std::make_shared<ByteArray>(), cas = std::dynamic_pointer_cast<ByteArray>(b);
+            while (rep--) {
+                res->value.insert(res->value.end(), cas->value.begin(), cas->value.end());
+            }
+            return res;
+        }
+    }
     if (op != "+") {
         throw VMError("VM:CalculateInfix", "No that operator " + op + " between these objects");
     }
@@ -882,6 +916,8 @@ std::shared_ptr<Object> VirtualMachine::CalculateInteger(std::string op, std::sh
     if (op == "^") return std::make_shared<_Tp>(av ^ bv);
     if (op == "&") return std::make_shared<_Tp>(av & bv);
     if (op == "|") return std::make_shared<_Tp>(av | bv);
+    if (op == "<<") return std::make_shared<_Tp>(av << bv);
+    if (op == ">>") return std::make_shared<_Tp>(av >> bv);
     if (op == ">") return av > bv ? True : False;
     if (op == ">=") return av >= bv ? True : False;
     if (op == "<") return av < bv ? True : False;
@@ -921,7 +957,7 @@ std::shared_ptr<Object> VirtualMachine::CalculateFloat(std::string op, std::shar
     if (op == "<") return (av <= bv) ? True : False;
     if (op == "==" || op == "===") return (av == bv) ? True : False;
     if (op == "!=" || op == "!==") return (av != bv) ? True : False;
-    if (op == "**") return std::make_shared<Float>(VM_fastPow(av, bv));
+    if (op == "**") return std::make_shared<Float>(pow(av, bv));
     throw VMError("VM:CalcFloat", "Unknown operator " + op);
 }
 
@@ -969,15 +1005,10 @@ std::shared_ptr<Object> VirtualMachine::CalculateRelationship(std::string op, st
         if (op == "==") return (std::dynamic_pointer_cast<String>(a)->hash == std::dynamic_pointer_cast<String>(b)->hash) ? True : False;
         if (op == "!=") return (std::dynamic_pointer_cast<String>(a)->hash == std::dynamic_pointer_cast<String>(b)->hash) ? False : True;
     }
-    else return False;
-    std::string as = a->toString(), bs = b->toString();
-    if (op == "==") return as == bs ? True : False;
-    if (op == "!=") return as != bs ? True : False;
-    if (op == ">=") return as >= bs ? True : False;
-    if (op == "<=") return as <= bs ? True : False;
-    if (op == ">") return as > bs ? True : False;
-    if (op == "<") return as < bs ? True : False;
-    throw VMError("VM:CalcRels", "Unknown operator: " + op);
+    else {
+        if (op == "!=") return True;
+        return False;
+    }
 }
 
 std::shared_ptr<Object> VirtualMachine::CalculateGetter(std::shared_ptr<Object> a, std::string b, std::shared_ptr<Environment> env, bool isForced) {

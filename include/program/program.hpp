@@ -14,6 +14,8 @@ public:
 public:
     void loadLibrary(std::shared_ptr<Plugin> _plg);
     int Execute(std::shared_ptr<ProgramNode> _program);
+    int ExecuteFile(std::string fileName);
+    void IncludeFile(std::string fileName);
     int ExecuteCode(std::string src, std::string from = "[stdin]");
 	int ExecuteOuter(std::shared_ptr<ProgramNode> _program);
 	void REPL();

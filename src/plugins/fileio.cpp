@@ -13,6 +13,7 @@
 Plugins::FileIO::FileIO() {}
 
 std::shared_ptr<Object> File_Get_Int(Args args) {
+    plain(args);
     if(args.size() != 1 || args[0]->type != Object::Type::File) {
         throw VMError("(FileIO)File_Get_Int", "Incorrect Format");
     }
@@ -25,6 +26,7 @@ std::shared_ptr<Object> File_Get_Int(Args args) {
 }
 
 std::shared_ptr<Object> File_Get_String(Args args) {
+    plain(args);
     if(args.size() != 1 || args[0]->type != Object::Type::File) {
         throw VMError("(FileIO)File_Get_String", "Incorrect Format");
     }
@@ -37,6 +39,7 @@ std::shared_ptr<Object> File_Get_String(Args args) {
 }
 
 std::shared_ptr<Object> File_Get_Float(Args args) {
+    plain(args);
     if(args.size() != 1 || args[0]->type != Object::Type::File) {
         throw VMError("(FileIO)File_Get_Float", "Incorrect Format");
     }
@@ -49,6 +52,7 @@ std::shared_ptr<Object> File_Get_Float(Args args) {
 }
 
 std::shared_ptr<Object> File_Get_Line(Args args) {
+    plain(args);
     if(args.size() != 1 || args[0]->type != Object::Type::File) {
         throw VMError("(FileIO)File_Get_Line", "Incorrect Format");
     }
@@ -61,6 +65,7 @@ std::shared_ptr<Object> File_Get_Line(Args args) {
 }
 
 std::shared_ptr<Object> File_Get_Char(Args args) {
+    plain(args);
     if(args.size() != 1 || args[0]->type != Object::Type::File) {
         throw VMError("(FileIO)File_Get_Char" , "Incorrect Format");
     }
@@ -73,6 +78,7 @@ std::shared_ptr<Object> File_Get_Char(Args args) {
 }
 
 std::shared_ptr<Object> File_Print(Args args) {
+    plain(args);
     if(args.size() <= 1 || args[0]->type != Object::Type::File)
     {
         throw VMError("(FileIO)File_Print" , "Incorrect Format");
@@ -81,21 +87,23 @@ std::shared_ptr<Object> File_Print(Args args) {
         throw VMError("(FileIO)File_Print" , "File Closed");   
     }
     bool isFirst = true;
-    for (auto& e : args) {
+    for (size_t i = 1; i < args.size(); i++) {
         if (isFirst) isFirst = false;
         else *(std::dynamic_pointer_cast<File>(args[0])->fs) << ' ';
-        *(std::dynamic_pointer_cast<File>(args[0])->fs) << e->toString();
+        *(std::dynamic_pointer_cast<File>(args[0])->fs) << args[i]->toString();
     }
     return gVM->VNull;
 }
 
 std::shared_ptr<Object> File_Print_Ln(Args args) {
+    plain(args);
     auto res = File_Print(args);
     *(std::dynamic_pointer_cast<File>(args[0])->fs) << '\n';
     return res;
 }
 
 std::shared_ptr<Object> FFastIO_Get_Int(Args args) {
+    plain(args);
     if(args.size() != 1 || args[0]->type != Object::Type::File) {
         throw VMError("(FileIO)FFastIO:Get_Int", "Incorrect Format");
     }
@@ -121,6 +129,7 @@ std::shared_ptr<Object> FFastIO_Get_Int(Args args) {
 }
 
 std::shared_ptr<Object> FFastIO_Get_Float(Args args) {
+    plain(args);
     if(args.size() != 1 || args[0]->type != Object::Type::File) {
         throw VMError("(FileIO)FFastIO:Get_Float", "Incorrect Format");
     }
@@ -193,7 +202,7 @@ std::shared_ptr<Object> FFastIO_Print_Int(Args args) {
 
 void FWrite_Float_only(std::fstream& fs, double x , long long k)
 {
-    static long long n = _FastPow(10 , k);
+    long long n = _FastPow(10 , k);
     if (x == 0)
     {
         fs.put('0');
@@ -213,7 +222,7 @@ void FWrite_Float_only(std::fstream& fs, double x , long long k)
     x = (long long)x;
     FWrite_Int_only(fs, x);
     fs.put('.');
-    int bit[10],p=0,i;
+    int bit[20],p=0,i;
     for (; p < k ; y /= 10) {
         bit[++p] = y % 10;
     }
