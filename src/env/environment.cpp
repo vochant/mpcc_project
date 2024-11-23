@@ -76,7 +76,7 @@ std::shared_ptr<Object> InstanceBinder::get(std::string name) {
     if (name == "__index__") {
         return std::make_shared<Integer>(cls->id);
     }
-    if (!cls->getAL(name)) {
+    if (cls->getAL(name) == -3) {
         return parent->get(name);
     }
     if (obj->value_store.count(name)) {
@@ -86,7 +86,7 @@ std::shared_ptr<Object> InstanceBinder::get(std::string name) {
 }
 
 std::shared_ptr<Object> InstanceBinder::getUnder(std::string name, long long ident) {
-    if (!cls->getAL(name)) {
+    if (cls->getAL(name) == -3) {
         return std::make_shared<Null>();
     }
     if (ident != -1 && cls->getAL(name) == -2) {
