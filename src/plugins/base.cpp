@@ -66,6 +66,28 @@ std::shared_ptr<Object> Array_Map(Args args) {
     return res;
 }
 
+std::shared_ptr<Object> Array_Filter(Args args) {
+    plain(args);
+    if (args.size() != 2 || args[1]->type != Object::Type::Executable) {
+        throw VMError("(Base)Array_Filter", "Incorrect Format");
+    }
+    if (args[0]->type == Object::Type::Iterator) {
+        args[0] = std::dynamic_pointer_cast<Iterator>(args[0])->toArray();
+    }
+    if (args[0]->type != Object::Type::Array) {
+        throw VMError("(Base)Array_Filter", "Incorrect Format");
+    }
+    auto exec = std::dynamic_pointer_cast<Executable>(args[1]);
+    auto arr = std::dynamic_pointer_cast<Array>(args[0]);
+    auto res = std::make_shared<Array>();
+    for (auto& e : arr->value) {
+        if (gVM->isTrue(exec->call({e}))) {
+            res->value.push_back(e);
+        }
+    }
+    return res;
+}
+
 std::shared_ptr<Object> Array_FlatMap(Args args) {
     plain(args);
     if (args.size() != 2 || args[1]->type != Object::Type::Executable) {
@@ -623,6 +645,7 @@ void Plugins::Base::enable() {
     regist("findAt", Array_FindAt);
     regist("push", Array_Push);
     regist("pop", Array_Pop);
+    regist("filter", Array_Filter);
     regist("reverse", ArrStr_Reverse);
     regist("len", ArrStr_Length);
     regist("split", String_Split);

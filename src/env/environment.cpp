@@ -97,6 +97,9 @@ std::shared_ptr<Object> InstanceBinder::getUnder(std::string name, long long ide
     else if (cls->getAL(name) != -1 && ident != -1 && cls->getAL(name) != ident) {
         return std::make_shared<Null>();
     }
+    if (obj->value_store.count(name)) {
+        return std::make_shared<Reference>(&obj->value_store[name]);
+    }
     return cls->getObject(name, obj->innerBinder);
 }
 

@@ -465,14 +465,14 @@ std::shared_ptr<Object> VirtualMachine::ExecuteIndex(std::shared_ptr<IndexNode> 
     }
     if (l->type == Object::Type::String) {
         if (inx->type == Object::Type::Integer) {
-            auto sl = std::dynamic_pointer_cast<String>(l)->value.length();
+            long long sl = std::dynamic_pointer_cast<String>(l)->value.length();
             return std::make_shared<String>(std::dynamic_pointer_cast<String>(l)->value.at((std::dynamic_pointer_cast<Integer>(inx)->value % sl + sl) % sl));
         }
         else {
             std::string rstr = "";
             auto arr = std::dynamic_pointer_cast<Array>(inx);
             auto& str = std::dynamic_pointer_cast<String>(l)->value;
-            auto sl = str.length();
+            long long sl = str.length();
             for (auto& e : arr->value) {
                 if (e->type != Object::Type::Integer) {
                     throw VMError("VM:ExecuteIndex", "Unsupported index type");
@@ -484,19 +484,19 @@ std::shared_ptr<Object> VirtualMachine::ExecuteIndex(std::shared_ptr<IndexNode> 
     }
     else if (l->type == Object::Type::Array) {
         if (inx->type == Object::Type::Integer) {
-            auto al = std::dynamic_pointer_cast<Array>(l)->value.size();
+            long long al = std::dynamic_pointer_cast<Array>(l)->value.size();
             if (isr) {
-                return std::make_shared<Reference>(&(std::dynamic_pointer_cast<Array>(l)->value[(std::dynamic_pointer_cast<Integer>(l)->value % al + al) % al]));
+                return std::make_shared<Reference>(&(std::dynamic_pointer_cast<Array>(l)->value[(std::dynamic_pointer_cast<Integer>(inx)->value % al + al) % al]));
             }
             else {
-                return std::dynamic_pointer_cast<Array>(l)->value[(std::dynamic_pointer_cast<Integer>(l)->value % al + al) % al];
+                return std::dynamic_pointer_cast<Array>(l)->value[(std::dynamic_pointer_cast<Integer>(inx)->value % al + al) % al];
             }
         }
         else {
             auto res = std::make_shared<Array>();
             auto& arr = std::dynamic_pointer_cast<Array>(l)->value;
             auto idx = std::dynamic_pointer_cast<Array>(inx);
-            auto al = arr.size();
+            long long al = arr.size();
             for (auto& e : idx->value) {
                 if (e->type != Object::Type::Integer) {
                     throw VMError("VM:ExecuteIndex", "Unsupported index type");
