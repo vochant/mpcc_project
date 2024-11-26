@@ -530,6 +530,14 @@ std::shared_ptr<Object> Math_Max(Args args) {
     return std::make_shared<Float>(value);
 }
 
+#include <random>
+
+std::mt19937_64 _math_gRND(std::random_device{}());
+
+std::shared_ptr<Object> Math_Random(Args args) {
+    return std::make_shared<Float>(_math_gRND() / pow(2.0, 64));
+}
+
 std::shared_ptr<Object> Math_Min(Args args) {
     if (Detect(args, -1)) {
         throw VMError("(Math)Math:Min", "Incorrect Format");
@@ -609,5 +617,6 @@ void Plugins::Math::enable() {
     _Math->set("dim", std::make_shared<NativeFunction>(Math_Dim));
     _Math->set("max", std::make_shared<NativeFunction>(Math_Max));
     _Math->set("min", std::make_shared<NativeFunction>(Math_Min));
+    _Math->set("random", std::make_shared<NativeFunction>(Math_Random));
     regist("Math", _Math);
 }

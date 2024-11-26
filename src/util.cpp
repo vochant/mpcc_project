@@ -113,8 +113,7 @@ int getweight(const char* const str) {
 	if ((ch0 & 0xF8) == 0xF0) {
 		return 4;
 	}
-    throw UtilError("Unknown char codepoint (try to save with UTF-8 encode): " + std::to_string(ch0) + " " + std::to_string(ch1) + " " + std::to_string(ch2) + " " + std::to_string(ch3));
-	return -1;
+	return 1;
 }
 
 namespace BinaryIn {
@@ -221,9 +220,17 @@ std::string escape(std::string in) {
             else if (in[i] == '\t') res += "\\t";
             else {
                 int w = getweight(&in[i]);
+                if (i + w > in.length()) {
+                    for (int j = i; j < in.length(); j++) {
+                        res += "\\x";
+                        res += ctohex(((unsigned char)(in[j])) >> 4);
+                        res += ctohex(in[j] & 15);
+                    }
+                    break;
+                }
                 if (w == 1) {
                     res += "\\x";
-                    res += ctohex(in[i] >> 4);
+                    res += ctohex(((unsigned char)(in[i])) >> 4);
                     res += ctohex(in[i] & 15);
                 }
                 else {

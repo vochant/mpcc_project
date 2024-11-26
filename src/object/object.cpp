@@ -408,6 +408,7 @@ RangeBasedIterator::RangeBasedIterator(long long b, long long e, long long s) : 
 String::String(char ch) : Object(Type::String) {
     char str[2] = {ch, 0};
     value = str;
+    hash = genHash(value);
 }
 
 std::shared_ptr<Object> ArrayBasedIterator::make_copy() {

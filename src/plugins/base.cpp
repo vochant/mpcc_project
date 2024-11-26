@@ -15,7 +15,9 @@
 #include "object/float.hpp"
 #include "object/rbit.hpp"
 #include "object/bytearray.hpp"
+#include "object/byte.hpp"
 #include <algorithm>
+#include <random>
 
 Plugins::Base::Base() {}
 
@@ -266,6 +268,43 @@ std::shared_ptr<Object> String_Split(Args args) {
     }
 }
 
+std::shared_ptr<Object> String_Replace(Args args) {
+    plain(args);
+    if (args.size() != 3 || args[0]->type != Object::Type::String || args[1]->type != Object::Type::String || args[2]->type != Object::Type::String) {
+        throw VMError("(Base)String_Replace", "Incorrect Format");
+    }
+    auto& str = std::dynamic_pointer_cast<String>(args[0])->value;
+    auto& mode = std::dynamic_pointer_cast<String>(args[1])->value;
+    auto& to = std::dynamic_pointer_cast<String>(args[2])->value;
+    std::stringstream ss;
+    std::vector<size_t> fail;
+    fail.reserve(mode.length());
+    fail.push_back(0);
+    size_t mode_length = mode.length();
+    for (size_t i = 1; i < mode_length; i++) {
+        size_t p = fail[i - 1];
+        while (p && mode[p] != mode[i]) p = fail[p - 1];
+        fail.push_back(p + (mode[i] == mode[p]));
+    }
+    size_t e = 0, begin = 0;
+    for (size_t i = 0; i < str.length(); i++) {
+        while (e && mode[e] != str[i]) e = fail[e - 1];
+        if (mode[e] == str[i]) e++;
+        if (e == mode_length) {
+            if (i + 1 - mode_length - begin != 0) {
+                ss << str.substr(begin, i + 1 - mode_length - begin);
+            }
+            ss << to;
+            begin = i + 1;
+            e = 0;
+        }
+    }
+    if (begin != str.length()) {
+        ss << str.substr(begin);
+    }
+    return std::make_shared<String>(ss.str());
+}
+
 std::shared_ptr<Object> String_Escape(Args args) {
     plain(args);
     if (args.size() != 1 || args[0]->type != Object::Type::String) {
@@ -319,7 +358,7 @@ std::shared_ptr<Object> Assert(Args args) {
 
 std::shared_ptr<Object> BelongTo(Args args) {
     if (args.size() != 2 || args[1]->type != Object::Type::String) {
-        throw VMError("(Base)Typestr", "Incorrect Format");
+        throw VMError("(Base)BelongTo", "Incorrect Format");
     }
     auto t = gVM->getTypeString(args[0]), et = args[1]->toString();
     if (t != et) {
@@ -362,6 +401,20 @@ std::shared_ptr<Object> Min(Args args) {
     return v;
 }
 
+std::mt19937_64 _gRND(std::random_device{}());
+
+std::shared_ptr<Object> Random_Integer(Args args) {
+    plain(args);
+    if (args.size() != 2 || args[0]->type != Object::Type::Integer || args[1]->type != Object::Type::Integer) {
+        throw VMError("(Base)Random_Integer", "Incorrect Format");
+    }
+    long long s = std::dynamic_pointer_cast<Integer>(args[0])->value, e = std::dynamic_pointer_cast<Integer>(args[1])->value;
+    if (s > e) {
+        throw VMError("(Base)Random_Integer", "Incorrect Format");
+    }
+    return std::make_shared<Integer>(s + _gRND() % (e - s + 1));
+}
+
 std::shared_ptr<Object> String_Digit(Args args) {
     plain(args);
     if (args.size() != 1 || args[0]->type != Object::Type::String) {
@@ -369,13 +422,13 @@ std::shared_ptr<Object> String_Digit(Args args) {
     }
     auto str = std::dynamic_pointer_cast<String>(args[0])->value;
     if (str.length() == 1) {
-        return std::make_shared<Integer>(str[0]);
+        return std::make_shared<Byte>(str[0]);
     }
     else {
-        auto res = std::make_shared<Array>();
+        auto res = std::make_shared<ByteArray>();
         res->value.reserve(str.length());
         for (size_t i = 0; i < str.length(); i++) {
-            res->value.push_back(std::make_shared<Integer>(str[i]));
+            res->value.push_back(str[i]);
         }
         return res;
     }
@@ -389,7 +442,7 @@ std::shared_ptr<Object> String_Char(Args args) {
     if (args[0]->type == Object::Type::Integer) {
         return std::make_shared<String>((char)(std::dynamic_pointer_cast<Integer>(args[0])->value));
     }
-    if (args[0]->type != Object::Type::Iterator) {
+    if (args[0]->type == Object::Type::Iterator) {
         args[0] = std::dynamic_pointer_cast<Iterator>(args[0])->toArray();
     }
     if (args[0]->type != Object::Type::Array) {
@@ -667,6 +720,8 @@ void Plugins::Base::enable() {
     regist("slice", ArrStr_Slice);
     regist("greater", Comparator_Greater);
     regist("less", Comparator_Less);
+    regist("randomInt", Random_Integer);
+    regist("replace", String_Replace);
 
     auto _MPCC = std::make_shared<NativeObject>();
     _MPCC->set("version", std::make_shared<String>("2.3"));

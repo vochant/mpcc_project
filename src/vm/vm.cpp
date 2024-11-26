@@ -396,7 +396,8 @@ std::shared_ptr<Object> VirtualMachine::ExecuteInDecrement(std::shared_ptr<InDec
     if (a->type != Object::Type::Reference) {
         throw VMError("VM:ExecuteXcrement", "Cannot use increment/decrement on rval");
     }
-    auto rv = *(std::dynamic_pointer_cast<Reference>(a)->ptr);
+    auto ptr = std::dynamic_pointer_cast<Reference>(a)->ptr;
+    auto rv = *ptr;
     if (rv->type == Object::Type::Instance) {
         auto name = std::string(idc->isAfter ? "operator" : "prefix") + (idc->isDecrement ? "--" : "++");
         auto f = std::dynamic_pointer_cast<Instance>(rv)->innerBinder->getUnder(name, getIdent(env));
@@ -406,24 +407,30 @@ std::shared_ptr<Object> VirtualMachine::ExecuteInDecrement(std::shared_ptr<InDec
         return std::dynamic_pointer_cast<Executable>(f)->call({});
     }
     if (rv->type == Object::Type::Integer) {
+        rv = rv->make_copy();
         if (idc->isAfter) {
             auto cpy = rv->make_copy();
             std::dynamic_pointer_cast<Integer>(rv)->value += idc->isDecrement ? -1 : 1;
+            *ptr = rv;
             return cpy;
         }
         else {
             std::dynamic_pointer_cast<Integer>(rv)->value += idc->isDecrement ? -1 : 1;
+            *ptr = rv;
             return rv->make_copy();
         }
     }
     else if (rv->type == Object::Type::Float) {
+        rv = rv->make_copy();
         if (idc->isAfter) {
             auto cpy = rv->make_copy();
             std::dynamic_pointer_cast<Float>(rv)->value += idc->isDecrement ? -1 : 1;
+            *ptr = rv;
             return cpy;
         }
         else {
             std::dynamic_pointer_cast<Float>(rv)->value += idc->isDecrement ? -1 : 1;
+            *ptr = rv;
             return rv->make_copy();
         }
     }
@@ -486,6 +493,7 @@ std::shared_ptr<Object> VirtualMachine::ExecuteIndex(std::shared_ptr<IndexNode> 
         if (inx->type == Object::Type::Integer) {
             long long al = std::dynamic_pointer_cast<Array>(l)->value.size();
             if (isr) {
+                // std::dynamic_pointer_cast<Array>(l)->value[(std::dynamic_pointer_cast<Integer>(inx)->value % al + al) % al] = std::dynamic_pointer_cast<Array>(l)->value[(std::dynamic_pointer_cast<Integer>(inx)->value % al + al) % al]->make_copy();
                 return std::make_shared<Reference>(&(std::dynamic_pointer_cast<Array>(l)->value[(std::dynamic_pointer_cast<Integer>(inx)->value % al + al) % al]));
             }
             else {
@@ -921,7 +929,7 @@ std::shared_ptr<Object> VirtualMachine::CalculateInteger(std::string op, std::sh
     if (op == ">") return av > bv ? True : False;
     if (op == ">=") return av >= bv ? True : False;
     if (op == "<") return av < bv ? True : False;
-    if (op == "<") return av <= bv ? True : False;
+    if (op == "<=") return av <= bv ? True : False;
     if (op == "==" || op == "===") return av == bv ? True : False;
     if (op == "!=" || op == "!==") return av != bv ? True : False;
     if (op == "**") return std::make_shared<_Tp>(VM_fastPow(av, bv));
@@ -954,7 +962,7 @@ std::shared_ptr<Object> VirtualMachine::CalculateFloat(std::string op, std::shar
     if (op == ">") return (av > bv) ? True : False;
     if (op == ">=") return (av >= bv) ? True : False;
     if (op == "<") return (av < bv) ? True : False;
-    if (op == "<") return (av <= bv) ? True : False;
+    if (op == "<=") return (av <= bv) ? True : False;
     if (op == "==" || op == "===") return (av == bv) ? True : False;
     if (op == "!=" || op == "!==") return (av != bv) ? True : False;
     if (op == "**") return std::make_shared<Float>(pow(av, bv));
@@ -1004,6 +1012,10 @@ std::shared_ptr<Object> VirtualMachine::CalculateRelationship(std::string op, st
     if (a->type == Object::Type::String && b->type == Object::Type::String) {
         if (op == "==") return (std::dynamic_pointer_cast<String>(a)->hash == std::dynamic_pointer_cast<String>(b)->hash) ? True : False;
         if (op == "!=") return (std::dynamic_pointer_cast<String>(a)->hash == std::dynamic_pointer_cast<String>(b)->hash) ? False : True;
+        if (op == "<") return (std::dynamic_pointer_cast<String>(a)->value < std::dynamic_pointer_cast<String>(b)->value) ? True : False;
+        if (op == ">") return (std::dynamic_pointer_cast<String>(a)->value > std::dynamic_pointer_cast<String>(b)->value) ? True : False;
+        if (op == "<=") return (std::dynamic_pointer_cast<String>(a)->value <= std::dynamic_pointer_cast<String>(b)->value) ? True : False;
+        if (op == ">=") return (std::dynamic_pointer_cast<String>(a)->value >= std::dynamic_pointer_cast<String>(b)->value) ? True : False;
     }
     else {
         if (op == "!=") return True;
