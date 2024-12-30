@@ -23,7 +23,7 @@ std::shared_ptr<NativeFunction> get_ext_function(const std::string _library, con
         loadeds[_library] = _library_handle;
     }
     
-    NFunc func = dlsym(_library_handle, _symbol.c_str());
+    NFunc func = (base_function_t)dlsym(_library_handle, _symbol.c_str());
     if (func == NULL) {
         throw VMError("native:get", "Failed to find symbol: " + _symbol + " (in library " + _library + ")");
     }

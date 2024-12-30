@@ -467,6 +467,20 @@ std::shared_ptr<Object> VirtualMachine::ExecuteIndex(std::shared_ptr<IndexNode> 
     if (inx->type == Object::Type::CommonObject) {
         return std::dynamic_pointer_cast<CommonObject>(inx)->get(inx->toString());
     }
+    if (inx->type == Object::Type::Boolean) {
+        inx = std::make_shared<Integer>(std::dynamic_pointer_cast<Boolean>(inx)->value);
+    }
+    if (inx->type == Object::Type::Byte) {
+        inx = std::make_shared<Integer>(std::dynamic_pointer_cast<Byte>(inx)->value);
+    }
+    if (inx->type == Object::Type::ByteArray) {
+        auto arr = std::dynamic_pointer_cast<ByteArray>(inx);
+        auto res = std::make_shared<Array>();
+        for (auto i : arr->value) {
+            res->value.push_back(std::make_shared<Integer>(i));
+        }
+        inx = res;
+    }
     if (inx->type != Object::Type::Integer && inx->type != Object::Type::Array) {
         throw VMError("VM:ExecuteIndex", "Unsupported index type");
     }
@@ -481,6 +495,12 @@ std::shared_ptr<Object> VirtualMachine::ExecuteIndex(std::shared_ptr<IndexNode> 
             auto& str = std::dynamic_pointer_cast<String>(l)->value;
             long long sl = str.length();
             for (auto& e : arr->value) {
+                if (e->type == Object::Type::Boolean) {
+                    e = std::make_shared<Integer>(std::dynamic_pointer_cast<Boolean>(e)->value);
+                }
+                if (e->type == Object::Type::Byte) {
+                    e = std::make_shared<Integer>(std::dynamic_pointer_cast<Byte>(e)->value);
+                }
                 if (e->type != Object::Type::Integer) {
                     throw VMError("VM:ExecuteIndex", "Unsupported index type");
                 }
@@ -506,6 +526,12 @@ std::shared_ptr<Object> VirtualMachine::ExecuteIndex(std::shared_ptr<IndexNode> 
             auto idx = std::dynamic_pointer_cast<Array>(inx);
             long long al = arr.size();
             for (auto& e : idx->value) {
+                if (e->type == Object::Type::Boolean) {
+                    e = std::make_shared<Integer>(std::dynamic_pointer_cast<Boolean>(e)->value);
+                }
+                if (e->type == Object::Type::Byte) {
+                    e = std::make_shared<Integer>(std::dynamic_pointer_cast<Byte>(e)->value);
+                }
                 if (e->type != Object::Type::Integer) {
                     throw VMError("VM:ExecuteIndex", "Unsupported index type");
                 }
@@ -793,7 +819,7 @@ bool VirtualMachine::isTrue(std::shared_ptr<Object> obj) {
 
 std::shared_ptr<Object> VirtualMachine::CalculateInfix(std::string op, std::shared_ptr<Object> a, std::shared_ptr<Object> b, std::shared_ptr<Environment> env) {
     if (op == "===" && a->type != b->type) return False;
-    if (op == "!==" && a->type == b->type) return False;
+    if (op == "!==" && a->type != b->type) return True;
     if (a->type == Object::Type::Instance) {
         std::string fn = "operator" + op;
         auto f = std::dynamic_pointer_cast<Instance>(a)->innerBinder->getUnder(fn, getIdent(env));

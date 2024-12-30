@@ -318,11 +318,7 @@ std::shared_ptr<Node> Parser::parse_for() {
     parse_token();
     if (_current->type == Token::Type::Identifier) {
         auto _node = std::make_shared<ForNode>();
-        if (_current->type != Token::Type::Identifier) {
-            throw ParserError("An identifier expression should include an identifier token", &lexer);
-        }
-        _node->_var = _current->value;
-        parse_token();
+        _node->_var = std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id;
         if (_current->type != Token::Type::LParan) {
             throw ParserError("For format error", &lexer);
         }
@@ -344,6 +340,7 @@ std::shared_ptr<Node> Parser::parse_for() {
         if (_current->type != Token::Type::RParan) {
             throw ParserError("For format error", &lexer);
         }
+        parse_token();
         _node->_body = parse_statement();
         return _node;
     }
@@ -381,10 +378,7 @@ std::shared_ptr<Node> Parser::parse_function() {
         std::string _p;
         if (_current->type == Token::Type::More) {
             parse_token();
-            if (_current->type != Token::Type::Identifier) {
-                throw ParserError("A expand argument should have a name");
-            }
-            _obj->moreName = _current->value;
+            _obj->moreName = std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id;
             parse_token();
             if (_current->type != Token::Type::RParan) {
                 if (_current->type != Token::Type::Comma) {
@@ -396,18 +390,10 @@ std::shared_ptr<Node> Parser::parse_function() {
             }
             break;
         }
-        if (_current->type != Token::Type::Identifier) {
-            throw ParserError("An argument should be an identifier");
-        }
-        _p = _current->value;
-        parse_token();
+        _p = std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id;
         if (_current->type == Token::Type::As) {
             parse_token();
-            if (_current->type != Token::Type::Identifier) {
-                throw ParserError("Typechecks should be identifiers");
-            }
-            _obj->typechecks.insert({_obj->args.size(), _current->value});
-            parse_token();
+            _obj->typechecks.insert({_obj->args.size(), std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id});
         }
         if (_current->type != Token::Type::Comma && _current->type != Token::Type::RParan) {
             throw ParserError("Arguments should be splited by comma");
@@ -452,19 +438,11 @@ std::shared_ptr<Node> Parser::parse_class_creation() {
         throw ParserError("A class statement should begin with a class token", &lexer);
     }
     parse_token();
-    if (_current->type != Token::Type::Identifier) {
-        throw ParserError("A class should have a name", &lexer);
-    }
     auto _classNode = std::make_shared<ClassNode>();
-    _classNode->_name = _current->value;
-    parse_token();
+    _classNode->_name = std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id;
     if (_current->type == Token::Type::As) {
         parse_token();
-        if (_current->type != Token::Type::Identifier) {
-            throw ParserError("The class to extend must be an identifier token", &lexer);
-        }
-        _classNode->_ext = _current->value;
-        parse_token();
+        _classNode->_ext = std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id;
     }
     if (_current->type != Token::Type::LBrace) {
         throw ParserError("A class should have a scope", &lexer);
@@ -488,12 +466,7 @@ std::shared_ptr<Node> Parser::parse_enumerate_creation() {
         throw ParserError("An enumerate statement should begin with an enumerate token", &lexer);
     }
     parse_token();
-    std::string _name;
-    if (_current->type != Token::Type::Identifier) {
-        throw ParserError("An enumerate should have a name", &lexer);
-    }
-    _name = _current->value;
-    parse_token();
+    std::string _name = std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id;
     if (_current->type != Token::Type::LBrace) {
         throw ParserError("An enumerate should have an item list", &lexer);
     }
@@ -501,11 +474,7 @@ std::shared_ptr<Node> Parser::parse_enumerate_creation() {
     _enumNode->_name = _name;
     while (!shouldEnd() && _current->type != Token::Type::RBrace) {
         parse_token();
-        if (_current->type != Token::Type::Identifier) {
-            throw ParserError("Each item in an enumerate should be an identifier token", &lexer);
-        }
-        _enumNode->items.push_back(_current->value);
-        parse_token();
+        _enumNode->items.push_back(std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id);
         if (_current->type != Token::Type::Comma && _current->type != Token::Type::RBrace) {
             throw ParserError("Items in an enumerate should be splited by comma and end with a right brace", &lexer);
         }
@@ -532,18 +501,10 @@ std::shared_ptr<Node> Parser::parse_function_creation() {
             if (_current->type == Token::Type::More) {
                 throw ParserError("Constructors cannot use argument expanding", &lexer);
             }
-            if (_current->type != Token::Type::Identifier) {
-                throw ParserError("Arguments should have a name", &lexer);
-            }
-            _p = _current->value;
-            parse_token();
+            _p = std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id;
             if (_current->type == Token::Type::As) {
                 parse_token();
-                if (_current->type != Token::Type::Identifier) {
-                    throw ParserError("Typechecks should be identifiers");
-                }
-                _obj->typechecks.insert({_obj->args.size(), _current->value});
-                parse_token();
+                _obj->typechecks.insert({_obj->args.size(), std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id});
             }
             if (_current->type != Token::Type::Comma && _current->type != Token::Type::RParan) {
                 throw ParserError("Arguments should be splited by comma and end with a right paran", &lexer);
@@ -562,11 +523,7 @@ std::shared_ptr<Node> Parser::parse_function_creation() {
     }
     else if (funcType == Token::Type::FunctionDef || funcType == Token::Type::Method) {
         auto _obj = std::make_shared<FunctionNode>();
-        if (_current->type != Token::Type::Identifier) {
-            throw ParserError("Functions should have a name", &lexer);
-        }
-        std::string _name = _current->value;
-        parse_token();
+        std::string _name = std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id;
         if (_current->type != Token::Type::LParan) {
             throw ParserError("A function should have an argument list", &lexer);
         }
@@ -576,18 +533,10 @@ std::shared_ptr<Node> Parser::parse_function_creation() {
             std::string _p;
             if (_current->type == Token::Type::More) {
                 parse_token();
-                if (_current->type != Token::Type::Identifier) {
-                    throw ParserError("A expand argument should have a name");
-                }
-                _obj->moreName = _current->value;
-                parse_token();
+                _obj->moreName = std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id;
                 if (_current->type == Token::Type::As) {
                     parse_token();
-                    if (_current->type != Token::Type::Identifier) {
-                        throw ParserError("Typechecks should be identifiers");
-                    }
-                    _obj->typechecks.insert({_obj->args.size(), _current->value});
-                    parse_token();
+                    _obj->typechecks.insert({_obj->args.size(), std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id});
                 }
                 if (_current->type != Token::Type::RParan) {
                     if (_current->type != Token::Type::Comma) {
@@ -599,18 +548,10 @@ std::shared_ptr<Node> Parser::parse_function_creation() {
                 }
                 break;
             }
-            if (_current->type != Token::Type::Identifier) {
-                throw ParserError("An argument should be an identifier");
-            }
-            _p = _current->value;
-            parse_token();
+            _p = std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id;
             if (_current->type == Token::Type::As) {
                 parse_token();
-                if (_current->type != Token::Type::Identifier) {
-                    throw ParserError("Typechecks should be identifiers");
-                }
-                _obj->typechecks.insert({_obj->args.size(), _current->value});
-                parse_token();
+                _obj->typechecks.insert({_obj->args.size(), std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id});
             }
             if (_current->type != Token::Type::Comma && _current->type != Token::Type::RParan) {
                 throw ParserError("Arguments should be splited by comma");
@@ -654,11 +595,7 @@ std::shared_ptr<Node> Parser::parse_creation() {
     }
     while (true) {
         std::shared_ptr<Node> _obj = std::make_shared<NullNode>();
-        if (_current->type != Token::Type::Identifier) {
-            throw ParserError("The variable to create must be an identifier token", &lexer);
-        }
-        std::string _name = _current->value;
-        parse_token();
+        std::string _name = std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id;
         if (_current->type == Token::Type::Assign) {
             parse_token();
             _obj = parse_expr();
@@ -792,11 +729,7 @@ std::shared_ptr<Node> Parser::parse_remove() {
         throw ParserError("Remove expressions should begin with a delete token", &lexer);
     }
     parse_token();
-    if (_current->type != Token::Type::Identifier) {
-        throw ParserError("Nothing to remove", &lexer);
-    }
-    auto _node = std::make_shared<RemoveNode>(_current->value);
-    parse_token();
+    auto _node = std::make_shared<RemoveNode>(std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id);
     if (_current->type == Token::Type::Semicolon) {
         parse_token();
     }
@@ -971,11 +904,7 @@ std::shared_ptr<Node> Parser::parse_class_statement() {
     parse_token();
     if (_current->type == Token::Type::Value) {
         parse_token();
-        if (_current->type != Token::Type::Identifier) {
-            throw ParserError("Values should be identifier tokens", &lexer);
-        }
-        std::string name = _current->value;
-        parse_token();
+        std::string name = std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id;
         std::shared_ptr<Node> value = std::make_shared<NullNode>();
         if (_current->type == Token::Type::Assign) {
             parse_token();
@@ -992,11 +921,7 @@ std::shared_ptr<Node> Parser::parse_class_statement() {
     }
     else if (_current->type == Token::Type::Static) {
         parse_token();
-        if (_current->type != Token::Type::Identifier) {
-            throw ParserError("Values should be identifier tokens", &lexer);
-        }
-        std::string name = _current->value;
-        parse_token();
+        std::string name = std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id;
         if (_current->type != Token::Type::Assign) {
             throw ParserError("Statics should have a value", &lexer);
         }
