@@ -227,6 +227,9 @@ std::shared_ptr<Node> Parser::parse_statement() {
     case Token::Type::Break:
     case Token::Type::Continue:
         return parse_break_continue();
+    case Token::Type::Semicolon:
+        parse_token();
+        return std::make_shared<ExprNode>(std::make_shared<NullNode>());
     default:
         return parse_expr();
     }
@@ -379,7 +382,6 @@ std::shared_ptr<Node> Parser::parse_function() {
         if (_current->type == Token::Type::More) {
             parse_token();
             _obj->moreName = std::dynamic_pointer_cast<IdentifierNode>(parse_identifier())->id;
-            parse_token();
             if (_current->type != Token::Type::RParan) {
                 if (_current->type != Token::Type::Comma) {
                     throw ParserError("Arguments should be splited by comma");

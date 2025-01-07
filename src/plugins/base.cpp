@@ -422,13 +422,13 @@ std::shared_ptr<Object> String_Digit(Args args) {
     }
     auto str = std::dynamic_pointer_cast<String>(args[0])->value;
     if (str.length() == 1) {
-        return std::make_shared<Byte>(str[0]);
+        return std::make_shared<Integer>((unsigned char) str[0]);
     }
     else {
-        auto res = std::make_shared<ByteArray>();
+        auto res = std::make_shared<Array>();
         res->value.reserve(str.length());
         for (size_t i = 0; i < str.length(); i++) {
-            res->value.push_back(str[i]);
+            res->value.push_back(std::make_shared<Integer>((unsigned char) str[i]));
         }
         return res;
     }
